@@ -1,75 +1,54 @@
 const net = require('net');
 const netPORT = 1863;
 
+const isCommand = (line) => line.match(/^[A-Z]{3} /);
+
 const handleVER = require('./handlers/VER');
 const handleCVR = require('./handlers/CVR');
 
 const server = net.createServer((socket) => {
-    console.log('New client: ' + socket.remoteAddress);
+  console.log('New client: ' + socket.remoteAddress);
 
-    let buffer = '';
-    let currentCommand = null;
-    let commandBuffer = [];
+  let previousCommand = null;
 
-    socket.on('data', (data) => {
-        buffer += data.toString();
-        
-        const messages = buffer.split('\r\n');
-        buffer = messages.pop();
+  socket.on('data', (data) => {
+    const messages = data.toString().trim().split('\r\n');
 
-        for (const message of messages) {
-            if (/^[A-Z]{3} /.test(message)) {
-                if (currentCommand !== null) {
-                    processCommand(socket, currentCommand, commandBuffer);
-                }
-                currentCommand = message.trim().split(' ')[0];
-                commandBuffer = [message];
-            } else {
-                if (currentCommand !== null) {
-                    commandBuffer.push(message);
-                } else {
-                    console.error('Received data without a command: ' + message);
-                }
-            }
+    for (const message of messages) {
+      if (isCommand(message)) {
+        const command = message.toString().trim().split(' ');
+        const data = previousCommand ? previousCommand.data : '';
+        previousCommand = null;
+        switch (command[0]) {
+          case 'VER':
+            handleVER(socket, command.slice(1), data);
+            break;
+          case 'CVR':
+            handleCVR(socket, command.slice(1), data);
+            break;
+          case 'USR':
+            socket.write('USR 3 SSO S MBI_KEY_OLD E4Fhehbe0q2Je+SUSp7IRnJV+rN4uME75ljIpUjIZ1Si+DgmrfuiIL+AFmkMA6Wv\r\n');
+            break;
+          default:
+            socket.write('OUT\n');
         }
-
-        if (currentCommand !== null) {
-            processCommand(socket, currentCommand, commandBuffer);
-            currentCommand = null;
-            commandBuffer = [];
+      } else {
+        if (previousCommand) {
+          previousCommand.data += message + '\r\n';
         }
-    });
+      }
+    }
+  });
 
-    socket.on('close', () => {
-        console.log('Client closed: ' + socket.remoteAddress);
-    });
+  socket.on('close', () => {
+    console.log('Client closed: ' + socket.remoteAddress);
+  });
 
-    socket.on('error', (err) => {
-        console.error(err);
-    });
+  socket.on('error', (err) => {
+    console.error(err);
+  });
 });
 
-function processCommand(socket, command, commandBuffer) {
-    const commandString = commandBuffer.join('\r\n');
-    const args = commandString.split(' ').slice(1);
-    
-    switch (command) {
-        case 'VER':
-            handleVER(socket, args);
-            break;
-        case 'CVR':
-            handleCVR(socket, args);
-            break;
-        case 'USR':
-            socket.write('OUT \r\n');
-            break;
-        default:
-            // Log or handle unknown command
-            console.log(`Unknown command received: ${commandString}`);
-            socket.write('OUT \r\n');
-    }
-}
-
 server.listen(netPORT, () => {
-    console.log('MSN Server listening on port ' + netPORT);
+  console.log('MSN Server listening on port ' + netPORT);
 });
