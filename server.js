@@ -7,7 +7,7 @@ const handleVER = require('./handlers/VER');
 const handleCVR = require('./handlers/CVR');
 
 const server = net.createServer((socket) => {
-  console.log('New client: ' + socket.remoteAddress);
+  console.log('New client: ' + socket.remoteAddress + ":" + socket.remotePort);
 
   let previousCommand = null;
 
@@ -41,7 +41,7 @@ const server = net.createServer((socket) => {
   });
 
   socket.on('close', () => {
-    console.log('Client closed: ' + socket.remoteAddress);
+    console.log('Client closed: ' + socket.remoteAddress + ":" + socket.remotePort);
   });
 
   socket.on('error', (err) => {
