@@ -9,8 +9,6 @@ module.exports = (socket, args) => {
     if (supported.length > 0) {
         socket.write(`VER ${transactionID} ${supported.join(' ')}\r\n`);
     } else {
-        socket.write(`VER ${transactionID} NONE\r\n`);
+        socket.write(`VER ${transactionID} 0\r\n`);
     }
-
-    console.log('RETURNED VER')
 }
