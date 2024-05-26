@@ -5,11 +5,10 @@ const isCommand = (line) => line.match(/^[A-Z]{3} /);
 
 const handleVER = require('./handlers/VER');
 const handleCVR = require('./handlers/CVR');
+const handleUSR = require('./handlers/USR');
 
 const server = net.createServer((socket) => {
     console.log('New client: ' + socket.remoteAddress);
-
-    let accumulatedData = '';
 
     socket.on('data', (data) => {
         const messages = data.toString().trim().split('\r\n');
@@ -17,27 +16,20 @@ const server = net.createServer((socket) => {
         for (const message of messages) {
             if (isCommand(message)) {
                 const command = message.toString().trim().split(' ');
-                const data = accumulatedData;
-                accumulatedData = '';
 
                 switch (command[0]) {
                     case 'VER':
-                        console.log(message)
                         handleVER(socket, command.slice(1), data);
                         break;
                     case 'CVR':
-                        console.log(message)
                         handleCVR(socket, command.slice(1), data);
                         break;
                     case 'USR':
-                        console.log(message + "From USR")
-                        socket.write('OUT\r\n');
+                        handleUSR(socket, command.slice(1), data);
                         break;
                     default:
-                        socket.write('OUT\n');
+                        socket.write('OUT\r\n');
                 }
-            } else {
-                accumulatedData += message + '\r\n';
             }
         }
     });
