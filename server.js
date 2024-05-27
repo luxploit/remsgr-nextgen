@@ -341,6 +341,8 @@ httpServer.listen(80, () => {
 
 const isCommand = (line) => line.match(/^[A-Z]{3} /);
 
+const dataCommands = ["ADL"]
+
 const handleVER = require('./handlers/VER');
 const handleCVR = require('./handlers/CVR');
 const handleUSR = require('./handlers/USR');
@@ -352,6 +354,8 @@ const server = net.createServer((socket) => {
         const messages = data.toString().trim().split('\r\n');
 
         for (const message of messages) {
+			console.log(`${chalk.magenta.bold('[MSN SOCKET]')} ${socket.remoteAddress}:${socket.remotePort} -> ${message}`);
+
             if (isCommand(message)) {
                 const command = message.toString().trim().split(' ');
 
