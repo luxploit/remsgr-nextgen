@@ -9,7 +9,6 @@ module.exports = async (socket, args) => {
         if (state === 'I') {
             socket.passport = args[3];
             console.log(`${socket.passport} is trying to log in.`);
-
             
             const random = crypto.randomBytes(48).toString('hex');
             const userCommand = `USR ${transactionID} SSO S MBI_KEY_OLD ${random.toString("base64")}\r\n`;
