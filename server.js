@@ -316,6 +316,8 @@ app.post("/RST2.srf", async (req, res) => {
 	}
 });
 
+app.use("/abservice", require("./routes/abservice"));
+
 const httpsServer = https.createServer({
     key: fs.readFileSync('./certs/key.pem'),
     cert: fs.readFileSync('./certs/cert.pem')
