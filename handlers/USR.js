@@ -23,6 +23,8 @@ module.exports = async (socket, args) => {
             socket.write(`USR ${transactionID} OK ${socket.passport} 1 0\r\n`);
             socket.write(`SBS 0 null\r\n`);
             socket.write(`MSG Hotmail Hotmail 1460\r\nMIME-Version: 1.0\r\nContent-Type: text/x-msmsgsprofile; charset=UTF-8\r\nLoginTime: 1706902514\r\nEmailEnabled: 0\r\nMemberIdHigh: 3061839339\r\nMemberIdLow: 496352507\r\nlang_preference: 1033\r\npreferredEmail:\r\ncountry:\r\nPostalCode:\r\nGender:\r\nKid: 0\r\nAge:\r\nBDayPre:\r\nBirthday:\r\nWallet:\r\nFlags: 536872513\r\nsid: 507\r\nMSPAuth: fergalicious\r\nClientIP: ${socket.remoteAddress}\r\nClientPort: ${socket.remotePort}\r\nABCHMigrated:`);
+            socket.write(`MPOPEnabled: 1\r\nBetaInvites: 1\r\n\r\n`)
+            socket.write(`UBX 1:${socket.passport} 0\r\n`)
         }
     } else if (scheme === 'TWN') {
         socket.destroy();
