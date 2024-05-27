@@ -8,6 +8,8 @@ const http = require('http');
 const net = require('net');
 const netPORT = 1863;
 
+const chalk = require('chalk');
+
 // Express
 const app = express();
 const parser = new XMLParser();
@@ -34,7 +36,7 @@ app.post("/RST2.srf", async (req, res) => {
     const password = req.body["s:Envelope"]["s:Header"]["wsse:Security"]["wsse:UsernameToken"]["wsse:Password"];
     const getSortaISODate = () => { return new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '') };
 
-    console.log(`[RST2.srf] "${username}" is trying to log in using password "${password}".`);
+    console.log(`${chalk.cyan.bold('[RST2.SRF]')} "${username}" is trying to log in using password "${password}".`);
 
     if (username.endsWith("@hotmail.com") || password !== "password") {
 		return res.status(200).send(`<?xml version="1.0" encoding="utf-8" ?>
@@ -178,7 +180,7 @@ app.post("/RST2.srf", async (req, res) => {
 					<wsu:Expires>2024-01-29T04:05:39Z</wsu:Expires>
 				</wst:Lifetime>
 				<wst:RequestedSecurityToken>
-					<wsse:BinarySecurityToken Id="Compact2">t=3b2b2f6308d77e183d65Y6+H31sTUOFkqjNTDYqAAFLr5Ote7BMrMnUIzpg860jh084QMgs5djRQLLQP0TVOFkKdWDwAJdEWcfsI9YL8otN9kSfhTaPHR1njHmG0H98O2NE/Ck6zrog3UJFmYlCnHidZk1g3AzUNVXmjZoyMSyVvoHLjQSzoGRpgHg3hHdi7zrFhcYKWD8XeNYdoz9wfA2YAAAgZIgF9kFvsy2AC0Fl/ezc/fSo6YgB9TwmXyoK0wm0F9nz5EfhHQLu2xxgsvMOiXUSFSpN1cZaNzEk/KGVa3Z33Mcu0qJqvXoLyv2VjQyI0VLH6YlW5E+GMwWcQurXB9hT/DnddM5Ggzk3nX8uMSV4kV+AgF1EWpiCdLViRI6DmwwYDtUJU6W6wQXsfyTm6CNMv0eE0wFXmZvoKaL24fggkp99dX+m1vgMQJ39JblVH9cmnnkBQcKkV8lnQJ003fd6iIFzGpgPBW5Z3T1Bp7uzSGMWnHmrEw8eOpKC5ny4x8uoViXDmA2UId23xYSoJ/GQrMjqB+NslqnuVsOBE1oWpNrmfSKhGU1X0kR4Eves56t5i5n3XU+7ne0MkcUzlrMi89n2j8aouf0zeuD7o+ngqvfRCsOqjaU71XWtuD4ogu2X7/Ajtwkxg/UJDFGAnCxFTTd4dqrrEpKyMK8eWBMaartFxwwrH39HMpx1T9JgknJ1hFWELzG8b302sKy64nCseOTGaZrdH63pjGkT7vzyIxVH/b+yJwDRmy/PlLz7fmUj6zpTBNmCtl1EGFOEFdtI2R04EprIkLXbtpoIPA7m0TPZURpnWufCSsDtD91ChxR8j/FnQ/gOOyKg/EJrTcHvM1e50PMRmoRZGlltBRRwBV+ArPO64On6zygr5zud5o/aADF1laBjkuYkjvUVsXwgnaIKbTLN2+sr/WjogxT1Yins79jPa1+3dDenxZtE/rHA/6qsdJmo5BJZqNYQUFrnpkU428LryMnBaNp2BW51JRsWXPAA7yCi0wDlHzEDxpqaOnhI4Ol87ra+VAg==&amp;p=</wsse:BinarySecurityToken>
+					<wsse:BinarySecurityToken Id="Compact2">t=fergalicious</wsse:BinarySecurityToken>
 				</wst:RequestedSecurityToken>
 				<wst:RequestedAttachedReference>
 					<wsse:SecurityTokenReference>
@@ -203,7 +205,7 @@ app.post("/RST2.srf", async (req, res) => {
 					<wsu:Expires>2024-01-29T04:05:39Z</wsu:Expires>
 				</wst:Lifetime>
 				<wst:RequestedSecurityToken>
-					<wsse:BinarySecurityToken Id="Compact3">t=3b2b2f6308d77e183d65Y6+H31sTUOFkqjNTDYqAAFLr5Ote7BMrMnUIzpg860jh084QMgs5djRQLLQP0TVOFkKdWDwAJdEWcfsI9YL8otN9kSfhTaPHR1njHmG0H98O2NE/Ck6zrog3UJFmYlCnHidZk1g3AzUNVXmjZoyMSyVvoHLjQSzoGRpgHg3hHdi7zrFhcYKWD8XeNYdoz9wfA2YAAAgZIgF9kFvsy2AC0Fl/ezc/fSo6YgB9TwmXyoK0wm0F9nz5EfhHQLu2xxgsvMOiXUSFSpN1cZaNzEk/KGVa3Z33Mcu0qJqvXoLyv2VjQyI0VLH6YlW5E+GMwWcQurXB9hT/DnddM5Ggzk3nX8uMSV4kV+AgF1EWpiCdLViRI6DmwwYDtUJU6W6wQXsfyTm6CNMv0eE0wFXmZvoKaL24fggkp99dX+m1vgMQJ39JblVH9cmnnkBQcKkV8lnQJ003fd6iIFzGpgPBW5Z3T1Bp7uzSGMWnHmrEw8eOpKC5ny4x8uoViXDmA2UId23xYSoJ/GQrMjqB+NslqnuVsOBE1oWpNrmfSKhGU1X0kR4Eves56t5i5n3XU+7ne0MkcUzlrMi89n2j8aouf0zeuD7o+ngqvfRCsOqjaU71XWtuD4ogu2X7/Ajtwkxg/UJDFGAnCxFTTd4dqrrEpKyMK8eWBMaartFxwwrH39HMpx1T9JgknJ1hFWELzG8b302sKy64nCseOTGaZrdH63pjGkT7vzyIxVH/b+yJwDRmy/PlLz7fmUj6zpTBNmCtl1EGFOEFdtI2R04EprIkLXbtpoIPA7m0TPZURpnWufCSsDtD91ChxR8j/FnQ/gOOyKg/EJrTcHvM1e50PMRmoRZGlltBRRwBV+ArPO64On6zygr5zud5o/aADF1laBjkuYkjvUVsXwgnaIKbTLN2+sr/WjogxT1Yins79jPa1+3dDenxZtE/rHA/6qsdJmo5BJZqNYQUFrnpkU428LryMnBaNp2BW51JRsWXPAA7yCi0wDlHzEDxpqaOnhI4Ol87ra+VAg==&amp;p=</wsse:BinarySecurityToken>
+					<wsse:BinarySecurityToken Id="Compact3">t=fergalicious</wsse:BinarySecurityToken>
 				</wst:RequestedSecurityToken>
 				<wst:RequestedAttachedReference>
 					<wsse:SecurityTokenReference>
@@ -226,7 +228,7 @@ app.post("/RST2.srf", async (req, res) => {
 					<wsu:Expires>2024-01-29T04:05:39Z</wsu:Expires>
 				</wst:Lifetime>
 				<wst:RequestedSecurityToken>
-					<wsse:BinarySecurityToken Id="Compact4">t=3b2b2f6308d77e183d65Y6+H31sTUOFkqjNTDYqAAFLr5Ote7BMrMnUIzpg860jh084QMgs5djRQLLQP0TVOFkKdWDwAJdEWcfsI9YL8otN9kSfhTaPHR1njHmG0H98O2NE/Ck6zrog3UJFmYlCnHidZk1g3AzUNVXmjZoyMSyVvoHLjQSzoGRpgHg3hHdi7zrFhcYKWD8XeNYdoz9wfA2YAAAgZIgF9kFvsy2AC0Fl/ezc/fSo6YgB9TwmXyoK0wm0F9nz5EfhHQLu2xxgsvMOiXUSFSpN1cZaNzEk/KGVa3Z33Mcu0qJqvXoLyv2VjQyI0VLH6YlW5E+GMwWcQurXB9hT/DnddM5Ggzk3nX8uMSV4kV+AgF1EWpiCdLViRI6DmwwYDtUJU6W6wQXsfyTm6CNMv0eE0wFXmZvoKaL24fggkp99dX+m1vgMQJ39JblVH9cmnnkBQcKkV8lnQJ003fd6iIFzGpgPBW5Z3T1Bp7uzSGMWnHmrEw8eOpKC5ny4x8uoViXDmA2UId23xYSoJ/GQrMjqB+NslqnuVsOBE1oWpNrmfSKhGU1X0kR4Eves56t5i5n3XU+7ne0MkcUzlrMi89n2j8aouf0zeuD7o+ngqvfRCsOqjaU71XWtuD4ogu2X7/Ajtwkxg/UJDFGAnCxFTTd4dqrrEpKyMK8eWBMaartFxwwrH39HMpx1T9JgknJ1hFWELzG8b302sKy64nCseOTGaZrdH63pjGkT7vzyIxVH/b+yJwDRmy/PlLz7fmUj6zpTBNmCtl1EGFOEFdtI2R04EprIkLXbtpoIPA7m0TPZURpnWufCSsDtD91ChxR8j/FnQ/gOOyKg/EJrTcHvM1e50PMRmoRZGlltBRRwBV+ArPO64On6zygr5zud5o/aADF1laBjkuYkjvUVsXwgnaIKbTLN2+sr/WjogxT1Yins79jPa1+3dDenxZtE/rHA/6qsdJmo5BJZqNYQUFrnpkU428LryMnBaNp2BW51JRsWXPAA7yCi0wDlHzEDxpqaOnhI4Ol87ra+VAg==&amp;p=</wsse:BinarySecurityToken>
+					<wsse:BinarySecurityToken Id="Compact4">t=fergalicious</wsse:BinarySecurityToken>
 				</wst:RequestedSecurityToken>
 				<wst:RequestedAttachedReference>
 					<wsse:SecurityTokenReference>
@@ -249,7 +251,7 @@ app.post("/RST2.srf", async (req, res) => {
 					<wsu:Expires>2024-01-29T04:05:39Z</wsu:Expires>
 				</wst:Lifetime>
 				<wst:RequestedSecurityToken>
-					<wsse:BinarySecurityToken Id="Compact5">t=3b2b2f6308d77e183d65Y6+H31sTUOFkqjNTDYqAAFLr5Ote7BMrMnUIzpg860jh084QMgs5djRQLLQP0TVOFkKdWDwAJdEWcfsI9YL8otN9kSfhTaPHR1njHmG0H98O2NE/Ck6zrog3UJFmYlCnHidZk1g3AzUNVXmjZoyMSyVvoHLjQSzoGRpgHg3hHdi7zrFhcYKWD8XeNYdoz9wfA2YAAAgZIgF9kFvsy2AC0Fl/ezc/fSo6YgB9TwmXyoK0wm0F9nz5EfhHQLu2xxgsvMOiXUSFSpN1cZaNzEk/KGVa3Z33Mcu0qJqvXoLyv2VjQyI0VLH6YlW5E+GMwWcQurXB9hT/DnddM5Ggzk3nX8uMSV4kV+AgF1EWpiCdLViRI6DmwwYDtUJU6W6wQXsfyTm6CNMv0eE0wFXmZvoKaL24fggkp99dX+m1vgMQJ39JblVH9cmnnkBQcKkV8lnQJ003fd6iIFzGpgPBW5Z3T1Bp7uzSGMWnHmrEw8eOpKC5ny4x8uoViXDmA2UId23xYSoJ/GQrMjqB+NslqnuVsOBE1oWpNrmfSKhGU1X0kR4Eves56t5i5n3XU+7ne0MkcUzlrMi89n2j8aouf0zeuD7o+ngqvfRCsOqjaU71XWtuD4ogu2X7/Ajtwkxg/UJDFGAnCxFTTd4dqrrEpKyMK8eWBMaartFxwwrH39HMpx1T9JgknJ1hFWELzG8b302sKy64nCseOTGaZrdH63pjGkT7vzyIxVH/b+yJwDRmy/PlLz7fmUj6zpTBNmCtl1EGFOEFdtI2R04EprIkLXbtpoIPA7m0TPZURpnWufCSsDtD91ChxR8j/FnQ/gOOyKg/EJrTcHvM1e50PMRmoRZGlltBRRwBV+ArPO64On6zygr5zud5o/aADF1laBjkuYkjvUVsXwgnaIKbTLN2+sr/WjogxT1Yins79jPa1+3dDenxZtE/rHA/6qsdJmo5BJZqNYQUFrnpkU428LryMnBaNp2BW51JRsWXPAA7yCi0wDlHzEDxpqaOnhI4Ol87ra+VAg==&amp;p=</wsse:BinarySecurityToken>
+					<wsse:BinarySecurityToken Id="Compact5">t=fergalicious</wsse:BinarySecurityToken>
 				</wst:RequestedSecurityToken>
 				<wst:RequestedAttachedReference>
 					<wsse:SecurityTokenReference>
@@ -272,7 +274,7 @@ app.post("/RST2.srf", async (req, res) => {
 					<wsu:Expires>2024-01-29T04:05:39Z</wsu:Expires>
 				</wst:Lifetime>
 				<wst:RequestedSecurityToken>
-					<wsse:BinarySecurityToken Id="Compact6">t=3b2b2f6308d77e183d65Y6+H31sTUOFkqjNTDYqAAFLr5Ote7BMrMnUIzpg860jh084QMgs5djRQLLQP0TVOFkKdWDwAJdEWcfsI9YL8otN9kSfhTaPHR1njHmG0H98O2NE/Ck6zrog3UJFmYlCnHidZk1g3AzUNVXmjZoyMSyVvoHLjQSzoGRpgHg3hHdi7zrFhcYKWD8XeNYdoz9wfA2YAAAgZIgF9kFvsy2AC0Fl/ezc/fSo6YgB9TwmXyoK0wm0F9nz5EfhHQLu2xxgsvMOiXUSFSpN1cZaNzEk/KGVa3Z33Mcu0qJqvXoLyv2VjQyI0VLH6YlW5E+GMwWcQurXB9hT/DnddM5Ggzk3nX8uMSV4kV+AgF1EWpiCdLViRI6DmwwYDtUJU6W6wQXsfyTm6CNMv0eE0wFXmZvoKaL24fggkp99dX+m1vgMQJ39JblVH9cmnnkBQcKkV8lnQJ003fd6iIFzGpgPBW5Z3T1Bp7uzSGMWnHmrEw8eOpKC5ny4x8uoViXDmA2UId23xYSoJ/GQrMjqB+NslqnuVsOBE1oWpNrmfSKhGU1X0kR4Eves56t5i5n3XU+7ne0MkcUzlrMi89n2j8aouf0zeuD7o+ngqvfRCsOqjaU71XWtuD4ogu2X7/Ajtwkxg/UJDFGAnCxFTTd4dqrrEpKyMK8eWBMaartFxwwrH39HMpx1T9JgknJ1hFWELzG8b302sKy64nCseOTGaZrdH63pjGkT7vzyIxVH/b+yJwDRmy/PlLz7fmUj6zpTBNmCtl1EGFOEFdtI2R04EprIkLXbtpoIPA7m0TPZURpnWufCSsDtD91ChxR8j/FnQ/gOOyKg/EJrTcHvM1e50PMRmoRZGlltBRRwBV+ArPO64On6zygr5zud5o/aADF1laBjkuYkjvUVsXwgnaIKbTLN2+sr/WjogxT1Yins79jPa1+3dDenxZtE/rHA/6qsdJmo5BJZqNYQUFrnpkU428LryMnBaNp2BW51JRsWXPAA7yCi0wDlHzEDxpqaOnhI4Ol87ra+VAg==&amp;p=</wsse:BinarySecurityToken>
+					<wsse:BinarySecurityToken Id="Compact6">t=fergalicious</wsse:BinarySecurityToken>
 				</wst:RequestedSecurityToken>
 				<wst:RequestedAttachedReference>
 					<wsse:SecurityTokenReference>
@@ -295,7 +297,7 @@ app.post("/RST2.srf", async (req, res) => {
 					<wsu:Expires>2024-01-29T04:05:39Z</wsu:Expires>
 				</wst:Lifetime>
 				<wst:RequestedSecurityToken>
-					<wsse:BinarySecurityToken Id="Compact7">t=3b2b2f6308d77e183d65Y6+H31sTUOFkqjNTDYqAAFLr5Ote7BMrMnUIzpg860jh084QMgs5djRQLLQP0TVOFkKdWDwAJdEWcfsI9YL8otN9kSfhTaPHR1njHmG0H98O2NE/Ck6zrog3UJFmYlCnHidZk1g3AzUNVXmjZoyMSyVvoHLjQSzoGRpgHg3hHdi7zrFhcYKWD8XeNYdoz9wfA2YAAAgZIgF9kFvsy2AC0Fl/ezc/fSo6YgB9TwmXyoK0wm0F9nz5EfhHQLu2xxgsvMOiXUSFSpN1cZaNzEk/KGVa3Z33Mcu0qJqvXoLyv2VjQyI0VLH6YlW5E+GMwWcQurXB9hT/DnddM5Ggzk3nX8uMSV4kV+AgF1EWpiCdLViRI6DmwwYDtUJU6W6wQXsfyTm6CNMv0eE0wFXmZvoKaL24fggkp99dX+m1vgMQJ39JblVH9cmnnkBQcKkV8lnQJ003fd6iIFzGpgPBW5Z3T1Bp7uzSGMWnHmrEw8eOpKC5ny4x8uoViXDmA2UId23xYSoJ/GQrMjqB+NslqnuVsOBE1oWpNrmfSKhGU1X0kR4Eves56t5i5n3XU+7ne0MkcUzlrMi89n2j8aouf0zeuD7o+ngqvfRCsOqjaU71XWtuD4ogu2X7/Ajtwkxg/UJDFGAnCxFTTd4dqrrEpKyMK8eWBMaartFxwwrH39HMpx1T9JgknJ1hFWELzG8b302sKy64nCseOTGaZrdH63pjGkT7vzyIxVH/b+yJwDRmy/PlLz7fmUj6zpTBNmCtl1EGFOEFdtI2R04EprIkLXbtpoIPA7m0TPZURpnWufCSsDtD91ChxR8j/FnQ/gOOyKg/EJrTcHvM1e50PMRmoRZGlltBRRwBV+ArPO64On6zygr5zud5o/aADF1laBjkuYkjvUVsXwgnaIKbTLN2+sr/WjogxT1Yins79jPa1+3dDenxZtE/rHA/6qsdJmo5BJZqNYQUFrnpkU428LryMnBaNp2BW51JRsWXPAA7yCi0wDlHzEDxpqaOnhI4Ol87ra+VAg==&amp;p=</wsse:BinarySecurityToken>
+					<wsse:BinarySecurityToken Id="Compact7">t=fergalicious</wsse:BinarySecurityToken>
 				</wst:RequestedSecurityToken>
 				<wst:RequestedAttachedReference>
 					<wsse:SecurityTokenReference>
@@ -320,7 +322,7 @@ const httpsServer = https.createServer({
 }, app);
 
 httpsServer.listen(443, () => {
-    console.log('MSN Server listening on port 443');
+    console.log(`${chalk.magenta.bold('[HTTPS SERVER]')} Listening on port 443`);
 });
 
 const httpServer = http.createServer((req, res) => {
@@ -329,7 +331,7 @@ const httpServer = http.createServer((req, res) => {
 });
 
 httpServer.listen(80, () => {
-    console.log('HTTP Server listening on port 80');
+    console.log(`${chalk.magenta.bold('[HTTP SERVER]')} Listening on port 80`);
 });
 
 
@@ -342,7 +344,7 @@ const handleCVR = require('./handlers/CVR');
 const handleUSR = require('./handlers/USR');
 
 const server = net.createServer((socket) => {
-    console.log('New client: ' + socket.remoteAddress);
+    console.log(`${chalk.magenta.bold('[MSN SOCKET]')} New connection: ${socket.remoteAddress}:${socket.remotePort}`);
 
     socket.on('data', (data) => {
         const messages = data.toString().trim().split('\r\n');
@@ -369,7 +371,7 @@ const server = net.createServer((socket) => {
     });
 
     socket.on('close', () => {
-        console.log('Client closed: ' + socket.remoteAddress);
+        console.log(`${chalk.magenta.bold('[MSN SOCKET]')} Connection closed: ${socket.remoteAddress}:${socket.remotePort}`);
     });
 
     socket.on('error', (err) => {
@@ -378,5 +380,6 @@ const server = net.createServer((socket) => {
 });
 
 server.listen(netPORT, () => {
-    console.log('MSN Server listening on port ' + netPORT);
+    console.log(`${chalk.magenta.bold('[MSN SOCKET]')} Listening on port ${netPORT}`);
+	console.log('-----------------------------------------');
 });

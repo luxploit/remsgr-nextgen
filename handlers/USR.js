@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const chalk = require('chalk');
 
 module.exports = async (socket, args) => {
     const transactionID = args[0];
@@ -8,7 +9,7 @@ module.exports = async (socket, args) => {
     if (scheme === 'SSO') {
         if (state === 'I') {
             socket.passport = args[3];
-            console.log(`${socket.passport} is trying to log in.`);
+            console.log(`${chalk.yellow.bold('[USR SSO INITIAL]')} ${socket.passport} is trying to log in.`);
             
             const random = crypto.randomBytes(48).toString('hex');
             const userCommand = `USR ${transactionID} SSO S MBI_KEY_OLD ${random.toString("base64")}\r\n`;
@@ -18,6 +19,10 @@ module.exports = async (socket, args) => {
             const buffer = Buffer.from(bytes.replace(/\s/g, ""), "hex").toString().replace(/\n/g, "\r\n");
             socket.write("GCF 0 1209\r\n" + buffer);
             socket.write(userCommand);
+        } else if (state === 'S') {
+            socket.write(`USR ${transactionID} OK ${socket.passport} 1 0\r\n`);
+            socket.write(`SBS 0 null\r\n`);
+            socket.write(`MSG Hotmail Hotmail 1460\r\nMIME-Version: 1.0\r\nContent-Type: text/x-msmsgsprofile; charset=UTF-8\r\nLoginTime: 1706902514\r\nEmailEnabled: 0\r\nMemberIdHigh: 3061839339\r\nMemberIdLow: 496352507\r\nlang_preference: 1033\r\npreferredEmail:\r\ncountry:\r\nPostalCode:\r\nGender:\r\nKid: 0\r\nAge:\r\nBDayPre:\r\nBirthday:\r\nWallet:\r\nFlags: 536872513\r\nsid: 507\r\nMSPAuth: fergalicious\r\nClientIP: ${socket.remoteAddress}\r\nClientPort: ${socket.remotePort}\r\nABCHMigrated:`);
         }
     } else if (scheme === 'TWN') {
         socket.destroy();
