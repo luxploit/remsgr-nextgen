@@ -339,40 +339,75 @@ httpServer.listen(80, () => {
 
 // Socket
 
-const isCommand = (line) => line.match(/^[A-Z]{3} /);
-
-const dataCommands = ["ADL"]
+const isCommand = (line) => line.match(/^[A-Z]{3}/);
 
 const handleVER = require('./handlers/VER');
 const handleCVR = require('./handlers/CVR');
 const handleUSR = require('./handlers/USR');
+const handlePNG = require('./handlers/PNG');
 
 const server = net.createServer((socket) => {
     console.log(`${chalk.magenta.bold('[MSN SOCKET]')} New connection: ${socket.remoteAddress}:${socket.remotePort}`);
 
+	let buffer = '';
+
     socket.on('data', (data) => {
-        const messages = data.toString().trim().split('\r\n');
+        buffer += data.toString();
+
+        const messages = buffer.trim().split('\r\n');
+        buffer = '';
+
+        let parsedCommands = [];
+        let tempBuffer = '';
 
         for (const message of messages) {
-			console.log(`${chalk.magenta.bold('[MSN SOCKET]')} ${socket.remoteAddress}:${socket.remotePort} -> ${message}`);
-
             if (isCommand(message)) {
-                const command = message.toString().trim().split(' ');
+                if (tempBuffer) {
+                    parsedCommands.push(tempBuffer);
+                    tempBuffer = '';
+                }
+                tempBuffer = message;
+            } else {
+                if (tempBuffer) {
+                    tempBuffer += `\r\n${message}`;
+                } else {
+                    console.log(`${chalk.red.bold('[MSN SOCKET]')} Received non-command message without a preceding command: ${message}`);
+                }
+            }
+        }
 
-                switch (command[0]) {
+        if (tempBuffer) {
+            parsedCommands.push(tempBuffer);
+        }
+
+        if (buffer === '' || isCommand(messages[messages.length - 1])) {
+            for (const command of parsedCommands) {
+                const commandParts = command.toString().trim().split(' ');
+
+                switch (commandParts[0]) {
                     case 'VER':
-                        handleVER(socket, command.slice(1), data);
+                        handleVER(socket, commandParts.slice(1), command);
                         break;
                     case 'CVR':
-                        handleCVR(socket, command.slice(1), data);
+                        handleCVR(socket, commandParts.slice(1), command);
                         break;
                     case 'USR':
-                        handleUSR(socket, command.slice(1), data);
+                        handleUSR(socket, commandParts.slice(1), command);
                         break;
+					case 'PNG':
+						handlePNG(socket);
+						break;
+					case 'ADL':
+						console.log(`${chalk.red.bold('[FUCK ASS REALLY BAD MULTIDATA PARSER]')} Gonna try to get the data now, check below:`)
+						console.log(command.split('\r\n')[1]);
+						break;
                     default:
+                        console.log(`${chalk.red.bold('[MSN SOCKET]')} Unknown command: ${commandParts[0]}`);
+						console.log(command);
                         socket.destroy();
                 }
             }
+            parsedCommands = [];
         }
     });
 
