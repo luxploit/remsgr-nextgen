@@ -345,6 +345,7 @@ const handleVER = require('./handlers/VER');
 const handleCVR = require('./handlers/CVR');
 const handleUSR = require('./handlers/USR');
 const handlePNG = require('./handlers/PNG');
+const handleADL = require('./handlers/ADL');
 
 const server = net.createServer((socket) => {
     console.log(`${chalk.magenta.bold('[MSN SOCKET]')} New connection: ${socket.remoteAddress}:${socket.remotePort}`);
@@ -398,13 +399,12 @@ const server = net.createServer((socket) => {
 						handlePNG(socket);
 						break;
 					case 'ADL':
-						console.log(`${chalk.red.bold('[FUCK ASS REALLY BAD MULTIDATA PARSER]')} Gonna try to get the data now, check below:`)
-						console.log(command.split('\r\n')[1]);
+						handleADL(socket, commandParts.slice(1), command);
 						break;
                     default:
                         console.log(`${chalk.red.bold('[MSN SOCKET]')} Unknown command: ${commandParts[0]}`);
-						console.log(command);
-                        socket.destroy();
+					//	console.log(command);
+                    //    socket.destroy();
                 }
             }
             parsedCommands = [];
