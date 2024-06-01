@@ -6,5 +6,5 @@ module.exports = (socket, args) => {
 
     console.log(`${chalk.blue.bold('[CHG]')} ${socket.passport} GIORLLL SHES CHANGING HER STATUS AND ASKING FOR STATUSES HELPPPP`);
     socket.write(`CHG ${transactionID} ${status}\r\n`);
-    socket.write(`ILN ${transactionID} IDL chriskermit@escargot.chat chris%20faggot%20jane\r\n`);
+    socket.write(`ILN ${transactionID} NLN chriskermit@butterfly.net chris%20faggot%20jane\r\n`);
 }
