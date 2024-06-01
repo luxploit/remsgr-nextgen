@@ -6,10 +6,13 @@ module.exports = (socket, args) => {
     const versions = args.slice(1);
 
     const supported = versions.filter(version => supportedVersions.includes(version));
+    // get version and only get the number & make it an int
+    const version = parseInt(supported[0].replace('MSNP', ''));
 
     if (supported.length > 0) {
-        console.log(`${chalk.red.bold('[VER]')} ${socket.remoteAddress} has sent supported versions, these are: ${supported.join(', ')}.`);
-        socket.write(`VER ${transactionID} ${supported.join(' ')}\r\n`);
+        console.log(`${chalk.red.bold('[VER]')} ${socket.remoteAddress} has sent supported versions, these are: ${supported.join(', ')}, we will use MSNP${version}.`);
+        socket.version = version;
+        socket.write(`VER ${transactionID} MSNP${version}\r\n`);
     } else {
         console.log(`${chalk.red.bold('[VER]')} ${socket.remoteAddress} has sent unsupported versions.`);
         socket.write(`VER ${transactionID} 0\r\n`);

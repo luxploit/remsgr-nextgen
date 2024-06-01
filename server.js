@@ -346,6 +346,10 @@ const handleCVR = require('./handlers/CVR');
 const handleUSR = require('./handlers/USR');
 const handlePNG = require('./handlers/PNG');
 const handleADL = require('./handlers/ADL');
+const handleINF = require('./handlers/INF');
+const handleSYN = require('./handlers/SYN');
+const handleCHG = require('./handlers/CHG');
+const handleOUT = require('./handlers/OUT');
 
 const server = net.createServer((socket) => {
     console.log(`${chalk.magenta.bold('[MSN SOCKET]')} New connection: ${socket.remoteAddress}:${socket.remotePort}`);
@@ -383,6 +387,7 @@ const server = net.createServer((socket) => {
 
         if (buffer === '' || isCommand(messages[messages.length - 1])) {
             for (const command of parsedCommands) {
+				// console.log(`${chalk.red.bold('[MSN SOCKET]')} Received command: ${command}`);
                 const commandParts = command.toString().trim().split(' ');
 
                 switch (commandParts[0]) {
@@ -400,6 +405,18 @@ const server = net.createServer((socket) => {
 						break;
 					case 'ADL':
 						handleADL(socket, commandParts.slice(1), command);
+						break;
+					case 'INF':
+						handleINF(socket, commandParts.slice(1), command);
+						break;
+					case 'SYN':
+						handleSYN(socket, commandParts.slice(1), command);
+						break;
+					case 'CHG':
+						handleCHG(socket, commandParts.slice(1), command);
+						break;
+					case 'OUT':
+						handleOUT(socket);
 						break;
                     default:
                         console.log(`${chalk.red.bold('[MSN SOCKET]')} Unknown command: ${commandParts[0]}`);
