@@ -3,6 +3,8 @@ const connection = require('../db/connect').promise();
 
 class LoginMethods {
 
+    // MD5 AUTHENTICATION
+
     async md5login(socket, version, state, transactionID, passport, passhash) {
         if (state === 'I') {
             console.log(`${chalk.yellow.bold('[USR MD5 INITIAL]')} ${passport} is trying to log in.`);
@@ -81,6 +83,8 @@ class LoginMethods {
         }
         return parts[2];
     }
+
+    // SSO AUTHENTICATION - NOT IMPLEMENTED YET
 
 }
 
