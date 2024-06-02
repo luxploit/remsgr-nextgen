@@ -42,7 +42,7 @@ module.exports = async (socket, args) => {
         }
         
         else if (state === 'S') {
-            if (socket.version < 7) {
+            if (socket.version <= 7) {
                 login.md5login(socket, socket.version, state, transactionID, socket.passport, args[3]);
             }
             

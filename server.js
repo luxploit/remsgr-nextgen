@@ -413,6 +413,10 @@ const server = net.createServer((socket) => {
     });
 
     socket.on('close', () => {
+		const index = sockets.indexOf(socket);
+		if (index > -1) {
+			sockets.splice(index, 1);
+		}
         console.log(`${chalk.magenta.bold('[MSN SOCKET]')} Connection closed: ${socket.remoteAddress}:${socket.remotePort}`);
     });
 

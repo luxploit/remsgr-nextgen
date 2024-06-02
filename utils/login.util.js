@@ -1,5 +1,6 @@
 const chalk = require('chalk');
 const connection = require('../db/connect').promise();
+const { sockets, getSocketByPassport, getMultipleSocketsByPassport } = require('../utils/socket.util');
 
 class LoginMethods {
 
@@ -60,6 +61,17 @@ class LoginMethods {
                 socket.destroy();
                 return;
             }
+
+            const existingSockets = getMultipleSocketsByPassport(passport);
+
+            existingSockets.forEach(existingSocketObj => {
+                if (existingSocketObj !== socket) {
+                    console.log(`${chalk.yellow.bold('[USR MD5 SUBSEQUENT]')} ${passport} is already logged in, logging out old session.`);
+                    
+                    existingSocketObj.write('OUT\r\n');
+                    existingSocketObj.destroy();
+                }
+            });
 
             await connection.query('UPDATE users SET last_login = NOW() WHERE email = ?', [passport]);
 

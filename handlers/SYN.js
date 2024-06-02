@@ -8,8 +8,8 @@ module.exports = (socket, args) => {
     socket.write(`SYN ${transactionID} ${IDplusone}\r\n`);
     socket.write(`GTC ${transactionID} ${IDplusone} A\r\n`);
     socket.write(`BLP ${transactionID} ${IDplusone} AL\r\n`);
-    socket.write(`LST ${transactionID} FL ${IDplusone} 1 1 default@butterfly.net default\r\n`);
-    socket.write(`LST ${transactionID} AL ${IDplusone} 1 1 default@butterfly.net default\r\n`);
+    socket.write(`LST ${transactionID} FL ${IDplusone} 1 1 default@butterfly.net default 0\r\n`);
+    socket.write(`LST ${transactionID} AL ${IDplusone} 1 1 default@butterfly.net default 0\r\n`);
     socket.write(`LST ${transactionID} BL ${IDplusone} 0 0\r\n`);
-    socket.write(`LST ${transactionID} RL ${IDplusone} 1 1 default@butterfly.net default\r\n`);
+    socket.write(`LST ${transactionID} RL ${IDplusone} 1 1 default@butterfly.net default 0\r\n`);
 }
