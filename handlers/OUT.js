@@ -1,6 +1,6 @@
 const chalk = require('chalk');
 
-module.exports = (socket, args) => {
-    // console.log(`${chalk.red.bold('[VER]')} ${socket.remoteAddress} has sent supported versions, these are: ${supported.join(', ')}.`);
+module.exports = (socket) => {
     socket.write(`OUT\r\n`);
+    socket.destroy();
 }

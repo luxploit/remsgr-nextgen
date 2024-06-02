@@ -9,6 +9,10 @@ const net = require('net');
 const netPORT = 1863;
 
 const chalk = require('chalk');
+const dotenv = require('dotenv');
+dotenv.config();
+
+require('./db/connect');
 
 // Express
 const app = express();
@@ -324,7 +328,7 @@ const httpsServer = https.createServer({
 }, app);
 
 httpsServer.listen(443, () => {
-    console.log(`${chalk.magenta.bold('[HTTPS SERVER]')} Listening on port 443`);
+    console.log(`${chalk.magenta.bold('[HTTPS SERVER]')} Listening on port ${chalk.green.bold("443")}`);
 });
 
 const httpServer = http.createServer((req, res) => {
@@ -333,7 +337,7 @@ const httpServer = http.createServer((req, res) => {
 });
 
 httpServer.listen(80, () => {
-    console.log(`${chalk.magenta.bold('[HTTP SERVER]')} Listening on port 80`);
+    console.log(`${chalk.magenta.bold('[HTTP SERVER]')} Listening on port ${chalk.green.bold("80")}`);
 });
 
 
@@ -421,7 +425,7 @@ const server = net.createServer((socket) => {
                     default:
                         console.log(`${chalk.red.bold('[MSN SOCKET]')} Unknown command: ${commandParts[0]}`);
 					//	console.log(command);
-                    //    socket.destroy();
+                    //  socket.destroy();
                 }
             }
             parsedCommands = [];
@@ -438,6 +442,6 @@ const server = net.createServer((socket) => {
 });
 
 server.listen(netPORT, () => {
-    console.log(`${chalk.magenta.bold('[MSN SOCKET]')} Listening on port ${netPORT}`);
+    console.log(`${chalk.magenta.bold('[MSN SOCKET]')} Listening on port ${chalk.green.bold(netPORT)}`);
 	console.log('-----------------------------------------');
 });
