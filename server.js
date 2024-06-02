@@ -13,6 +13,7 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 require('./db/connect');
+const { sockets } = require('./utils/socket.util');
 
 // Express
 const app = express();
@@ -357,6 +358,7 @@ const handleOUT = require('./handlers/OUT');
 
 const server = net.createServer((socket) => {
     console.log(`${chalk.magenta.bold('[MSN SOCKET]')} New connection: ${socket.remoteAddress}:${socket.remotePort}`);
+	sockets.push(socket);
 
 	let buffer = '';
 
@@ -394,39 +396,17 @@ const server = net.createServer((socket) => {
 				// console.log(`${chalk.red.bold('[MSN SOCKET]')} Received command: ${command}`);
                 const commandParts = command.toString().trim().split(' ');
 
-                switch (commandParts[0]) {
-                    case 'VER':
-                        handleVER(socket, commandParts.slice(1), command);
-                        break;
-                    case 'CVR':
-                        handleCVR(socket, commandParts.slice(1), command);
-                        break;
-                    case 'USR':
-                        handleUSR(socket, commandParts.slice(1), command);
-                        break;
-					case 'PNG':
-						handlePNG(socket);
-						break;
-					case 'ADL':
-						handleADL(socket, commandParts.slice(1), command);
-						break;
-					case 'INF':
-						handleINF(socket, commandParts.slice(1), command);
-						break;
-					case 'SYN':
-						handleSYN(socket, commandParts.slice(1), command);
-						break;
-					case 'CHG':
-						handleCHG(socket, commandParts.slice(1), command);
-						break;
-					case 'OUT':
-						handleOUT(socket);
-						break;
-                    default:
-                        console.log(`${chalk.red.bold('[MSN SOCKET]')} Unknown command: ${commandParts[0]}`);
-					//	console.log(command);
-                    //  socket.destroy();
-                }
+				const commandName = commandParts[0];
+				try {
+					const handler = require(`./handlers/${commandName}.js`);
+					if (handler) {
+						handler(socket, commandParts.slice(1), command);
+					} else {
+						console.log(`${chalk.red.bold('[MSN SOCKET]')} No handler found for command: ${commandName}`);
+					}
+				} catch (e) {
+					console.log(`${chalk.red.bold('[MSN SOCKET]')} No handler found for command: ${commandName}`);
+				}
             }
             parsedCommands = [];
         }
