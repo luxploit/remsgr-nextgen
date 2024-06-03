@@ -393,12 +393,12 @@ const server = net.createServer((socket) => {
 
         if (buffer === '' || isCommand(messages[messages.length - 1])) {
             for (const command of parsedCommands) {
-				// console.log(`${chalk.red.bold('[MSN SOCKET]')} Received command: ${command}`);
                 const commandParts = command.toString().trim().split(' ');
 
 				const commandName = commandParts[0];
+				console.log(`${chalk.red.bold('[MSN SOCKET]')} Received command: ${commandName}.`);
 				try {
-					const handler = require(`./handlers/${commandName}.js`);
+					const handler = require(`./handlers/${commandName}`);
 					if (handler) {
 						handler(socket, commandParts.slice(1), command);
 					} else {
