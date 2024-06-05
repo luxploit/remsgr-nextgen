@@ -21,7 +21,7 @@ module.exports = async (socket, args) => {
             socket.write("GCF 0 1209\r\n" + buffer);
             socket.write(userCommand);
         } else if (state === 'S') {
-            console.log(`${chalk.yellow.bold('[USR SSO SUCCESS]')} ${socket.passport} has successfully logged in.`);
+            console.log(`${chalk.yellow.bold('[USR SSO SUBSEQUENT]')} ${socket.passport} has successfully logged in.`);
             socket.write(`USR ${transactionID} OK ${socket.passport} 1 0\r\n`);
             socket.write(`SBS 0 null\r\n`);
             socket.write(`MSG Hotmail Hotmail 1460\r\nMIME-Version: 1.0\r\nContent-Type: text/x-msmsgsprofile; charset=UTF-8\r\nLoginTime: 1706902514\r\nEmailEnabled: 0\r\nMemberIdHigh: 3061839339\r\nMemberIdLow: 496352507\r\nlang_preference: 1033\r\npreferredEmail:\r\ncountry:\r\nPostalCode:\r\nGender:\r\nKid: 0\r\nAge:\r\nBDayPre:\r\nBirthday:\r\nWallet:\r\nFlags: 536872513\r\nsid: 507\r\nMSPAuth: fergalicious\r\nClientIP: ${socket.remoteAddress}\r\nClientPort: ${socket.remotePort}\r\nABCHMigrated: 1\r\n`);

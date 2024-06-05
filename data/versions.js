@@ -3,7 +3,8 @@ const supportedVersions = [
     'MSNP18',
     'MSNP6',
     'MSNP5',
-    'MSNP4'
+    'MSNP4',
+    'MSNP2'
 ];
 
 module.exports = supportedVersions;

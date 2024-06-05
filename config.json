@@ -1,0 +1,10 @@
+{
+    "server": {
+        "host": "192.168.1.62",
+        "ip": "192.168.1.62",
+        "net_port": 1863,
+        "switchboard_port": 1864,
+        "http_port": 80,
+        "https_port": 443
+    }
+}

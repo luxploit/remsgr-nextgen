@@ -7,13 +7,14 @@ const http = require('http');
 
 const net = require('net');
 const netPORT = 1863;
+const switchboardPORT = 1864;
 
 const chalk = require('chalk');
 const dotenv = require('dotenv');
 dotenv.config();
 
 require('./db/connect');
-const { sockets } = require('./utils/socket.util');
+const { sockets, switchboard_sockets } = require('./utils/socket.util');
 
 // Express
 const app = express();
@@ -346,16 +347,6 @@ httpServer.listen(80, () => {
 
 const isCommand = (line) => line.match(/^[A-Z]{3}/);
 
-const handleVER = require('./handlers/VER');
-const handleCVR = require('./handlers/CVR');
-const handleUSR = require('./handlers/USR');
-const handlePNG = require('./handlers/PNG');
-const handleADL = require('./handlers/ADL');
-const handleINF = require('./handlers/INF');
-const handleSYN = require('./handlers/SYN');
-const handleCHG = require('./handlers/CHG');
-const handleOUT = require('./handlers/OUT');
-
 const server = net.createServer((socket) => {
     console.log(`${chalk.magenta.bold('[MSN SOCKET]')} New connection: ${socket.remoteAddress}:${socket.remotePort}`);
 	sockets.push(socket);
@@ -382,7 +373,9 @@ const server = net.createServer((socket) => {
                 if (tempBuffer) {
                     tempBuffer += `\r\n${message}`;
                 } else {
-                    console.log(`${chalk.red.bold('[MSN SOCKET]')} Received non-command message without a preceding command: ${message}`);
+					if (process.env.DEBUG === 'true') {
+                    	console.log(`${chalk.red.bold('[MSN SOCKET]')} Received non-command message without a preceding command: ${message}`);
+					}
                 }
             }
         }
@@ -396,17 +389,24 @@ const server = net.createServer((socket) => {
                 const commandParts = command.toString().trim().split(' ');
 
 				const commandName = commandParts[0];
-				console.log(`${chalk.red.bold('[MSN SOCKET]')} Received command: ${commandName}.`);
-				try {
-					const handler = require(`./handlers/${commandName}`);
-					if (handler) {
+				if (process.env.DEBUG === 'true') {
+					console.log(`${chalk.red.bold('[MSN SOCKET]')} Received command: ${commandName}.`);
+				}
+
+				const handlerPath = `./handlers/${commandName}.js`;
+				
+				if (fs.existsSync(handlerPath)) {
+					const handler = require(handlerPath);
+					try {
 						handler(socket, commandParts.slice(1), command);
-					} else {
-						console.log(`${chalk.red.bold('[MSN SOCKET]')} No handler found for command: ${commandName}`);
+					} catch (err) {
+						console.log(command);
+						console.error(err);
 					}
-				} catch (e) {
+				} else {
 					console.log(`${chalk.red.bold('[MSN SOCKET]')} No handler found for command: ${commandName}`);
 				}
+				
             }
             parsedCommands = [];
         }
@@ -425,7 +425,89 @@ const server = net.createServer((socket) => {
     });
 });
 
+const switchboard = net.createServer((socket) => {
+    console.log(`${chalk.magenta.bold('[MSN SWITCHBOARD]')} New connection: ${socket.remoteAddress}:${socket.remotePort}`);
+	switchboard_sockets.push(socket);
+
+	let buffer = '';
+
+    socket.on('data', (data) => {
+        buffer += data.toString();
+
+        const messages = buffer.trim().split('\r\n');
+        buffer = '';
+
+        let parsedCommands = [];
+        let tempBuffer = '';
+
+        for (const message of messages) {
+            if (isCommand(message)) {
+                if (tempBuffer) {
+                    parsedCommands.push(tempBuffer);
+                    tempBuffer = '';
+                }
+                tempBuffer = message;
+            } else {
+                if (tempBuffer) {
+                    tempBuffer += `\r\n${message}`;
+                } else {
+					if (process.env.DEBUG === 'true') {
+                    	console.log(`${chalk.red.bold('[MSN SWITCHBOARD]')} Received non-command message without a preceding command: ${message}`);
+					}
+                }
+            }
+        }
+
+        if (tempBuffer) {
+            parsedCommands.push(tempBuffer);
+        }
+
+        if (buffer === '' || isCommand(messages[messages.length - 1])) {
+            for (const command of parsedCommands) {
+                const commandParts = command.toString().trim().split(' ');
+				if (process.env.DEBUG === 'true') {
+					console.log(`${chalk.red.bold('[MSN SWITCHBOARD]')} Received command: ${command}`);
+				}
+
+				const commandName = commandParts[0];
+
+				const handlerPath = `./handlers/switchboard/${commandName}.js`;
+				
+				if (fs.existsSync(handlerPath)) {
+					const handler = require(handlerPath);
+					try {
+						handler(socket, commandParts.slice(1), command);
+					} catch (err) {
+						console.log(command);
+						console.error(err);
+					}
+				} else {
+					console.log(`${chalk.red.bold('[MSN SWITCHBOARD]')} No handler found for command: ${commandName}`);
+				}
+				
+            }
+            parsedCommands = [];
+        }
+    });
+
+    socket.on('close', () => {
+		const index = switchboard_sockets.indexOf(socket);
+		if (index > -1) {
+			switchboard_sockets.splice(index, 1);
+		}
+        console.log(`${chalk.magenta.bold('[MSN SWITCHBOARD]')} Connection closed: ${socket.remoteAddress}:${socket.remotePort}`);
+    });
+
+    socket.on('error', (err) => {
+        console.error(err);
+    });
+});
+
 server.listen(netPORT, () => {
     console.log(`${chalk.magenta.bold('[MSN SOCKET]')} Listening on port ${chalk.green.bold(netPORT)}`);
+});
+
+switchboard.listen(switchboardPORT, () => {
+    console.log(`${chalk.magenta.bold('[MSN SWITCHBOARD]')} Listening on port ${chalk.green.bold(switchboardPORT)}`);
 	console.log('-----------------------------------------');
 });
