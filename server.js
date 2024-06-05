@@ -322,6 +322,27 @@ app.post("/RST2.srf", async (req, res) => {
 	}
 });
 
+if (process.env.DEBUG === 'true') {
+	// THIS SHOULD NOT BE MADE PUBLIC IN A PRODUCTION ENVIRONMENT, IT IS FOR DEBUGGING PURPOSES ONLY AND CAN CONTAINS SENSITIVE INFORMATION ABOUT USERS
+	app.get("/sessions", (req, res) => {
+		res.json({ sockets, switchboard_sockets });
+	});
+
+	// send a message to all connected sockets via a query parameter
+	app.get("/send", (req, res) => {
+		const message = req.query.message;
+		if (!message) {
+			return res.status(400).json({ error: "No message provided" });
+		}
+
+		for (const socket of sockets) {
+			socket.write("NOT " + message);
+		}
+
+		res.json({ success: true });
+	});
+}
+
 app.use("/abservice", require("./routes/abservice"));
 
 const httpsServer = https.createServer({
