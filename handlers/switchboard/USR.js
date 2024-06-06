@@ -1,9 +1,23 @@
 const chalk = require('chalk');
-const config = require("../../config")
+const { verifyJWT } = require("../../utils/auth.util")
 
-module.exports = (socket, args) => {
+module.exports = async (socket, args) => {
     const transactionID = args[0];
     const email = args[1];
+    const token = args[2];
 
-    socket.write(`USR ${transactionID} OK ${email} ${email}\r\n`);
+    const verified = await verifyJWT(token);
+
+    if (!verified) {
+        socket.write(`911 4\r\n`);
+        return;
+    }
+
+    if (email !== verified.email) {
+        socket.write(`911 4\r\n`);
+        return;
+    }
+
+    socket.token = token;
+    socket.write(`USR ${transactionID} OK ${verified.email} ${verified.email}\r\n`);
 }

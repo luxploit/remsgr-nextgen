@@ -1,6 +1,7 @@
 const chalk = require('chalk');
 const connection = require('../db/connect').promise();
-const { sockets, getSocketByPassport, getMultipleSocketsByPassport } = require('../utils/socket.util');
+const jwt = require('jsonwebtoken');
+const { sockets, getSocketByPassport, getMultipleSocketsByPassport } = require('./socket.util');
 
 class LoginMethods {
 
@@ -35,7 +36,7 @@ class LoginMethods {
         }
 
         else if (state === 'S') {
-            const [rows] = await connection.query('SELECT legacy_pass FROM users WHERE email = ?', [passport]);
+            const [rows] = await connection.query('SELECT id, uuid, email, friendly_name, legacy_pass FROM users WHERE email = ?', [passport]);
 
             if (rows.length === 0) {
                 console.log(`${chalk.yellow.bold('[USR MD5 SUBSEQUENT]')} ${passport} does not exist in the database.`);
@@ -45,6 +46,7 @@ class LoginMethods {
             }
 
             const legacyPass = rows[0].legacy_pass;
+            const friendly_name = encodeURIComponent(rows[0].friendly_name);
 
             if (!legacyPass) {
                 console.log(`${chalk.yellow.bold('[USR MD5 SUBSEQUENT]')} ${passport} has no legacy password.`);
@@ -73,10 +75,13 @@ class LoginMethods {
                 }
             });
 
+            const token = jwt.sign({ id: rows[0].id, uuid: rows[0].uuid, email: rows[0].email }, process.env.JWT_SECRET, { expiresIn: '1d' });
+            socket.token = token;
+
             await connection.query('UPDATE users SET last_login = NOW() WHERE email = ?', [passport]);
 
             console.log(`${chalk.yellow.bold('[USR MD5 SUBSEQUENT]')} ${passport} has successfully logged in.`);
-            socket.write(`USR ${transactionID} OK ${passport} ${passport} 1\r\n`);
+            socket.write(`USR ${transactionID} OK ${passport} ${friendly_name} 1\r\n`);
         }
     }
 
@@ -97,6 +102,24 @@ class LoginMethods {
     }
 
     // SSO AUTHENTICATION - NOT IMPLEMENTED YET
+
+    // VERIFICATIONS
+
+    async verifyJWT(token) {
+        if (!token) {
+            console.log(`${chalk.red.bold('[JWT DECODE]')} No token provided.`);
+            return false;
+        }
+
+        try {
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            console.log(`${chalk.red.bold('[JWT DECODE]')} Token decoded for user ID ${decoded.id}.`);
+            return decoded;
+        } catch (err) {
+            console.log(`${chalk.red.bold('[JWT DECODE]')} Token decoding failed.`);
+            return false;
+        }
+    }
 
 }
 

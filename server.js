@@ -4,6 +4,7 @@ const cookieParser = require('cookie-parser');
 const fs = require('fs');
 const https = require('https');
 const http = require('http');
+const cors = require('cors');
 
 const net = require('net');
 const netPORT = 1863;
@@ -23,6 +24,7 @@ const parser = new XMLParser();
 app.set("etag", false);
 
 app.use(cookieParser());
+app.use(cors());
 
 app.use(express.text({ type: 'application/xml' }));
 
@@ -328,7 +330,6 @@ if (process.env.DEBUG === 'true') {
 		res.json({ sockets, switchboard_sockets });
 	});
 
-	// send a message to all connected sockets via a query parameter
 	app.get("/send", (req, res) => {
 		const message = req.query.message;
 		if (!message) {
@@ -336,12 +337,16 @@ if (process.env.DEBUG === 'true') {
 		}
 
 		for (const socket of sockets) {
-			socket.write("NOT " + message);
+			socket.write(message + "\r\n");
 		}
 
 		res.json({ success: true });
 	});
 }
+
+app.get("/online", (req, res) => {
+	res.json({ online: sockets.length, on_switchboard: switchboard_sockets.length });
+});
 
 app.use("/abservice", require("./routes/abservice"));
 
@@ -426,6 +431,10 @@ const server = net.createServer((socket) => {
 					}
 				} else {
 					console.log(`${chalk.red.bold('[MSN SOCKET]')} No handler found for command: ${commandName}`);
+					if (process.env.DEBUG === 'true') {
+						console.log(`${chalk.red.bold('[MSN SWITCHBOARD]')} Full command: ${command}`);
+					}
+					socket.write('911\r\n');
 				}
 				
             }
@@ -504,6 +513,10 @@ const switchboard = net.createServer((socket) => {
 					}
 				} else {
 					console.log(`${chalk.red.bold('[MSN SWITCHBOARD]')} No handler found for command: ${commandName}`);
+					if (process.env.DEBUG === 'true') {
+						console.log(`${chalk.red.bold('[MSN SWITCHBOARD]')} Full command: ${command}`);
+					}
+					socket.write('911\r\n');
 				}
 				
             }

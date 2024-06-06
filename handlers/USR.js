@@ -1,6 +1,6 @@
 const crypto = require('crypto');
 const chalk = require('chalk');
-const login = require('../utils/login.util');
+const login = require('../utils/auth.util');
 
 module.exports = async (socket, args) => {
     const transactionID = args[0];
