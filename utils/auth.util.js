@@ -82,6 +82,10 @@ class LoginMethods {
 
             console.log(`${chalk.yellow.bold('[USR MD5 SUBSEQUENT]')} ${passport} has successfully logged in.`);
             socket.write(`USR ${transactionID} OK ${passport} ${friendly_name} 1\r\n`);
+
+            if (socket.version === 7) {
+                
+            }
         }
     }
 

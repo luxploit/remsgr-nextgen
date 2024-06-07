@@ -12,7 +12,6 @@ module.exports = async (socket, args) => {
     socket.write(`CHG ${transactionID} ${status}\r\n`);
 
     if (socket.initial_status === false) {
-        console.log(`${chalk.blue.bold('[CHG]')} ${socket.passport} ${socket.status_amount}`);
         socket.write(`ILN ${transactionID} NLN default@butterfly.net default\r\n`);
         socket.initial_status = true;
         return;
