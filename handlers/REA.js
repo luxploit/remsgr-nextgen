@@ -13,6 +13,13 @@ module.exports = async (socket, args) => {
     if (!decoded) {
         console.log(`${chalk.red.bold('[REA]')} ${socket.remoteAddress} has an invalid token.`);
         socket.write(`OUT\r\n`);
+        socket.destroy();
+        return;
+    }
+
+    if (email !== decoded.email) {
+        console.log(`${chalk.red.bold('[REA]')} ${socket.remoteAddress} has attempted to change a user that is not theirs.`);
+        socket.write(`REA ${transactionID} 0\r\n`);
         return;
     }
 
