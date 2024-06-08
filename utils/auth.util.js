@@ -1,7 +1,15 @@
 const chalk = require('chalk');
 const connection = require('../db/connect').promise();
 const jwt = require('jsonwebtoken');
+const { parse: uuidParse } = require('uuid');
 const { sockets, getSocketByPassport, getMultipleSocketsByPassport } = require('./socket.util');
+
+function uuidToHighLow(uuid) {
+    const parsedUuid = uuidParse(uuid);
+    const high = (parsedUuid[0] << 24) | (parsedUuid[1] << 16) | (parsedUuid[2] << 8) | parsedUuid[3];
+    const low = (parsedUuid[10] << 24) | (parsedUuid[11] << 16) | (parsedUuid[12] << 8) | parsedUuid[13];
+    return [high >>> 0, low >>> 0]; // >>> 0 to convert to unsigned 32-bit integer
+}
 
 class LoginMethods {
 
@@ -36,7 +44,7 @@ class LoginMethods {
         }
 
         else if (state === 'S') {
-            const [rows] = await connection.query('SELECT id, uuid, email, friendly_name, legacy_pass FROM users WHERE email = ?', [passport]);
+            const [rows] = await connection.query('SELECT * FROM users WHERE email = ?', [passport]);
 
             if (rows.length === 0) {
                 console.log(`${chalk.yellow.bold('[USR MD5 SUBSEQUENT]')} ${passport} does not exist in the database.`);
@@ -83,8 +91,13 @@ class LoginMethods {
             console.log(`${chalk.yellow.bold('[USR MD5 SUBSEQUENT]')} ${passport} has successfully logged in.`);
             socket.write(`USR ${transactionID} OK ${passport} ${friendly_name} 1\r\n`);
 
-            if (socket.version === 7) {
-                
+            if (socket.version >= 7) {
+                const timestamp = Math.floor(Date.now() / 1000);
+                const [high, low] = uuidToHighLow(rows[0].uuid);
+                const ip = socket.remoteAddress.replace('::ffff:', '');
+                const port = socket.remotePort;
+
+                socket.write(`MSG Hotmail Hotmail 589\r\nMIME-Version: 1.0\r\nContent-Type: text/x-msmsgsprofile; charset=UTF-8\r\nLoginTime: ${timestamp}\r\nEmailEnabled: 0\r\nMemberIdHigh: ${high}\r\nMemberIdLow: ${low}\r\nlang_preference: 0\r\npreferredEmail: \r\ncountry: \r\nPostalCode: \r\nGender: \r\nKid: 0\r\nAge: \r\nBDayPre: \r\nBirthday: \r\nWallet: \r\nFlags: 536872513\r\nsid: 507\r\nMSPAuth: ${token}\r\nClientIP: ${ip}\r\nClientPort: ${port}\r\nABCHMigrated: 1\r\nMPOPEnabled: 0\r\n\r\n`);
             }
         }
     }

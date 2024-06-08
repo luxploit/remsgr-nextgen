@@ -18,7 +18,11 @@ module.exports = async (socket, args) => {
         return;
     }
 
-    // if list isn't AL, BL, 
+    if (email === decoded.email) {
+        console.log(`${chalk.red.bold('[ADD]')} ${socket.passport} has attempted to add themselves to a list. (${email})`);
+        socket.write(`201\r\n`);
+        return;
+    }
 
     if (!validator.validate(email)) {
         console.log(`${chalk.red.bold('[ADD]')} ${socket.passport} has attempted to add a user with an invalid email address. (${email})`);
