@@ -432,9 +432,9 @@ const server = net.createServer((socket) => {
 				} else {
 					console.log(`${chalk.red.bold('[MSN SOCKET]')} No handler found for command: ${commandName}`);
 					if (process.env.DEBUG === 'true') {
-						console.log(`${chalk.red.bold('[MSN SWITCHBOARD]')} Full command: ${command}`);
+						console.log(`${chalk.red.bold('[MSN SOCKET]')} Full command: ${command}`);
 					}
-					socket.write('911\r\n');
+					socket.write('IDK\r\n');
 				}
 				
             }
