@@ -434,7 +434,7 @@ const server = net.createServer((socket) => {
 					if (process.env.DEBUG === 'true') {
 						console.log(`${chalk.red.bold('[MSN SOCKET]')} Full command: ${command}`);
 					}
-					socket.write('IDK\r\n');
+					socket.write(`200 ${commandParts[1]}\r\n`);
 				}
 				
             }
@@ -516,7 +516,7 @@ const switchboard = net.createServer((socket) => {
 					if (process.env.DEBUG === 'true') {
 						console.log(`${chalk.red.bold('[MSN SWITCHBOARD]')} Full command: ${command}`);
 					}
-					socket.write('911\r\n');
+					socket.write(`200 ${commandParts[1]}\r\n`);
 				}
 				
             }

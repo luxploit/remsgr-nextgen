@@ -9,12 +9,12 @@ module.exports = async (socket, args) => {
     const verified = await verifyJWT(token);
 
     if (!verified) {
-        socket.write(`911 4\r\n`);
+        socket.write(`911 ${transactionID}\r\n`);
         return;
     }
 
     if (email !== verified.email) {
-        socket.write(`911 4\r\n`);
+        socket.write(`911 ${transactionID}\r\n`);
         return;
     }
 

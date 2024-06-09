@@ -16,7 +16,7 @@ class MD5Auth {
 
             if (rows.length === 0) {
                 console.log(`${chalk.yellow.bold('[USR MD5 INITIAL]')} ${passport} does not exist in the database.`);
-                socket.write(`911 4\r\n`);
+                socket.write(`911 ${transactionID}\r\n`);
                 socket.destroy();
                 return;
             }
@@ -25,7 +25,7 @@ class MD5Auth {
 
             if (!legacyPass) {
                 console.log(`${chalk.yellow.bold('[USR MD5 INITIAL]')} ${passport} has no legacy password.`);
-                socket.write(`911 4\r\n`);
+                socket.write(`911 ${transactionID}\r\n`);
                 socket.destroy();
                 return;
             }
@@ -39,7 +39,7 @@ class MD5Auth {
 
             if (rows.length === 0) {
                 console.log(`${chalk.yellow.bold('[USR MD5 SUBSEQUENT]')} ${passport} does not exist in the database.`);
-                socket.write(`911 4\r\n`);
+                socket.write(`911 ${transactionID}\r\n`);
                 socket.destroy();
                 return;
             }
@@ -49,7 +49,7 @@ class MD5Auth {
 
             if (!legacyPass) {
                 console.log(`${chalk.yellow.bold('[USR MD5 SUBSEQUENT]')} ${passport} has no legacy password.`);
-                socket.write(`911 4\r\n`);
+                socket.write(`911 ${transactionID}\r\n`);
                 socket.destroy();
                 return;
             }
@@ -58,7 +58,7 @@ class MD5Auth {
 
             if (passhash !== md5Password) {
                 console.log(`${chalk.yellow.bold('[USR MD5 SUBSEQUENT]')} ${passport} has entered an incorrect password.`);
-                socket.write(`911 4\r\n`);
+                socket.write(`911 ${transactionID}\r\n`);
                 socket.destroy();
                 return;
             }

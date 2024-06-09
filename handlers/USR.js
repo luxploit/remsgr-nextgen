@@ -42,19 +42,7 @@ module.exports = async (socket, args) => {
         }
         
         else if (state === 'S') {
-            if (socket.version <= 7) {
-                MD5Auth.login(socket, socket.version, state, transactionID, socket.passport, args[3]);
-            }
-            
-            //var ip = socket.remoteAddress;
-            //if (ip.substr(0, 7) == "::ffff:") {
-            //    ip = ip.substr(7)
-            //}
-
-            //var timestamp = Math.floor(Date.now() / 1000);
-
-            // socket.write(`MSG Hotmail Hotmail 1460\r\nMIME-Version: 1.0\r\nContent-Type: text/x-msmsgsprofile; charset=UTF-8\r\nLoginTime: ${timestamp}\r\nEmailEnabled: 0\r\nMemberIdHigh: 3712500060\r\nMemberIdLow: 984432394\r\nlang_preference: 1033\r\npreferredEmail:\r\ncountry:\r\nPostalCode:\r\nGender:\r\nKid: 0\r\nAge:\r\nBDayPre:\r\nBirthday:\r\nWallet:\r\nFlags: 536872513\r\nsid: 507\r\nMSPAuth: fergalicious\r\nClientIP: ${ip}\r\nClientPort: ${socket.remotePort}\r\nABCHMigrated: 1\r\n`);
-            // socket.write(`MPOPEnabled: 0\r\nBetaInvites: 1\r\n\r\n`);
+            MD5Auth.login(socket, socket.version, state, transactionID, socket.passport, args[3]);
         }
     }
 

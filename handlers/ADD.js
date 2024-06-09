@@ -20,7 +20,7 @@ module.exports = async (socket, args) => {
 
     if (!validator.validate(email)) {
         console.log(`${chalk.red.bold('[ADD]')} ${socket.passport} has attempted to add a user with an invalid email address. (${email})`);
-        socket.write(`201\r\n`);
+        socket.write(`201 ${transactionID}\r\n`);
         return;
     }
 
@@ -28,7 +28,7 @@ module.exports = async (socket, args) => {
 
     if (rows.length === 0) {
         console.log(`${chalk.red.bold('[ADD]')} ${socket.passport} has attempted to add a user that does not exist. (${email})`);
-        socket.write(`205\r\n`);
+        socket.write(`205 ${transactionID}\r\n`);
         return;
     }
 
@@ -36,7 +36,7 @@ module.exports = async (socket, args) => {
 
     if (contacts.length >= 300) {
         console.log(`${chalk.red.bold('[ADD]')} ${socket.passport} has attempted to add a user to a list that is full. (${email})`);
-        socket.write(`210\r\n`);
+        socket.write(`210 ${transactionID}\r\n`);
         return;
     }
 
@@ -44,7 +44,7 @@ module.exports = async (socket, args) => {
 
     if (existing.length > 0) {
         console.log(`${chalk.red.bold('[ADD]')} ${socket.passport} has attempted to add a user that is already in their ${list} list. (${email})`);
-        socket.write(`ADD ${transactionID} 215\r\n`);
+        socket.write(`215 ${transactionID}\r\n`);
         return;
     }
 
@@ -53,7 +53,7 @@ module.exports = async (socket, args) => {
 
     if (blocked.length > 0 && allowed.length > 0) {
         console.log(`${chalk.red.bold('[ADD]')} ${socket.passport} has attempted to add a user that is blocked. (${email})`);
-        socket.write(`215\r\n`);
+        socket.write(`215 ${transactionID}\r\n`);
         return;
     }
 
