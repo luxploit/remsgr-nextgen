@@ -1,6 +1,6 @@
 const chalk = require('chalk');
 const config = require("../config")
-const auth = require("../utils/auth.util");
+const { verifyJWT } = require("../utils/auth.util");
 const connection = require('../db/connect').promise();
 const validator = require('email-validator');
 
@@ -9,18 +9,12 @@ module.exports = async (socket, args) => {
     const list = args[1];
     const email = args[2];
 
-    const decoded = await auth.verifyJWT(socket.token);
+    const decoded = await verifyJWT(socket.token);
 
     if (!decoded) {
         console.log(`${chalk.red.bold('[ADD]')} ${socket.remoteAddress} has an invalid token.`);
         socket.write(`OUT\r\n`);
         socket.destroy();
-        return;
-    }
-
-    if (email === decoded.email) {
-        console.log(`${chalk.red.bold('[ADD]')} ${socket.passport} has attempted to add themselves to a list. (${email})`);
-        socket.write(`201\r\n`);
         return;
     }
 
@@ -49,8 +43,8 @@ module.exports = async (socket, args) => {
     const [existing] = await connection.query('SELECT * FROM contacts WHERE userID = ? AND contactID = ?', [decoded.id, rows[0].id]);
 
     if (existing.length > 0) {
-        console.log(`${chalk.red.bold('[ADD]')} ${socket.passport} has attempted to add a user that is already in their list. (${email})`);
-        socket.write(`215\r\n`);
+        console.log(`${chalk.red.bold('[ADD]')} ${socket.passport} has attempted to add a user that is already in their ${list} list. (${email})`);
+        socket.write(`ADD ${transactionID} 215\r\n`);
         return;
     }
 

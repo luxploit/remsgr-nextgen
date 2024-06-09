@@ -1,6 +1,6 @@
 const chalk = require('chalk');
 const config = require("../config")
-const auth = require("../utils/auth.util");
+const { verifyJWT } = require("../utils/auth.util");
 const connection = require('../db/connect').promise();
 
 module.exports = async (socket, args) => {
@@ -8,7 +8,7 @@ module.exports = async (socket, args) => {
     const email = args[1];
     const friendly_name = args[2];
 
-    const decoded = await auth.verifyJWT(socket.token);
+    const decoded = await verifyJWT(socket.token);
 
     if (!decoded) {
         console.log(`${chalk.red.bold('[REA]')} ${socket.remoteAddress} has an invalid token.`);

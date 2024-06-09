@@ -1,6 +1,6 @@
 const crypto = require('crypto');
 const chalk = require('chalk');
-const login = require('../utils/auth.util');
+const { MD5Auth } = require('../utils/auth.util');
 
 module.exports = async (socket, args) => {
     const transactionID = args[0];
@@ -38,12 +38,12 @@ module.exports = async (socket, args) => {
     else if (scheme === 'MD5') {
         if (state === 'I') {
             socket.passport = args[3];
-            login.md5login(socket, socket.version, state, transactionID, socket.passport);
+            MD5Auth.login(socket, socket.version, state, transactionID, socket.passport);
         }
         
         else if (state === 'S') {
             if (socket.version <= 7) {
-                login.md5login(socket, socket.version, state, transactionID, socket.passport, args[3]);
+                MD5Auth.login(socket, socket.version, state, transactionID, socket.passport, args[3]);
             }
             
             //var ip = socket.remoteAddress;

@@ -1,5 +1,5 @@
 const chalk = require('chalk');
-const { verifyJWT } = require("../../utils/auth.util")
+const { verifyJWT } = require("../../utils/auth.util");
 
 module.exports = async (socket, args) => {
     const transactionID = args[0];
