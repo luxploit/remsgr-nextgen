@@ -124,7 +124,6 @@ async function verifyJWT(token) {
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        console.log(`${chalk.red.bold('[JWT DECODE]')} Token decoded for user ID ${decoded.id}.`);
         return decoded;
     } catch (err) {
         console.log(`${chalk.red.bold('[JWT DECODE]')} Token decoding failed.`);
