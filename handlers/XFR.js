@@ -1,10 +1,20 @@
 const chalk = require('chalk');
 const crypto = require('crypto');
 const config = require("../config")
+const { verifyJWT } = require("../utils/auth.util");
 
 module.exports = (socket, args) => {
     const transactionID = args[0];
     console.log(`${chalk.yellow.bold('[XFR]')} ${socket.remoteAddress} is trying to transfer to the switchboard.`);
+
+    const verified = verifyJWT(socket.token);
+
+    if (!verified) {
+        console.log(`${chalk.yellow.bold('[XFR]')} ${socket.remoteAddress} has an invalid token.`);
+        socket.write(`201 ${transactionID}\r\n`);
+        socket.destroy();
+        return;
+    }
 
     let sb_token = null;
 

@@ -12,7 +12,7 @@ module.exports = async (socket, args) => {
 
     if (!regularSocket) {
         console.log(`${chalk.yellow.bold('[SB: USR]')} ${socket.remoteAddress} has an invalid switchboard token.`);
-        socket.write(`201 ${transactionID}\r\n`);
+        socket.write(`911 ${transactionID}\r\n`);
         socket.destroy();
         return;
     }
@@ -20,6 +20,16 @@ module.exports = async (socket, args) => {
     socket.passport = regularSocket.passport;
     socket.version = regularSocket.version;
     socket.token = regularSocket.token;
+    socket.userID = regularSocket.userID;
+
+    const verified = verifyJWT(socket.token);
+
+    if (!verified) {
+        console.log(`${chalk.yellow.bold('[SB: USR]')} ${socket.remoteAddress} has an invalid token.`);
+        socket.write(`911 ${transactionID}\r\n`);
+        socket.destroy();
+        return;
+    }
 
     socket.write(`USR ${transactionID} OK ${socket.passport} ${socket.passport}\r\n`);
     console.log(`${chalk.yellow.bold('[SB: USR]')} ${socket.remoteAddress} has successfully logged in as ${socket.passport}.`);

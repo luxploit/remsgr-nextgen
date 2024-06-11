@@ -75,6 +75,7 @@ class MD5Auth {
 
             const token = jwt.sign({ id: rows[0].id, uuid: rows[0].uuid, email: rows[0].email }, process.env.JWT_SECRET, { expiresIn: '1d' });
             socket.token = token;
+            socket.userID = rows[0].id;
 
             await connection.query('UPDATE users SET last_login = NOW() WHERE email = ?', [passport]);
 

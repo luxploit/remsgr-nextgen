@@ -13,6 +13,10 @@ const getSocketByToken = (token) => {
     return sockets.find(s => s.token === token);
 }
 
+const getSocketByUserID = (userID) => {
+    return sockets.find(s => s.userID === userID);
+}
+
 const getSocketBySwitchboardToken = (sb_token) => {
     return sockets.find(s => s.sb_token === sb_token);
 }
@@ -21,4 +25,4 @@ const getSwitchboardSocketByPassport = (passport) => {
     return switchboard_sockets.find(s => s.passport === passport);
 }
 
-module.exports = { sockets, switchboard_sockets, getSocketByPassport, getMultipleSocketsByPassport, getSocketByToken, getSocketBySwitchboardToken, getSwitchboardSocketByPassport };
+module.exports = { sockets, switchboard_sockets, getSocketByPassport, getMultipleSocketsByPassport, getSocketByToken, getSocketByUserID, getSocketBySwitchboardToken, getSwitchboardSocketByPassport };
