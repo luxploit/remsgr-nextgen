@@ -23,7 +23,7 @@ module.exports = async (socket, args) => {
         return;
     }
 
-    if (decodeURIComponent(friendly_name).length > 387) {
+    if (decodeURIComponent(friendly_name).length > 129) {
         console.log(`${chalk.red.bold('[REA]')} ${socket.remoteAddress} has a friendly name that is too long.`);
         socket.write(`REA ${transactionID} 0\r\n`);
         return;
