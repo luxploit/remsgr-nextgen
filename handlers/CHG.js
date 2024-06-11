@@ -59,9 +59,22 @@ module.exports = async (socket, args) => {
 
     console.log(`${chalk.blue.bold('[CHG]')} ${socket.passport} changed their status to ${status}.`);
     socket.write(`CHG ${transactionID} ${status}\r\n`);
+    socket.status = status;
 
     if (socket.initial_status === false) {
-        socket.write(`ILN ${transactionID} NLN default@butterfly.net default\r\n`);
+        const [contacts] = await connection.query('SELECT * FROM contacts WHERE userID = ? AND list = ?', [socket.userID, 'FL']);
+
+        for (const contact of contacts) {
+            const contactSocket = getSocketByUserID(contact.contactID);
+
+            if (!contactSocket) {
+                continue;
+            }
+
+            const [contactUser] = await connection.query('SELECT * FROM users WHERE id = ?', [contact.contactID]);
+
+            socket.write(`ILN ${transactionID} ${contactSocket.status} ${contactUser[0].email} ${contactUser[0].friendly_name}\r\n`);
+        }
         socket.initial_status = true;
         return;
     }
