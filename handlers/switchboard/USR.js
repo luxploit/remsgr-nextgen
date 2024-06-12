@@ -1,6 +1,8 @@
 const chalk = require('chalk');
+const crypto = require('crypto');
 const { verifyJWT } = require("../../utils/auth.util");
 const { getSocketBySwitchboardToken } = require("../../utils/socket.util");
+const { switchboard_chats } = require("../../utils/sb.util");
 
 module.exports = async (socket, args) => {
     const transactionID = args[0];
@@ -21,6 +23,7 @@ module.exports = async (socket, args) => {
     socket.version = regularSocket.version;
     socket.token = regularSocket.token;
     socket.userID = regularSocket.userID;
+    socket.friendly_name = regularSocket.friendly_name;
 
     const verified = verifyJWT(socket.token);
 
@@ -31,6 +34,22 @@ module.exports = async (socket, args) => {
         return;
     }
 
+    let chatID = generateNumericID();
+
+    switchboard_chats.push({ chatID, participants: [socket.passport], pending: [] });
+
+    socket.chat = chatID;
+
+    console.log(switchboard_chats)
+
     socket.write(`USR ${transactionID} OK ${socket.passport} ${socket.passport}\r\n`);
     console.log(`${chalk.yellow.bold('[SB: USR]')} ${socket.remoteAddress} has successfully logged in as ${socket.passport}.`);
+}
+
+function generateNumericID() {
+    let id = '';
+    while (id.length < 10) {
+        id += crypto.randomInt(0, 10);
+    }
+    return id;
 }

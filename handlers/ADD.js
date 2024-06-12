@@ -58,7 +58,7 @@ module.exports = async (socket, args) => {
     }
 
     await connection.query('INSERT INTO contacts (userID, contactID, list) VALUES (?, ?, ?)', [decoded.id, rows[0].id, list]);
-    const friendly_name = encodeURIComponent(rows[0].friendly_name);
+    const friendly_name = rows[0].friendly_name;
 
     console.log(`${chalk.green.bold('[ADD]')} ${socket.passport} has added ${email} to their ${list} list.`);
     socket.write(`ADD ${transactionID} ${list} 1 ${email} ${friendly_name} 0\r\n`);

@@ -16,6 +16,7 @@ dotenv.config();
 
 require('./db/connect');
 const { sockets, switchboard_sockets } = require('./utils/socket.util');
+const { switchboard_chats } = require('./utils/sb.util');
 
 // Express
 const app = express();
@@ -330,6 +331,10 @@ if (process.env.DEBUG === 'true') {
 		res.json({ sockets, switchboard_sockets });
 	});
 
+	app.get("/chats", (req, res) => {
+		res.json(switchboard_chats);
+	});
+
 	app.get("/send", (req, res) => {
 		const message = req.query.message;
 		if (!message) {
@@ -371,7 +376,7 @@ httpServer.listen(80, () => {
 
 // Socket
 
-const isCommand = (line) => line.match(/^[A-Z]{3}/);
+const isCommand = (line) => line.match(/^[A-Z]{3} /);
 
 const server = net.createServer((socket) => {
     console.log(`${chalk.magenta.bold('[MSN SOCKET]')} New connection: ${socket.remoteAddress}:${socket.remotePort}`);

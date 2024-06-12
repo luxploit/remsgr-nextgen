@@ -45,7 +45,7 @@ class MD5Auth {
             }
 
             const legacyPass = rows[0].legacy_pass;
-            const friendly_name = encodeURIComponent(rows[0].friendly_name);
+            const friendly_name = rows[0].friendly_name;
 
             if (!legacyPass) {
                 console.log(`${chalk.yellow.bold('[USR MD5 SUBSEQUENT]')} ${passport} has no legacy password.`);
@@ -76,6 +76,7 @@ class MD5Auth {
             const token = jwt.sign({ id: rows[0].id, uuid: rows[0].uuid, email: rows[0].email }, process.env.JWT_SECRET, { expiresIn: '1d' });
             socket.token = token;
             socket.userID = rows[0].id;
+            socket.friendly_name = friendly_name;
 
             await connection.query('UPDATE users SET last_login = NOW() WHERE email = ?', [passport]);
 
