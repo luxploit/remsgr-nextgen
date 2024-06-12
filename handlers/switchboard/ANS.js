@@ -61,7 +61,7 @@ module.exports = async (socket, args) => {
         return;
     }
 
-    acceptCall(chatroom, email);
+    acceptCall(chatroom, email, socket);
     socket.chat = chatroom;
 
     let total = chat.participants.length;
@@ -69,17 +69,17 @@ module.exports = async (socket, args) => {
     for (let current = 1; current <= total; current++) {
         let participant = chat.participants[current - 1];
         let iro = `IRO ${transactionID} ${current} ${total}`;
-        const sbSocket = getSwitchboardSocketByPassport(participant);
+        const sbSocket = participant.socket;
     
         if (sbSocket) {
-            iro += ` ${participant} ${sbSocket.friendly_name}\r\n`;
+            iro += ` ${participant.email} ${sbSocket.friendly_name}\r\n`;
         } else {
-            iro += ` ${participant} ${participant}\r\n`;
+            iro += ` ${participant.email} ${participant}\r\n`;
         }
     
         socket.write(iro);
-
-        if (participant !== email) {
+        
+        if (participant.email !== email) {
             sbSocket.write(`JOI ${email} ${socket.friendly_name}\r\n`);
         }
     }

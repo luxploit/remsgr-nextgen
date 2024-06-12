@@ -36,7 +36,7 @@ module.exports = async (socket, args) => {
 
     let chatID = generateNumericID();
 
-    switchboard_chats.push({ chatID, participants: [socket.passport], pending: [] });
+    switchboard_chats.push({ chatID, participants: [{ email: socket.passport, socket }], pending: [] });
 
     socket.chat = chatID;
 

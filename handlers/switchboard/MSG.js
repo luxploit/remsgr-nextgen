@@ -1,17 +1,17 @@
 const chalk = require('chalk');
 const { verifyJWT } = require("../../utils/auth.util");
-const { getSocketByPassport, getSwitchboardSocketByPassport } = require("../../utils/socket.util");
-const { getAllParticipants } = require("../../utils/sb.util");
-const config = require("../../config");
-const crypto = require('crypto');
+const { getSwitchboardSocketByPassport } = require("../../utils/socket.util");
+const { getAllParticipantsSockets } = require("../../utils/sb.util");
+const MimeParser = require("../../utils/parsers/mime.util");
 // const connection = require('../../db/connect').promise();
 
 module.exports = async (socket, args, command) => {
-    const transactionID = args[0];
     const state = args[1];
     const messageTotal = args[2].split('\r\n')[0];
 
     const fullPayload = command.substring(command.indexOf('\r\n') + 2);
+
+    const parser = new MimeParser(fullPayload);
 
     const decoded = await verifyJWT(socket.token);
 
@@ -22,25 +22,19 @@ module.exports = async (socket, args, command) => {
         return;
     }
 
-    const participants = getAllParticipants(socket.chat, socket.passport);
+    const allSockets = getAllParticipantsSockets(socket.chat, decoded.email);
 
-    if (!participants) {
-        console.log(`${chalk.red.bold('[MSG]')} ${socket.passport} has attempted to send a message to a chat that does not exist. (${email})`);
-        socket.write(`911 ${transactionID}\r\n`);
+    if (parser.getHeader('TypingUser')) {
+        allSockets.forEach(s => {
+            s.write(`MSG ${socket.passport} ${socket.friendly_name} ${messageTotal}\r\nMIME-Version: ${parser.getHeader('MIME-Version')}\r\nContent-Type: text/x-msmsgscontrol\r\nTypingUser: ${parser.getHeader('TypingUser')}\r\n\r\n\r\n\r\n`);
+        });
         return;
     }
 
-    participants.forEach(participant => {
-        const userSocket = getSwitchboardSocketByPassport(participant);
-
-        if (userSocket) {
-            if (state === 'U') {
-                userSocket.write(`MSG ${socket.passport} ${socket.friendly_name} ${messageTotal}\r\n${fullPayload}\r\n\r\n`);
-            } else if (state === 'N') {
-                userSocket.write(`MSG ${socket.passport} ${socket.friendly_name} ${messageTotal}\r\n${fullPayload}`);
-            } else {
-                userSocket.write(`MSG ${socket.passport} ${socket.friendly_name} ${messageTotal}\r\n${fullPayload}`);
-            }
-        }
-    });
+    if (parser.getHeader('X-MMS-IM-Format')) {
+        allSockets.forEach(s => {
+            s.write(`MSG ${socket.passport} ${socket.friendly_name} ${messageTotal}\r\nMIME-Version: ${parser.getHeader('MIME-Version')}\r\nContent-Type: text/plain; charset=UTF-8\r\nX-MMS-IM-Format: ${parser.getHeader('X-MMS-IM-Format')}\r\n\r\n${parser.getContent()}\r\n`);
+        });
+        return;
+    }
 }

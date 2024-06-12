@@ -14,7 +14,6 @@ const chalk = require('chalk');
 const dotenv = require('dotenv');
 dotenv.config();
 
-require('./db/connect');
 const { sockets, switchboard_sockets } = require('./utils/socket.util');
 const { switchboard_chats } = require('./utils/sb.util');
 
