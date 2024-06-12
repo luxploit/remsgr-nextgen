@@ -71,6 +71,10 @@ module.exports = async (socket, args) => {
                 continue;
             }
 
+            if (contactSocket.status === 'HDN') {
+                continue;
+            }
+
             const [contactUser] = await connection.query('SELECT * FROM users WHERE id = ?', [contact.contactID]);
 
             socket.write(`ILN ${transactionID} ${contactSocket.status} ${contactUser[0].email} ${contactUser[0].friendly_name}\r\n`);
