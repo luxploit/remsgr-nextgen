@@ -403,8 +403,12 @@ const server = net.createServer((socket) => {
                 if (tempBuffer) {
                     tempBuffer += `\r\n${message}`;
                 } else {
-					if (process.env.DEBUG === 'true') {
-                    	console.log(`${chalk.red.bold('[MSN SOCKET]')} Received non-command message without a preceding command: ${message}`);
+					if (message === 'OUT') {
+						tempBuffer = message;
+					} else {
+						if (process.env.DEBUG === 'true') {
+                    		console.log(`${chalk.red.bold('[MSN SOCKET]')} Received non-command message without a preceding command: ${message}`);
+						}
 					}
                 }
             }
