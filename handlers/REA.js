@@ -18,6 +18,12 @@ module.exports = async (socket, args) => {
         return;
     }
 
+    if (friendly_name.length > 387) {
+        console.log(`${chalk.red.bold('[REA]')} ${socket.remoteAddress} has a friendly name that is too long.`);
+        socket.write(`REA ${transactionID} 0\r\n`);
+        return;
+    }
+
     if (email == decoded.email && socket.passport == email) {
         await connection.query('UPDATE users SET friendly_name = ? WHERE id = ?', [friendly_name, decoded.id]);
 
@@ -47,12 +53,6 @@ module.exports = async (socket, args) => {
     
             contactSocket.write(`NLN ${socket.status} ${socket.passport} ${socket.friendly_name}\r\n`);
         }
-    }
-
-    if (friendly_name.length > 387) {
-        console.log(`${chalk.red.bold('[REA]')} ${socket.remoteAddress} has a friendly name that is too long.`);
-        socket.write(`REA ${transactionID} 0\r\n`);
-        return;
     }
 
     socket.write(`REA ${transactionID} 1 ${email} ${friendly_name}\r\n`);

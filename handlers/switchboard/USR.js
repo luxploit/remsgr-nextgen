@@ -40,8 +40,6 @@ module.exports = async (socket, args) => {
 
     socket.chat = chatID;
 
-    console.log(switchboard_chats)
-
     socket.write(`USR ${transactionID} OK ${socket.passport} ${socket.passport}\r\n`);
     console.log(`${chalk.yellow.bold('[SB: USR]')} ${socket.remoteAddress} has successfully logged in as ${socket.passport}.`);
 }

@@ -141,7 +141,7 @@ async function logOut(socket) {
     }
 
     try {
-        const [contacts] = await connection.query('SELECT * FROM contacts WHERE userID = ? AND list = ?', [socket.userID, 'AL']);
+        const [contacts] = await connection.query('SELECT * FROM contacts WHERE userID = ? AND list = ?', [socket.userID, 'FL']);
         
         for (const contact of contacts) {
             const contactSocket = getSocketByUserID(contact.contactID);
@@ -150,7 +150,7 @@ async function logOut(socket) {
                 continue;
             }
 
-            const [contactContacts] = await connection.query('SELECT * FROM contacts WHERE userID = ? AND contactID = ? AND list = ?', [contact.contactID, socket.userID, 'AL']);
+            const [contactContacts] = await connection.query('SELECT * FROM contacts WHERE userID = ? AND contactID = ? AND list = ?', [contact.contactID, socket.userID, 'FL']);
 
             if (contactContacts.length > 0) {
                 contactSocket.write(`FLN ${socket.passport}\r\n`);
