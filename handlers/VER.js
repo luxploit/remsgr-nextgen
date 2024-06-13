@@ -15,5 +15,6 @@ module.exports = (socket, args) => {
     } else {
         console.log(`${chalk.red.bold('[VER]')} ${socket.remoteAddress} has sent unsupported versions.`);
         socket.write(`VER ${transactionID} 0\r\n`);
+        socket.destroy();
     }
 }
