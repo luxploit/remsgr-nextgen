@@ -7,7 +7,7 @@ const http = require('http');
 const cors = require('cors');
 
 const net = require('net');
-const netPORT = 1863;
+const notificationPORT = 1863;
 const switchboardPORT = 1864;
 
 const chalk = require('chalk');
@@ -15,7 +15,8 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 const { sockets, switchboard_sockets } = require('./utils/socket.util');
-const { switchboard_chats } = require('./utils/sb.util');
+const { switchboard_chats, SB_logOut } = require('./utils/sb.util');
+const { logOut } = require('./utils/auth.util');
 
 // Express
 const app = express();
@@ -40,13 +41,13 @@ app.use((req, res, next) => {
 });
 
 app.post("/RST2.srf", async (req, res) => {
-    const username = req.body["s:Envelope"]["s:Header"]["wsse:Security"]["wsse:UsernameToken"]["wsse:Username"];
-    const password = req.body["s:Envelope"]["s:Header"]["wsse:Security"]["wsse:UsernameToken"]["wsse:Password"];
-    const getSortaISODate = () => { return new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '') };
+	const username = req.body["s:Envelope"]["s:Header"]["wsse:Security"]["wsse:UsernameToken"]["wsse:Username"];
+	const password = req.body["s:Envelope"]["s:Header"]["wsse:Security"]["wsse:UsernameToken"]["wsse:Password"];
+	const getSortaISODate = () => { return new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '') };
 
-    console.log(`${chalk.cyan.bold('[RST2.SRF]')} "${username}" is trying to log in using password "${password}".`);
+	console.log(`${chalk.cyan.bold('[RST2.SRF]')} "${username}" is trying to log in using password "${password}".`);
 
-    if (username.endsWith("@hotmail.com") || password !== "password") {
+	if (username.endsWith("@hotmail.com") || password !== "password") {
 		return res.status(200).send(`<?xml version="1.0" encoding="utf-8" ?>
 <S:Envelope xmlns:S="http://www.w3.org/2003/05/soap-envelope" xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" xmlns:wst="http://schemas.xmlsoap.org/ws/2005/02/trust" xmlns:psf="http://schemas.microsoft.com/Passport/SoapServices/SOAPFault">
 	<S:Header>
@@ -355,80 +356,76 @@ app.get("/online", (req, res) => {
 app.use("/abservice", require("./routes/abservice"));
 
 const httpsServer = https.createServer({
-    key: fs.readFileSync('./certs/key.pem'),
-    cert: fs.readFileSync('./certs/cert.pem')
+	key: fs.readFileSync('./certs/key.pem'),
+	cert: fs.readFileSync('./certs/cert.pem')
 }, app);
 
 httpsServer.listen(443, () => {
-    console.log(`${chalk.magenta.bold('[HTTPS SERVER]')} Listening on port ${chalk.green.bold("443")}`);
+	console.log(`${chalk.magenta.bold('[HTTPS SERVER]')} Listening on port ${chalk.green.bold("443")}`);
 });
 
 const httpServer = http.createServer((req, res) => {
-    res.writeHead(301, { Location: 'https://' + req.headers.host + req.url });
-    res.end();
+	res.writeHead(301, { Location: 'https://' + req.headers.host + req.url });
+	res.end();
 });
 
 httpServer.listen(80, () => {
-    console.log(`${chalk.magenta.bold('[HTTP SERVER]')} Listening on port ${chalk.green.bold("80")}`);
+	console.log(`${chalk.magenta.bold('[HTTP SERVER]')} Listening on port ${chalk.green.bold("80")}`);
 });
 
 
 // Socket
 
-const isCommand = (line) => line.match(/^[A-Z]{3} /);
+const isCommand = (line) => line.match(/^[A-Z]{3}/);
 
-const server = net.createServer((socket) => {
-    console.log(`${chalk.magenta.bold('[MSN SOCKET]')} New connection: ${socket.remoteAddress}:${socket.remotePort}`);
+const notification = net.createServer((socket) => {
+	console.log(`${chalk.magenta.bold('[MSN NOTIFICATION]')} New connection: ${socket.remoteAddress}:${socket.remotePort}`);
 	sockets.push(socket);
 
 	let buffer = '';
 
-    socket.on('data', (data) => {
-        buffer += data.toString();
+	socket.on('data', (data) => {
+		buffer += data.toString();
 
-        const messages = buffer.trim().split('\r\n');
-        buffer = '';
+		const messages = buffer.trim().split('\r\n');
+		buffer = '';
 
-        let parsedCommands = [];
-        let tempBuffer = '';
+		let parsedCommands = [];
+		let tempBuffer = '';
 
-        for (const message of messages) {
-            if (isCommand(message)) {
-                if (tempBuffer) {
-                    parsedCommands.push(tempBuffer);
-                    tempBuffer = '';
-                }
-                tempBuffer = message;
-            } else {
-                if (tempBuffer) {
-                    tempBuffer += `\r\n${message}`;
-                } else {
-					if (message === 'OUT') {
-						tempBuffer = message;
-					} else {
-						if (process.env.DEBUG === 'true') {
-                    		console.log(`${chalk.red.bold('[MSN SOCKET]')} Received non-command message without a preceding command: ${message}`);
-						}
+		for (const message of messages) {
+			if (isCommand(message)) {
+				if (tempBuffer) {
+					parsedCommands.push(tempBuffer);
+					tempBuffer = '';
+				}
+				tempBuffer = message;
+			} else {
+				if (tempBuffer) {
+					tempBuffer += `\r\n${message}`;
+				} else {
+					if (process.env.DEBUG === 'true') {
+						console.log(`${chalk.red.bold('[MSN NOTIFICATION]')} Received non-command message without a preceding command: ${message}`);
 					}
-                }
-            }
-        }
+				}
+			}
+		}
 
-        if (tempBuffer) {
-            parsedCommands.push(tempBuffer);
-        }
+		if (tempBuffer) {
+			parsedCommands.push(tempBuffer);
+		}
 
-        if (buffer === '' || isCommand(messages[messages.length - 1])) {
-            for (const command of parsedCommands) {
-                const commandParts = command.toString().trim().split(' ');
+		if (buffer === '' || isCommand(messages[messages.length - 1])) {
+			for (const command of parsedCommands) {
+				const commandParts = command.toString().trim().split(' ');
 
 				const commandName = commandParts[0];
 				if (process.env.DEBUG === 'true') {
-					console.log(`${chalk.red.bold('[MSN SOCKET]')} Received command: ${commandName}.`);
+					console.log(`${chalk.red.bold('[MSN NOTIFICATION]')} Received command: ${commandName}.`);
 				}
 
 				const handlerPath = `./handlers/${commandName}.js`;
-				
+
 				if (fs.existsSync(handlerPath)) {
 					const handler = require(handlerPath);
 					try {
@@ -438,118 +435,84 @@ const server = net.createServer((socket) => {
 						console.error(err);
 					}
 				} else {
-					console.log(`${chalk.red.bold('[MSN SOCKET]')} No handler found for command: ${commandName}`);
+					console.log(`${chalk.red.bold('[MSN NOTIFICATION]')} No handler found for command: ${commandName}`);
 					if (process.env.DEBUG === 'true') {
-						console.log(`${chalk.red.bold('[MSN SOCKET]')} Full command: ${command}`);
+						console.log(`${chalk.red.bold('[MSN NOTIFICATION]')} Full command: ${command}`);
 					}
 					socket.write(`200 ${commandParts[1]}\r\n`);
 				}
-				
-            }
-            parsedCommands = [];
-        }
-    });
 
-    socket.on('close', () => {
+			}
+			parsedCommands = [];
+		}
+	});
+
+	socket.on('close', () => {
+		logOut(socket);
 		const index = sockets.indexOf(socket);
 		if (index > -1) {
 			sockets.splice(index, 1);
 		}
-        console.log(`${chalk.magenta.bold('[MSN SOCKET]')} Connection closed: ${socket.remoteAddress}:${socket.remotePort}`);
-    });
+		console.log(`${chalk.magenta.bold('[MSN NOTIFICATION]')} Connection closed: ${socket.remoteAddress}:${socket.remotePort}`);
+	});
 
-    socket.on('error', (err) => {
-        console.error(err);
-    });
+	socket.on('error', (err) => {
+		console.error(err);
+	});
 });
 
 const switchboard = net.createServer((socket) => {
-    console.log(`${chalk.magenta.bold('[MSN SWITCHBOARD]')} New connection: ${socket.remoteAddress}:${socket.remotePort}`);
+	console.log(`${chalk.magenta.bold('[MSN SWITCHBOARD]')} New connection: ${socket.remoteAddress}:${socket.remotePort}`);
 	switchboard_sockets.push(socket);
 
-	let buffer = '';
+	socket.on('data', (data) => {
+		const command = data.toString().trim();
+		const commandParts = command.toString().trim().split(' ');
 
-    socket.on('data', (data) => {
-        buffer += data.toString();
+		if (process.env.DEBUG === 'true') {
+			console.log(`${chalk.red.bold('[MSN SWITCHBOARD]')} Received command: ${command}`);
+		}
 
-        const messages = buffer.trim().split('\r\n');
-        buffer = '';
+		const commandName = commandParts[0];
 
-        let parsedCommands = [];
-        let tempBuffer = '';
+		const handlerPath = `./handlers/switchboard/${commandName}.js`;
 
-        for (const message of messages) {
-            if (isCommand(message)) {
-                if (tempBuffer) {
-                    parsedCommands.push(tempBuffer);
-                    tempBuffer = '';
-                }
-                tempBuffer = message;
-            } else {
-                if (tempBuffer) {
-                    tempBuffer += `\r\n${message}`;
-                } else {
-					if (process.env.DEBUG === 'true') {
-                    	console.log(`${chalk.red.bold('[MSN SWITCHBOARD]')} Received non-command message without a preceding command: ${message}`);
-					}
-                }
-            }
-        }
+		if (fs.existsSync(handlerPath)) {
+			const handler = require(handlerPath);
+			try {
+				handler(socket, commandParts.slice(1), command);
+			} catch (err) {
+				console.log(command);
+				console.error(err);
+			}
+		} else {
+			console.log(`${chalk.red.bold('[MSN SWITCHBOARD]')} No handler found for command: ${commandName}`);
+			if (process.env.DEBUG === 'true') {
+				console.log(`${chalk.red.bold('[MSN SWITCHBOARD]')} Full command: ${command}`);
+			}
+			socket.write(`200 ${commandParts[1]}\r\n`);
+		}
+	});
 
-        if (tempBuffer) {
-            parsedCommands.push(tempBuffer);
-        }
-
-        if (buffer === '' || isCommand(messages[messages.length - 1])) {
-            for (const command of parsedCommands) {
-                const commandParts = command.toString().trim().split(' ');
-				if (process.env.DEBUG === 'true') {
-					console.log(`${chalk.red.bold('[MSN SWITCHBOARD]')} Received command: ${command}`);
-				}
-
-				const commandName = commandParts[0];
-
-				const handlerPath = `./handlers/switchboard/${commandName}.js`;
-				
-				if (fs.existsSync(handlerPath)) {
-					const handler = require(handlerPath);
-					try {
-						handler(socket, commandParts.slice(1), command);
-					} catch (err) {
-						console.log(command);
-						console.error(err);
-					}
-				} else {
-					console.log(`${chalk.red.bold('[MSN SWITCHBOARD]')} No handler found for command: ${commandName}`);
-					if (process.env.DEBUG === 'true') {
-						console.log(`${chalk.red.bold('[MSN SWITCHBOARD]')} Full command: ${command}`);
-					}
-					socket.write(`200 ${commandParts[1]}\r\n`);
-				}
-				
-            }
-            parsedCommands = [];
-        }
-    });
-
-    socket.on('close', () => {
+	socket.on('close', () => {
+		SB_logOut(socket);
 		const index = switchboard_sockets.indexOf(socket);
 		if (index > -1) {
 			switchboard_sockets.splice(index, 1);
 		}
-        console.log(`${chalk.magenta.bold('[MSN SWITCHBOARD]')} Connection closed: ${socket.remoteAddress}:${socket.remotePort}`);
-    });
+		console.log(`${chalk.magenta.bold('[MSN SWITCHBOARD]')} Connection closed: ${socket.remoteAddress}:${socket.remotePort}`);
+	});
 
-    socket.on('error', (err) => {
-        console.error(err);
-    });
+	socket.on('error', (err) => {
+		console.error(err);
+	});
 });
 
-server.listen(netPORT, () => {
-    console.log(`${chalk.magenta.bold('[MSN SOCKET]')} Listening on port ${chalk.green.bold(netPORT)}`);
+notification.listen(notificationPORT, () => {
+	console.log(`${chalk.magenta.bold('[MSN NOTIFICATION]')} Listening on port ${chalk.green.bold(notificationPORT)}`);
 });
 
 switchboard.listen(switchboardPORT, () => {
-    console.log(`${chalk.magenta.bold('[MSN SWITCHBOARD]')} Listening on port ${chalk.green.bold(switchboardPORT)}`);
+	console.log(`${chalk.magenta.bold('[MSN SWITCHBOARD]')} Listening on port ${chalk.green.bold(switchboardPORT)}`);
 	console.log('-----------------------------------------');
 });

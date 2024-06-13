@@ -2,7 +2,7 @@ const chalk = require('chalk');
 const connection = require('../db/connect').promise();
 const jwt = require('jsonwebtoken');
 const { parse: uuidParse } = require('uuid');
-const { sockets, getSocketByPassport, getMultipleSocketsByPassport } = require('./socket.util');
+const { sockets, getSocketByPassport, getMultipleSocketsByPassport, getSocketByUserID } = require('./socket.util');
 
 class MD5Auth {
     static algorithm = 'md5';
@@ -133,7 +133,38 @@ async function verifyJWT(token) {
     }
 }
 
+async function logOut(socket) {
+    if (!socket.userID && !socket.token && !socket.passport) {
+        socket.write(`OUT\r\n`);
+        socket.destroy();
+        return;
+    }
+
+    try {
+        const [contacts] = await connection.query('SELECT * FROM contacts WHERE userID = ? AND list = ?', [socket.userID, 'AL']);
+        
+        for (const contact of contacts) {
+            const contactSocket = getSocketByUserID(contact.contactID);
+
+            if (!contactSocket) {
+                continue;
+            }
+
+            const [contactContacts] = await connection.query('SELECT * FROM contacts WHERE userID = ? AND contactID = ? AND list = ?', [contact.contactID, socket.userID, 'AL']);
+
+            if (contactContacts.length > 0) {
+                contactSocket.write(`FLN ${socket.passport}\r\n`);
+            }
+        }
+    } catch (err) {
+        console.log(`${chalk.red.bold('[LOGOUT UTIL]')} ${socket.passport} failed to get contacts from the database.`);
+    } finally {
+        socket.destroy();
+    }
+}
+
 module.exports = {
     MD5Auth: new MD5Auth(),
-    verifyJWT
+    verifyJWT,
+    logOut
 };

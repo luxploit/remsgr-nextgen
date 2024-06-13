@@ -64,10 +64,13 @@ module.exports = async (socket, args) => {
     acceptCall(chatroom, email, socket);
     socket.chat = chatroom;
 
-    let total = chat.participants.length;
+    let total = chat.participants.length - 1;
 
     for (let current = 1; current <= total; current++) {
         let participant = chat.participants[current - 1];
+
+        if (participant.email === email) continue;
+
         let iro = `IRO ${transactionID} ${current} ${total}`;
         const sbSocket = participant.socket;
     
