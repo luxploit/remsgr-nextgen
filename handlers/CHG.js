@@ -3,7 +3,7 @@ const { getSocketByUserID } = require('../utils/socket.util');
 const { verifyJWT } = require('../utils/auth.util');
 const connection = require('../db/connect').promise();
 
-module.exports = async (socket, args) => {
+module.exports = async (socket, args, command) => {
     const transactionID = args[0];
     const status = args[1];
 
@@ -27,7 +27,7 @@ module.exports = async (socket, args) => {
 
     if (!['NLN', 'BSY', 'IDL', 'BRB', 'AWY', 'PHN', 'LUN', 'HDN'].includes(status)) {
         console.log(`${chalk.red.bold('[CHG]')} ${socket.passport} has attempted to change their status to an invalid status. (${status})`);
-        socket.write(`201 ${transactionID}\r\n`);
+        socket.destroy();
         return;
     }
 
@@ -58,7 +58,7 @@ module.exports = async (socket, args) => {
     }
 
     console.log(`${chalk.blue.bold('[CHG]')} ${socket.passport} changed their status to ${status}.`);
-    socket.write(`CHG ${transactionID} ${status}\r\n`);
+    socket.write(command + `\r\n`);
     socket.status = status;
 
     if (socket.initial_status === false) {

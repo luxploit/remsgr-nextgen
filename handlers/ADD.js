@@ -40,7 +40,7 @@ module.exports = async (socket, args) => {
         return;
     }
 
-    const [existing] = await connection.query('SELECT * FROM contacts WHERE userID = ? AND contactID = ?', [decoded.id, rows[0].id]);
+    const [existing] = await connection.query('SELECT * FROM contacts WHERE userID = ? AND contactID = ? AND list = ?', [decoded.id, rows[0].id, list]);
 
     if (existing.length > 0) {
         console.log(`${chalk.red.bold('[ADD]')} ${socket.passport} has attempted to add a user that is already in their ${list} list. (${email})`);
