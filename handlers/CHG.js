@@ -79,6 +79,7 @@ module.exports = async (socket, args) => {
 
             socket.write(`ILN ${transactionID} ${contactSocket.status} ${contactUser[0].email} ${contactUser[0].friendly_name}\r\n`);
         }
+
         socket.initial_status = true;
         return;
     }

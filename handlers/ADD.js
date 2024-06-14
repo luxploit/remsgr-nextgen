@@ -34,7 +34,7 @@ module.exports = async (socket, args) => {
 
     const [contacts] = await connection.query('SELECT * FROM contacts WHERE userID = ? AND list = ?', [decoded.id, list]);
 
-    if (contacts.length >= 300) {
+    if (contacts.length >= 150) {
         console.log(`${chalk.red.bold('[ADD]')} ${socket.passport} has attempted to add a user to a list that is full. (${email})`);
         socket.write(`210 ${transactionID}\r\n`);
         return;
