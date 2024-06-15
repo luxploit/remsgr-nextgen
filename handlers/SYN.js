@@ -16,7 +16,7 @@ module.exports = async (socket, args) => {
     }
 
     try {
-        const lists = ['FL', 'AL', 'BL', 'RL'];
+        const lists = ['FL', 'AL', 'BL'];
         const promises = lists.map(list => connection.query('SELECT * FROM contacts WHERE userID = ? AND list = ?', [socket.userID, list]));
 
         const results = await Promise.all(promises);
@@ -39,7 +39,6 @@ module.exports = async (socket, args) => {
 
                 if (users.length === 0) {
                     console.log(`${chalk.magentaBright.bold('[SYN]')} ${socket.passport} has a contact in list ${list} that does not exist.`);
-                    socket.write(`911 ${transactionID}\r\n`);
                     continue;
                 }
 
@@ -52,6 +51,37 @@ module.exports = async (socket, args) => {
         }
     } catch (err) {
         console.log(`${chalk.magentaBright.bold('[SYN]')} ${socket.passport} failed to get contacts from the database.`);
+        socket.write(`911 ${transactionID}\r\n`);
+    }
+
+    try {
+        const [reverseList] = await connection.query('SELECT * FROM contacts WHERE contactID = ? AND list = ?', [socket.userID, 'FL']);
+
+        if (reverseList.length === 0) {
+            console.log(`${chalk.magentaBright.bold('[SYN]')} ${socket.passport} has no one in their reverse list.`);
+            socket.write(`LST ${transactionID} RL ${syncID} 0 0\r\n`);
+            return;
+        }
+
+        const total = reverseList.length;
+
+        for (let index = 0; index < total; index++) {
+            const contact = reverseList[index];
+            const [users] = await connection.query('SELECT * FROM users WHERE id = ?', [contact.userID]);
+
+            if (users.length === 0) {
+                console.log(`${chalk.magentaBright.bold('[SYN]')} ${socket.passport} has a contact in their reverse list that does not exist.`);
+                continue;
+            }
+
+            const user = users[0];
+            const contactEmail = user.email;
+            const contactName = user.friendly_name;
+
+            socket.write(`LST ${transactionID} RL ${syncID} ${index + 1} ${total} ${contactEmail} ${contactName} 0\r\n`);
+        }
+    } catch (err) {
+        console.log(`${chalk.magentaBright.bold('[SYN]')} ${socket.passport} failed to get reverse list from the database.`);
         socket.write(`911 ${transactionID}\r\n`);
     }
 

@@ -35,7 +35,7 @@ module.exports = async (socket, args, command) => {
         socket.initial_status = false;
     }
 
-    const [contacts] = await connection.query('SELECT * FROM contacts WHERE userID = ? AND list = ?', [socket.userID, 'FL']);
+    const [contacts] = await connection.query('SELECT * FROM contacts WHERE userID = ? AND list = ?', [socket.userID, 'AL']);
 
     for (const contact of contacts) {
         const contactSocket = getSocketByUserID(contact.contactID);
@@ -68,6 +68,12 @@ module.exports = async (socket, args, command) => {
             const contactSocket = getSocketByUserID(contact.contactID);
 
             if (!contactSocket) {
+                continue;
+            }
+
+            const [contactContacts] = await connection.query('SELECT * FROM contacts WHERE userID = ? AND contactID = ? AND list = ?', [contact.contactID, socket.userID, 'AL']);
+
+            if (contactContacts.length === 0) {
                 continue;
             }
 
