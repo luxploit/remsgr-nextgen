@@ -1,6 +1,6 @@
 const crypto = require('crypto');
 const chalk = require('chalk');
-const { MD5Auth } = require('../utils/auth.util');
+const { MD5Auth, TWNAuth } = require('../utils/auth.util');
 
 module.exports = async (socket, args) => {
     const transactionID = args[0];
@@ -28,6 +28,17 @@ module.exports = async (socket, args) => {
             // setTimeout(() => {
             //     socket.write(`UBX 1:${socket.passport} 0\r\n`)
             // }, 50)
+        }
+    }
+
+    else if (scheme === 'TWN') {
+        if (state === 'I') {
+            socket.passport = args[3];
+            TWNAuth.login(socket, socket.version, state, transactionID, socket.passport);
+        }
+        
+        else if (state === 'S') {
+            TWNAuth.login(socket, socket.version, state, transactionID, socket.passport, args[3]);
         }
     }
 

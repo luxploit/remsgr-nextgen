@@ -85,20 +85,13 @@ class MD5Auth {
 
             if (version >= 7) {
                 const timestamp = Math.floor(Date.now() / 1000);
-                const [high, low] = this.uuidToHighLow(rows[0].uuid);
+                const [high, low] = uuidToHighLow(rows[0].uuid);
                 const ip = socket.remoteAddress.replace('::ffff:', '');
                 const port = socket.remotePort;
 
                 socket.write(`MSG Hotmail Hotmail 589\r\nMIME-Version: 1.0\r\nContent-Type: text/x-msmsgsprofile; charset=UTF-8\r\nLoginTime: ${timestamp}\r\nEmailEnabled: 0\r\nMemberIdHigh: ${high}\r\nMemberIdLow: ${low}\r\nlang_preference: 0\r\npreferredEmail: \r\ncountry: \r\nPostalCode: \r\nGender: \r\nKid: 0\r\nAge: \r\nBDayPre: \r\nBirthday: \r\nWallet: \r\nFlags: 536872513\r\nsid: 507\r\nMSPAuth: ${token}\r\nClientIP: ${ip}\r\nClientPort: ${port}\r\nABCHMigrated: 1\r\nMPOPEnabled: 0\r\n\r\n`);
             }
         }
-    }
-
-    uuidToHighLow(uuid) {
-        const parsedUuid = uuidParse(uuid);
-        const high = (parsedUuid[0] << 24) | (parsedUuid[1] << 16) | (parsedUuid[2] << 8) | parsedUuid[3];
-        const low = (parsedUuid[10] << 24) | (parsedUuid[11] << 16) | (parsedUuid[12] << 8) | parsedUuid[13];
-        return [high >>> 0, low >>> 0]; // >>> 0 to convert to unsigned 32-bit integer
     }
 
     extractMD5Hash(legacyPass) {
@@ -116,6 +109,59 @@ class MD5Auth {
         }
         return parts[2];
     }
+}
+
+class TWNAuth {
+    async login(socket, version, state, transactionID, passport, token) {
+        if (state === 'I') {
+            console.log(`${chalk.yellow.bold('[USR TWN INITIAL]')} ${passport} is trying to log in.`);
+            socket.write(`USR ${transactionID} TWN S ct=1,rver=1,wp=FS_40SEC_0_COMPACT,lc=1,id=1\r\n`);
+        } else if (state === 'S') {
+            const decoded = await verifyJWT(token);
+
+            if (!decoded) {
+                console.log(`${chalk.yellow.bold('[USR TWN SUBSEQUENT]')} ${passport} has an invalid token.`);
+                socket.write(`911 ${transactionID}\r\n`);
+                socket.destroy();
+                return;
+            }
+
+            const [rows] = await connection.query('SELECT * FROM users WHERE email = ?', [passport]);
+
+            if (rows.length === 0) {
+                console.log(`${chalk.yellow.bold('[USR TWN SUBSEQUENT]')} ${passport} does not exist in the database.`);
+                socket.write(`911 ${transactionID}\r\n`);
+                socket.destroy();
+                return;
+            }
+
+            const existingSockets = getMultipleSocketsByPassport(passport);
+
+            existingSockets.forEach(existingSocketObj => {
+                if (existingSocketObj !== socket) {
+                    console.log(`${chalk.yellow.bold('[USR TWN SUBSEQUENT]')} ${passport} is already logged in, logging out old session.`);
+                    existingSocketObj.write('OUT\r\n');
+                    existingSocketObj.destroy();
+                }
+            });
+
+            socket.token = token;
+            socket.userID = rows[0].id;
+            socket.friendly_name = rows[0].friendly_name;
+
+            await connection.query('UPDATE users SET last_login = NOW() WHERE email = ?', [passport]);
+
+            console.log(`${chalk.yellow.bold('[USR TWN SUBSEQUENT]')} ${passport} has successfully logged in.`);
+            socket.write(`USR ${transactionID} OK ${passport} ${socket.friendly_name} 1 0\r\n`);
+        }
+    }
+}
+
+function uuidToHighLow(uuid) {
+    const parsedUuid = uuidParse(uuid);
+    const high = (parsedUuid[0] << 24) | (parsedUuid[1] << 16) | (parsedUuid[2] << 8) | parsedUuid[3];
+    const low = (parsedUuid[10] << 24) | (parsedUuid[11] << 16) | (parsedUuid[12] << 8) | parsedUuid[13];
+    return [high >>> 0, low >>> 0]; // >>> 0 to convert to unsigned 32-bit integer
 }
 
 async function verifyJWT(token) {
@@ -165,6 +211,7 @@ async function logOut(socket) {
 
 module.exports = {
     MD5Auth: new MD5Auth(),
+    TWNAuth: new TWNAuth(),
     verifyJWT,
     logOut
 };

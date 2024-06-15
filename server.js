@@ -14,10 +14,6 @@ const chalk = require('chalk');
 const dotenv = require('dotenv');
 dotenv.config();
 
-const { sockets, switchboard_sockets } = require('./utils/socket.util');
-const { switchboard_chats, SB_logOut } = require('./utils/sb.util');
-const { logOut } = require('./utils/auth.util');
-
 // Express
 const app = express();
 const parser = new XMLParser();
@@ -39,6 +35,12 @@ app.use((req, res, next) => {
 		next();
 	});
 });
+
+const { pprdr, twnAuth } = require('./services/authentication/tweener');
+
+// Tweener Auth
+app.get('/rdr/pprdr.asp', pprdr);
+app.get('/tweener/auth', twnAuth);
 
 app.post("/RST2.srf", async (req, res) => {
 	const username = req.body["s:Envelope"]["s:Header"]["wsse:Security"]["wsse:UsernameToken"]["wsse:Username"];
@@ -375,6 +377,10 @@ httpServer.listen(80, () => {
 
 
 // Socket
+
+const { sockets, switchboard_sockets } = require('./utils/socket.util');
+const { switchboard_chats, SB_logOut } = require('./utils/sb.util');
+const { logOut } = require('./utils/auth.util');
 
 const isCommand = (line) => line.match(/^[A-Z]{3}/);
 
