@@ -8,6 +8,12 @@ module.exports = async (socket, args) => {
     const transactionID = args[0];
     const email = args[1];
     const sb_token = args[2];
+
+    if (isNaN(transactionID)) {
+        socket.destroy();
+        return;
+    }
+    
     console.log(`${chalk.yellow.bold('[SB: USR]')} ${socket.remoteAddress} is trying to log in with ${email}.`)
 
     const regularSocket = getSocketBySwitchboardToken(sb_token);

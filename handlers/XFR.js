@@ -7,6 +7,11 @@ module.exports = (socket, args) => {
     const transactionID = args[0];
     console.log(`${chalk.yellow.bold('[XFR]')} ${socket.remoteAddress} is trying to transfer to the switchboard.`);
 
+    if (isNaN(transactionID)) {
+        socket.destroy();
+        return;
+    }
+
     const verified = verifyJWT(socket.token);
 
     if (!verified) {

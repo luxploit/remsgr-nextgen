@@ -7,6 +7,11 @@ module.exports = async (socket, args) => {
     const scheme = args[1];
     const state = args[2];
 
+    if (isNaN(transactionID)) {
+        socket.destroy();
+        return;
+    }
+
     if (scheme === 'SSO') {
         if (state === 'I') {
             socket.passport = args[3];

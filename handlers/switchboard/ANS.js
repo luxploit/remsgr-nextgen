@@ -12,6 +12,11 @@ module.exports = async (socket, args) => {
     const sb_token = args[2];
     const chatroom = args[3];
 
+    if (isNaN(transactionID)) {
+        socket.destroy();
+        return;
+    }
+
     const check = getSocketByPassport(email);
 
     if (!check) {

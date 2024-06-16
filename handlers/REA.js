@@ -9,6 +9,11 @@ module.exports = async (socket, args) => {
     const email = args[1];
     const friendly_name = args[2];
 
+    if (isNaN(transactionID)) {
+        socket.destroy();
+        return;
+    }
+
     const decoded = await verifyJWT(socket.token);
 
     if (!decoded) {

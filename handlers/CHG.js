@@ -7,6 +7,11 @@ module.exports = async (socket, args, command) => {
     const transactionID = args[0];
     const status = args[1];
 
+    if (isNaN(transactionID)) {
+        socket.destroy();
+        return;
+    }
+
     const verified = verifyJWT(socket.token);
 
     if (!verified) {

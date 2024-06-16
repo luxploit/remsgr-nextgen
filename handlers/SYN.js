@@ -5,6 +5,11 @@ module.exports = async (socket, args) => {
     const transactionID = args[0];
     const syncID = parseInt(args[1]) + 1;
 
+    if (isNaN(transactionID) || isNaN(syncID)) {
+        socket.destroy();
+        return;
+    }
+
     console.log(`${chalk.magentaBright.bold('[SYN]')} ${socket.passport} sister wants CONTACT LIST 💜`);
     socket.write(`SYN ${transactionID} ${syncID}\r\n`);
     socket.write(`GTC ${transactionID} ${syncID} A\r\n`);

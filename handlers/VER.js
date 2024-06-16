@@ -5,6 +5,11 @@ module.exports = (socket, args) => {
     const transactionID = args[0];
     const versions = args.slice(1);
 
+    if (isNaN(transactionID)) {
+        socket.destroy();
+        return;
+    }
+
     const supported = versions.filter(version => supportedVersions.includes(version));
 
     if (supported.length > 0) {
