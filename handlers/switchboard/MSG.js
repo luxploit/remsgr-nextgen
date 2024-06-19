@@ -26,14 +26,14 @@ module.exports = async (socket, args, command) => {
 
     if (parser.getHeader('TypingUser')) {
         allSockets.forEach(s => {
-            s.write(`MSG ${socket.passport} ${socket.friendly_name} ${messageTotal}\r\nMIME-Version: ${parser.getHeader('MIME-Version')}\r\nContent-Type: text/x-msmsgscontrol\r\nTypingUser: ${parser.getHeader('TypingUser')}\r\n\r\n\r\n\r\n`);
+            s.write(`MSG ${socket.passport} ${socket.friendly_name} ${messageTotal}\r\nMIME-Version: ${parser.getHeader('MIME-Version')}\r\nContent-Type: text/x-msmsgscontrol\r\nTypingUser: ${parser.getHeader('TypingUser')}\r\n\r\n\r\n`);
         });
         return;
     }
 
     if (parser.getHeader('X-MMS-IM-Format')) {
         allSockets.forEach(s => {
-            s.write(`MSG ${socket.passport} ${socket.friendly_name} ${messageTotal}\r\nMIME-Version: ${parser.getHeader('MIME-Version')}\r\nContent-Type: text/plain; charset=UTF-8\r\nX-MMS-IM-Format: ${parser.getHeader('X-MMS-IM-Format')}\r\n\r\n${parser.getContent()}\r\n`);
+            s.write(`MSG ${socket.passport} ${socket.friendly_name} ${messageTotal}\r\nMIME-Version: ${parser.getHeader('MIME-Version')}\r\nContent-Type: text/plain; charset=UTF-8\r\nX-MMS-IM-Format: ${parser.getHeader('X-MMS-IM-Format')}\r\n\r\n${parser.getContent()}`);
         });
         return;
     }

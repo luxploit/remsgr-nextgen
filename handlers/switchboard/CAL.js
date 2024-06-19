@@ -9,6 +9,12 @@ const crypto = require('crypto');
 module.exports = async (socket, args) => {
     const transactionID = args[0];
     const email = args[1];
+
+    if (isNaN(transactionID)) {
+        socket.destroy();
+        return;
+    }
+
     console.log(`${chalk.yellow.bold('[SB: CAL]')} ${socket.remoteAddress} is trying to call ${email}.`)
 
     if (!socket.chat) {

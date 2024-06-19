@@ -89,7 +89,18 @@ class MD5Auth {
                 const ip = socket.remoteAddress.replace('::ffff:', '');
                 const port = socket.remotePort;
 
-                socket.write(`MSG Hotmail Hotmail 589\r\nMIME-Version: 1.0\r\nContent-Type: text/x-msmsgsprofile; charset=UTF-8\r\nLoginTime: ${timestamp}\r\nEmailEnabled: 0\r\nMemberIdHigh: ${high}\r\nMemberIdLow: ${low}\r\nlang_preference: 0\r\npreferredEmail: \r\ncountry: \r\nPostalCode: \r\nGender: \r\nKid: 0\r\nAge: \r\nBDayPre: \r\nBirthday: \r\nWallet: \r\nFlags: 536872513\r\nsid: 507\r\nMSPAuth: ${token}\r\nClientIP: ${ip}\r\nClientPort: ${port}\r\nABCHMigrated: 1\r\nMPOPEnabled: 0\r\n\r\n`);
+                const messageTemplate = `MIME-Version: 1.0\r\nContent-Type: text/x-msmsgsprofile; charset=UTF-8\r\nLoginTime: ${timestamp}\r\nEmailEnabled: 0\r\nMemberIdHigh: ${high}\r\nMemberIdLow: ${low}\r\nlang_preference: 0\r\npreferredEmail: \r\ncountry: \r\nPostalCode: \r\nGender: \r\nKid: 0\r\nAge: \r\nBDayPre: \r\nBirthday: \r\nWallet: \r\nFlags: 536872513\r\nsid: 507\r\nMSPAuth: ${token}\r\nClientIP: ${ip}\r\nClientPort: ${port}\r\nABCHMigrated: 1\r\nMPOPEnabled: 0\r\n\r\n`;
+
+                const newLineCount = (messageTemplate.match(/\r\n/g) || []).length;
+                const initialHeader = `MSG Hotmail Hotmail `;
+                const lengthWithoutPlaceholder = initialHeader.length + messageTemplate.length - newLineCount;
+                
+                const messageLength = lengthWithoutPlaceholder + String(lengthWithoutPlaceholder).length + 1;
+                const messageHeader = `MSG Hotmail Hotmail ${messageLength}\r\n`;
+                
+                const finalMessage = messageHeader + messageTemplate;
+                
+                socket.write(finalMessage);
             }
         }
     }
@@ -152,7 +163,47 @@ class TWNAuth {
             await connection.query('UPDATE users SET last_login = NOW() WHERE email = ?', [passport]);
 
             console.log(`${chalk.yellow.bold('[USR TWN SUBSEQUENT]')} ${passport} has successfully logged in.`);
-            socket.write(`USR ${transactionID} OK ${passport} ${socket.friendly_name} 1 0\r\n`);
+            if (version >= 10) {
+                socket.write(`USR ${transactionID} OK ${passport} 1 0\r\n`);
+
+                const timestamp = Math.floor(Date.now() / 1000);
+                const [high, low] = uuidToHighLow(rows[0].uuid);
+                const ip = socket.remoteAddress.replace('::ffff:', '');
+                const port = socket.remotePort;
+
+                const messageTemplate = `MIME-Version: 1.0\r\nContent-Type: text/x-msmsgsprofile; charset=UTF-8\r\nLoginTime: ${timestamp}\r\nEmailEnabled: 0\r\nMemberIdHigh: ${high}\r\nMemberIdLow: ${low}\r\nlang_preference: 0\r\npreferredEmail: \r\ncountry: \r\nPostalCode: \r\nGender: \r\nKid: 0\r\nAge: \r\nBDayPre: \r\nBirthday: \r\nWallet: \r\nFlags: 536872513\r\nsid: 507\r\nMSPAuth: ${token}\r\nClientIP: ${ip}\r\nClientPort: ${port}\r\nABCHMigrated: 1\r\nMPOPEnabled: 0\r\n\r\n`;
+
+                const newLineCount = (messageTemplate.match(/\r\n/g) || []).length;
+                const initialHeader = `MSG Hotmail Hotmail `;
+                const lengthWithoutPlaceholder = initialHeader.length + messageTemplate.length - newLineCount;
+                
+                const messageLength = lengthWithoutPlaceholder + String(lengthWithoutPlaceholder).length + 1;
+                const messageHeader = `MSG Hotmail Hotmail ${messageLength}\r\n`;
+                
+                const finalMessage = messageHeader + messageTemplate;
+                
+                socket.write(finalMessage);
+            } else {
+                socket.write(`USR ${transactionID} OK ${passport} ${socket.friendly_name} 1 0\r\n`);
+
+                const timestamp = Math.floor(Date.now() / 1000);
+                const [high, low] = uuidToHighLow(rows[0].uuid);
+                const ip = socket.remoteAddress.replace('::ffff:', '');
+                const port = socket.remotePort;
+
+                const messageTemplate = `MIME-Version: 1.0\r\nContent-Type: text/x-msmsgsprofile; charset=UTF-8\r\nLoginTime: ${timestamp}\r\nEmailEnabled: 0\r\nMemberIdHigh: ${high}\r\nMemberIdLow: ${low}\r\nlang_preference: 0\r\npreferredEmail: \r\ncountry: \r\nPostalCode: \r\nGender: \r\nKid: 0\r\nAge: \r\nBDayPre: \r\nBirthday: \r\nWallet: \r\nFlags: 536872513\r\nsid: 507\r\nMSPAuth: ${token}\r\nClientIP: ${ip}\r\nClientPort: ${port}\r\nABCHMigrated: 1\r\nMPOPEnabled: 0\r\n\r\n`;
+
+                const newLineCount = (messageTemplate.match(/\r\n/g) || []).length;
+                const initialHeader = `MSG Hotmail Hotmail `;
+                const lengthWithoutPlaceholder = initialHeader.length + messageTemplate.length - newLineCount;
+                
+                const messageLength = lengthWithoutPlaceholder + String(lengthWithoutPlaceholder).length + 1;
+                const messageHeader = `MSG Hotmail Hotmail ${messageLength}\r\n`;
+                
+                const finalMessage = messageHeader + messageTemplate;
+                
+                socket.write(finalMessage);
+            }
         }
     }
 }
