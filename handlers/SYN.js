@@ -57,42 +57,46 @@ module.exports = async (socket, args) => {
     }
 
     // todo: code msnp10> syn : okay so for msnp10 and higher it uses numbers instead of letters for the lists, all the numbers from the lists get added up and then the total is sent as the number, & we can use a bitwise AND to check if a user is in the list
+    if (socket.version >= 10) {
+        // for msnp10 and higher it uses numbers instead of letters for the lists, all the numbers from the lists get added up and then the total is sent as the number, & we can use a bitwise AND to check if a user is in the list, we can get the numbers corresponding to the lists from the listsInt object
+        // get all the contacts from the database and send them to the client using the MSNP10 format for the LST command
 
-    try {
-        const lists = ['FL', 'AL', 'BL'];
-        const queries = lists.map(list => connection.query('SELECT * FROM contacts WHERE userID = ? AND list = ?', [socket.userID, list]));
-        queries.push(connection.query('SELECT * FROM contacts WHERE contactID = ? AND list = ?', [socket.userID, 'FL']));
-        const results = await Promise.all(queries);
-    
-        results.forEach((result, i) => {
-            const list = i < lists.length ? lists[i] : 'RL';
-            const contacts = result[0];
-    
-            if (contacts.length === 0) {
-                console.log(`${chalk.magentaBright.bold('[SYN]')} ${socket.passport} has no contacts in list ${list}.`);
-                socket.write(`LST ${transactionID} ${list} ${syncID} 0 0\r\n`);
-                return;
-            }
-    
-            const total = contacts.length;
-            contacts.forEach(async (contact, index) => {
-                const userID = list === 'RL' ? contact.userID : contact.contactID;
-                const [users] = await connection.query('SELECT * FROM users WHERE id = ?', [userID]);
-    
-                if (users.length === 0) {
-                    console.log(`${chalk.magentaBright.bold('[SYN]')} ${socket.passport} has a contact in list ${list} that does not exist.`);
+    } else {
+        try {
+            const lists = ['FL', 'AL', 'BL'];
+            const queries = lists.map(list => connection.query('SELECT * FROM contacts WHERE userID = ? AND list = ?', [socket.userID, list]));
+            queries.push(connection.query('SELECT * FROM contacts WHERE contactID = ? AND list = ?', [socket.userID, 'FL']));
+            const results = await Promise.all(queries);
+
+            results.forEach((result, i) => {
+                const list = i < lists.length ? lists[i] : 'RL';
+                const contacts = result[0];
+
+                if (contacts.length === 0) {
+                    console.log(`${chalk.magentaBright.bold('[SYN]')} ${socket.passport} has no contacts in list ${list}.`);
+                    socket.write(`LST ${transactionID} ${list} ${syncID} 0 0\r\n`);
                     return;
                 }
-    
-                const user = users[0];
-                socket.write(`LST ${transactionID} ${list} ${syncID} ${index + 1} ${total} ${user.email} ${user.friendly_name} 0\r\n`);
+
+                const total = contacts.length;
+                contacts.forEach(async (contact, index) => {
+                    const userID = list === 'RL' ? contact.userID : contact.contactID;
+                    const [users] = await connection.query('SELECT * FROM users WHERE id = ?', [userID]);
+
+                    if (users.length === 0) {
+                        console.log(`${chalk.magentaBright.bold('[SYN]')} ${socket.passport} has a contact in list ${list} that does not exist.`);
+                        return;
+                    }
+
+                    const user = users[0];
+                    socket.write(`LST ${transactionID} ${list} ${syncID} ${index + 1} ${total} ${user.email} ${user.friendly_name} 0\r\n`);
+                });
             });
-        });
-    } catch (err) {
-        console.log(`${chalk.magentaBright.bold('[SYN]')} ${socket.passport} failed to get contacts from the database.`);
-        socket.write(`911 ${transactionID}\r\n`);
+        } catch (err) {
+            console.log(`${chalk.magentaBright.bold('[SYN]')} ${socket.passport} failed to get contacts from the database.`);
+            socket.write(`911 ${transactionID}\r\n`);
+        }
     }
-    
 
     // socket.write(`LST ${transactionID} FL ${syncID} 1 1 default@butterfly.net default 0\r\n`);
     // socket.write(`LST ${transactionID} AL ${syncID} 1 1 default@butterfly.net default\r\n`);
