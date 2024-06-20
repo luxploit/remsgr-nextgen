@@ -14,10 +14,6 @@ module.exports = async (socket, args) => {
     console.log(`${chalk.magentaBright.bold('[SYN]')} ${socket.passport} sister wants CONTACT LIST 💜`);
 
     if (socket.version >= 10) {
-        // the SYN command is different for MSNP10 and higher versions
-        // SYN TRANSACTIONID TIMESTAMP (FORMAT: 2000-01-01T00:00:00.0-00:00) TIMESTAMP (FORMAT: 2000-01-01T00:00:00.0-00:00) TOTALCONTACTS TOTALGROUPS
-        // get the number of contacts in each list (including reverse) and add them up to get the total contacts
-
         const lists = ['FL', 'AL', 'BL'];
         const promises = lists.map(list => connection.query('SELECT * FROM contacts WHERE userID = ? AND list = ?', [socket.userID, list]));
         const reverseList = connection.query('SELECT * FROM contacts WHERE contactID = ? AND list = ?', [socket.userID, 'FL']);
@@ -25,7 +21,19 @@ module.exports = async (socket, args) => {
         const results = await Promise.all(promises);
         const reverse = await reverseList;
 
-        const totalContacts = results.reduce((acc, result) => acc + result[0].length, 0) + reverse[0].length;
+        const allContacts = new Set();
+
+        results.forEach(result => {
+            result.forEach(contact => {
+                allContacts.add(contact.contactID);
+            });
+        });
+
+        reverse.forEach(contact => {
+            allContacts.add(contact.contactID);
+        });
+
+        const totalContacts = allContacts.size;
 
         function getFormattedTimestamp() {
             const date = new Date();
@@ -56,11 +64,70 @@ module.exports = async (socket, args) => {
         socket.write(`LSG ${transactionID} ${syncID} 2 2 1 Favorites 0\r\n`);
     }
 
-    // todo: code msnp10> syn : okay so for msnp10 and higher it uses numbers instead of letters for the lists, all the numbers from the lists get added up and then the total is sent as the number, & we can use a bitwise AND to check if a user is in the list
     if (socket.version >= 10) {
-        // for msnp10 and higher it uses numbers instead of letters for the lists, all the numbers from the lists get added up and then the total is sent as the number, & we can use a bitwise AND to check if a user is in the list, we can get the numbers corresponding to the lists from the listsInt object
-        // get all the contacts from the database and send them to the client using the MSNP10 format for the LST command
+        const [contacts] = await connection.query('SELECT * FROM contacts WHERE userID = ?', [socket.userID]);
+        const [reverseContacts] = await connection.query('SELECT * FROM contacts WHERE contactID = ? AND list = ?', [socket.userID, 'FL']);
 
+        if (contacts.length === 0 && reverseContacts.length === 0) {
+            console.log(`${chalk.magentaBright.bold('[SYN]')} ${socket.passport} has no contacts.`);
+            socket.write(`LST ${transactionID} ${syncID} 0\r\n`);
+            return;
+        }
+
+        let contactsMap = new Map();
+
+        for (const contact of contacts) {
+            const [user] = await connection.query('SELECT * FROM users WHERE id = ?', [contact.contactID]);
+
+            if (user.length === 0) {
+                console.log(`${chalk.magentaBright.bold('[SYN]')} ${socket.passport} has a contact that does not exist.`);
+                continue;
+            }
+
+            const userId = contact.contactID;
+            const contactLists = contact.list.split(',').map(list => listsInt[list]);
+            const totalListsNumber = contactLists.reduce((acc, num) => acc + num, 0);
+
+            if (contactsMap.has(userId)) {
+                contactsMap.get(userId).lists_number |= totalListsNumber;
+            } else {
+                contactsMap.set(userId, {
+                    email: user[0].email,
+                    friendly_name: user[0].friendly_name,
+                    uuid: user[0].uuid,
+                    lists_number: totalListsNumber
+                });
+            }
+        }
+
+        for (const contact of reverseContacts) {
+            const [user] = await connection.query('SELECT * FROM users WHERE id = ?', [contact.userID]);
+
+            if (user.length === 0) {
+                console.log(`${chalk.magentaBright.bold('[SYN]')} ${socket.passport} has a reverse contact that does not exist.`);
+                continue;
+            }
+
+            const userId = contact.userID;
+            const totalListsNumber = listsInt.RL;
+
+            if (contactsMap.has(userId)) {
+                contactsMap.get(userId).lists_number |= totalListsNumber;
+            } else {
+                contactsMap.set(userId, {
+                    email: user[0].email,
+                    friendly_name: user[0].friendly_name,
+                    uuid: user[0].uuid,
+                    lists_number: totalListsNumber
+                });
+            }
+        }
+
+        const contactsData = Array.from(contactsMap.values());
+
+        for (const contact of contactsData) {
+            socket.write(`LST N=${contact.email} F=${contact.friendly_name} C=${contact.uuid} ${contact.lists_number}\r\n`);
+        }
     } else {
         try {
             const lists = ['FL', 'AL', 'BL'];
@@ -97,9 +164,4 @@ module.exports = async (socket, args) => {
             socket.write(`911 ${transactionID}\r\n`);
         }
     }
-
-    // socket.write(`LST ${transactionID} FL ${syncID} 1 1 default@butterfly.net default 0\r\n`);
-    // socket.write(`LST ${transactionID} AL ${syncID} 1 1 default@butterfly.net default\r\n`);
-    // socket.write(`LST ${transactionID} BL ${syncID} 0 0\r\n`);
-    // socket.write(`LST ${transactionID} RL ${syncID} 1 1 default@butterfly.net default\r\n`);
 }
