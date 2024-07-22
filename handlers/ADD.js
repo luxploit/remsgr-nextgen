@@ -1,8 +1,10 @@
 const chalk = require('chalk');
-const config = require("../config")
+const config = require("../config");
 const { verifyJWT } = require("../utils/auth.util");
-const connection = require('../db/connect').promise();
 const validator = require('email-validator');
+const mongoose = require('mongoose');
+const Contact = require('../models/Contact');
+const User = require('../models/User');
 
 module.exports = async (socket, args) => {
     const transactionID = args[0];
@@ -29,15 +31,15 @@ module.exports = async (socket, args) => {
         return;
     }
 
-    const [rows] = await connection.query('SELECT * FROM users WHERE email = ?', [email]);
+    const user = await User.findOne({ email }).exec();
 
-    if (rows.length === 0) {
+    if (!user) {
         console.log(`${chalk.red.bold('[ADD]')} ${socket.passport} has attempted to add a user that does not exist. (${email})`);
         socket.write(`205 ${transactionID}\r\n`);
         return;
     }
 
-    const [contacts] = await connection.query('SELECT * FROM contacts WHERE userID = ? AND list = ?', [decoded.id, list]);
+    const contacts = await Contact.find({ userID: decoded.id, list }).exec();
 
     if (contacts.length >= 150) {
         console.log(`${chalk.red.bold('[ADD]')} ${socket.passport} has attempted to add a user to a list that is full. (${email})`);
@@ -45,25 +47,32 @@ module.exports = async (socket, args) => {
         return;
     }
 
-    const [existing] = await connection.query('SELECT * FROM contacts WHERE userID = ? AND contactID = ? AND list = ?', [decoded.id, rows[0].id, list]);
+    const existing = await Contact.findOne({ userID: decoded.id, contactID: user._id, list }).exec();
 
-    if (existing.length > 0) {
+    if (existing) {
         console.log(`${chalk.red.bold('[ADD]')} ${socket.passport} has attempted to add a user that is already in their ${list} list. (${email})`);
         socket.write(`215 ${transactionID}\r\n`);
         return;
     }
 
-    const [blocked] = await connection.query('SELECT * FROM contacts WHERE userID = ? AND contactID = ? AND list = ?', [decoded.id, rows[0].id, 'BL']);
-    const [allowed] = await connection.query('SELECT * FROM contacts WHERE userID = ? AND contactID = ? AND list = ?', [decoded.id, rows[0].id, 'AL']);
+    const blocked = await Contact.findOne({ userID: decoded.id, contactID: user._id, list: 'BL' }).exec();
+    const allowed = await Contact.findOne({ userID: decoded.id, contactID: user._id, list: 'AL' }).exec();
 
-    if (blocked.length > 0 && allowed.length > 0) {
+    if (blocked && allowed) {
         console.log(`${chalk.red.bold('[ADD]')} ${socket.passport} has attempted to add a user that is blocked. (${email})`);
         socket.write(`215 ${transactionID}\r\n`);
         return;
     }
 
-    await connection.query('INSERT INTO contacts (userID, contactID, list) VALUES (?, ?, ?)', [decoded.id, rows[0].id, list]);
-    const friendly_name = rows[0].friendly_name;
+    const newContact = new Contact({
+        userID: decoded.id,
+        contactID: user._id,
+        list
+    });
+    
+    await newContact.save();
+
+    const friendly_name = user.friendly_name;
 
     console.log(`${chalk.green.bold('[ADD]')} ${socket.passport} has added ${email} to their ${list} list.`);
     socket.write(`ADD ${transactionID} ${list} 1 ${email} ${friendly_name} 0\r\n`);

@@ -1,8 +1,9 @@
 const chalk = require('chalk');
-const config = require("../config")
 const { verifyJWT } = require("../utils/auth.util");
 const { getSwitchboardSocketByPassport, getSocketByUserID } = require("../utils/socket.util");
-const connection = require('../db/connect').promise();
+
+const User = require('../models/User');
+const Contact = require('../models/Contact');
 
 module.exports = async (socket, args) => {
     const transactionID = args[0];
@@ -30,32 +31,32 @@ module.exports = async (socket, args) => {
     }
 
     if (email == decoded.email && socket.passport == email) {
-        await connection.query('UPDATE users SET friendly_name = ? WHERE id = ?', [friendly_name, decoded.id]);
+        await User.updateOne({ _id: decoded.id }, { friendly_name }).exec();
 
         const sbSocket = getSwitchboardSocketByPassport(email);
-    
+
         if (sbSocket) {
             sbSocket.friendly_name = friendly_name;
-            return;
         }
-    
+
         socket.friendly_name = friendly_name;
-    
-        const [contacts] = await connection.query('SELECT * FROM contacts WHERE userID = ? AND list = ?', [socket.userID, 'FL']);
-    
+
+        const contacts = await Contact.find({ userID: socket.userID, list: 'FL' }).exec();
+
         for (const contact of contacts) {
-            const contactSocket = getSocketByUserID(contact.contactID);
-    
+            const contactID = contact.contactID.toString();
+            const contactSocket = getSocketByUserID(contactID);
+
             if (!contactSocket) {
                 continue;
             }
-    
-            const [contactContacts] = await connection.query('SELECT * FROM contacts WHERE userID = ? AND contactID = ? AND list = ?', [contact.contactID, socket.userID, 'FL']);
-    
+
+            const contactContacts = await Contact.find({ userID: contact.contactID, contactID: socket.userID, list: 'FL' }).exec();
+
             if (contactContacts.length === 0) {
                 continue;
             }
-    
+
             contactSocket.write(`NLN ${socket.status} ${socket.passport} ${socket.friendly_name}\r\n`);
         }
     }

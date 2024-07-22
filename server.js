@@ -5,6 +5,7 @@ const fs = require('fs');
 const https = require('https');
 const http = require('http');
 const cors = require('cors');
+const mongoose = require('mongoose');
 
 const net = require('net');
 const notificationPORT = 1863;
@@ -13,6 +14,18 @@ const switchboardPORT = 1864;
 const chalk = require('chalk');
 const dotenv = require('dotenv');
 dotenv.config();
+
+const options = {
+	auth: {
+		username: process.env.MONGO_USER,
+		password: process.env.MONGO_PASS,
+	},
+};
+
+mongoose
+	.connect(process.env.MONGO_URI, options)
+	.then(() => console.log(`${chalk.magenta.bold('[MONGODB]')} Connected to ${chalk.green.bold("MongoDB")}\r\n-----------------------------------------`))
+	.catch((err) => console.error(`${chalk.magenta.bold('[MONGODB]')} Error connecting to ${chalk.green.bold("MongoDB")}:`, err, `\r\n-----------------------------------------`));
 
 // Express
 const app = express();
@@ -24,23 +37,26 @@ app.use(cookieParser());
 app.use(cors());
 
 app.use(express.text({ type: 'application/xml' }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-app.use((req, res, next) => {
-	let body = "";
-	req.on("data", (chunk) => {
-		body += chunk.toString();
-	});
-	req.on("end", () => {
-		req.body = parser.parse(body);
-		next();
-	});
-});
+// app.use((req, res, next) => {
+// 	let body = "";
+// 	req.on("data", (chunk) => {
+// 		body += chunk.toString();
+// 	});
+// 	req.on("end", () => {
+// 		req.body = parser.parse(body);
+// 		next();
+// 	});
+// });
 
-const { pprdr, twnAuth } = require('./services/authentication/tweener');
+const { pprdr, twnAuth, createAccount } = require('./services/authentication/tweener');
 
 // Tweener Auth
 app.get('/rdr/pprdr.asp', pprdr);
 app.get('/tweener/auth', twnAuth);
+app.post('/create', createAccount);
 
 app.post("/RST2.srf", async (req, res) => {
 	const username = req.body["s:Envelope"]["s:Header"]["wsse:Security"]["wsse:UsernameToken"]["wsse:Username"];
@@ -520,5 +536,4 @@ notification.listen(notificationPORT, () => {
 
 switchboard.listen(switchboardPORT, () => {
 	console.log(`${chalk.magenta.bold('[MSN SWITCHBOARD]')} Listening on port ${chalk.green.bold(switchboardPORT)}`);
-	console.log('-----------------------------------------');
 });

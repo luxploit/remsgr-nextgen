@@ -1,9 +1,10 @@
 const chalk = require('chalk');
-const config = require("../config")
+const config = require("../config");
 const { verifyJWT } = require("../utils/auth.util");
 const { getSocketByUserID } = require("../utils/socket.util");
-const connection = require('../db/connect').promise();
 const validator = require('email-validator');
+const Contact = require('../models/Contact');
+const User = require('../models/User');
 
 module.exports = async (socket, args) => {
     const transactionID = args[0];
@@ -30,33 +31,34 @@ module.exports = async (socket, args) => {
             return;
         }
 
-        const [rows] = await connection.query('SELECT * FROM users WHERE email = ?', [email]);
+        const user = await User.findOne({ email }).exec();
 
-        if (rows.length === 0) {
+        if (!user) {
             console.log(`${chalk.red.bold('[REM]')} ${socket.passport} attempted to remove a contact that does not exist. (${email})`);
             socket.write(`REM ${transactionID} 0\r\n`);
             return;
         }
 
-        const [contacts] = await connection.query('SELECT * FROM contacts WHERE userID = ? AND contactID = ? AND list = ?', [socket.userID, rows[0].id, list]);
+        const contact = await Contact.findOne({ userID: socket.userID, contactID: user._id, list }).exec();
 
-        if (contacts.length === 0) {
+        if (!contact) {
             console.log(`${chalk.red.bold('[REM]')} ${socket.passport} attempted to remove a contact that is not in their list. (${email})`);
             socket.write(`REM ${transactionID} 0\r\n`);
             return;
         }
 
-        await connection.query('DELETE FROM contacts WHERE userID = ? AND contactID = ? AND list = ?', [socket.userID, rows[0].id, list]);
+        await Contact.deleteOne({ userID: socket.userID, contactID: user._id, list }).exec();
 
-        const contactSocket = getSocketByUserID(rows[0].id);
+        const contactID = user._id.toString();
+        const contactSocket = getSocketByUserID(contactID);
 
         console.log(`${chalk.green.bold('[REM]')} ${socket.passport} removed ${email} from their list.`);
         socket.write(`REM ${transactionID} ${list} 1 ${email}\r\n`);
 
         if (contactSocket) {
-            const [contactContacts] = await connection.query('SELECT * FROM contacts WHERE userID = ? AND contactID = ? AND list = ?', [rows[0].id, socket.userID, list]);
+            const contactContact = await Contact.findOne({ userID: user._id, contactID: socket.userID, list }).exec();
 
-            if (contactContacts.length === 0) {
+            if (!contactContact) {
                 return;
             }
 

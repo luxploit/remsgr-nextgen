@@ -1,6 +1,8 @@
 const chalk = require('chalk');
-const connection = require('../db/connect').promise();
 const listsInt = require('../data/lists');
+const { verifyJWT } = require('../utils/auth.util');
+const Contact = require('../models/Contact');
+const User = require('../models/User');
 
 module.exports = async (socket, args) => {
     const transactionID = args[0];
@@ -11,12 +13,20 @@ module.exports = async (socket, args) => {
         return;
     }
 
+    const decoded = await verifyJWT(socket.token);
+
+    if (!decoded) {
+        console.log(`${chalk.red.bold('[SYN]')} ${socket.remoteAddress} has an invalid token.`);
+        socket.destroy();
+        return;
+    }
+
     console.log(`${chalk.magentaBright.bold('[SYN]')} ${socket.passport} sister wants CONTACT LIST 💜`);
 
     if (socket.version >= 10) {
         const lists = ['FL', 'AL', 'BL'];
-        const promises = lists.map(list => connection.query('SELECT * FROM contacts WHERE userID = ? AND list = ?', [socket.userID, list]));
-        const reverseList = connection.query('SELECT * FROM contacts WHERE contactID = ? AND list = ?', [socket.userID, 'FL']);
+        const promises = lists.map(list => Contact.find({ userID: socket.userID, list }).exec());
+        const reverseList = Contact.find({ contactID: socket.userID, list: 'FL' }).exec();
 
         const results = await Promise.all(promises);
         const reverse = await reverseList;
@@ -25,12 +35,12 @@ module.exports = async (socket, args) => {
 
         results.forEach(result => {
             result.forEach(contact => {
-                allContacts.add(contact.contactID);
+                allContacts.add(contact.contactID.toString());
             });
         });
 
         reverse.forEach(contact => {
-            allContacts.add(contact.contactID);
+            allContacts.add(contact.userID.toString());
         });
 
         const totalContacts = allContacts.size;
@@ -51,22 +61,66 @@ module.exports = async (socket, args) => {
 
         const timestamp = getFormattedTimestamp();
 
-        socket.write(`SYN ${transactionID} ${timestamp} ${timestamp} ${totalContacts} 0\r\n`);
+        const user = await User.findById(socket.userID).exec();
+
+        const totalGroupsInt = user.groups.length;
+
+        socket.write(`SYN ${transactionID} ${timestamp} ${timestamp} ${totalContacts} ${totalGroupsInt}\r\n`);
         socket.write(`GTC A\r\n`);
         socket.write(`BLP AL\r\n`);
         socket.write(`PRP MFN ${socket.friendly_name}\r\n`);
+
+        if (!user) {
+            console.log(`${chalk.magentaBright.bold('[SYN]')} ${socket.passport} does not exist.`);
+            socket.destroy();
+            return;
+        }
+
+        if (!user.groups) {
+            return;
+        }
+
+        const groups = user.groups;
+
+        groups.forEach(group => {
+            socket.write(`LSG ${group.name} ${group.id}\r\n`);
+        });
+
     } else if (socket.version <= 9) {
         socket.write(`SYN ${transactionID} ${syncID}\r\n`);
         socket.write(`GTC ${transactionID} ${syncID} A\r\n`);
         socket.write(`BLP ${transactionID} ${syncID} AL\r\n`);
 
-        socket.write(`LSG ${transactionID} ${syncID} 1 2 0 Other%20Contacts 0\r\n`);
-        socket.write(`LSG ${transactionID} ${syncID} 2 2 1 Favorites 0\r\n`);
+        if (socket.version >= 7) {
+            const user = await User.findById(socket.userID).exec();
+
+            if (!user) {
+                console.log(`${chalk.magentaBright.bold('[SYN]')} ${socket.passport} does not exist.`);
+                socket.destroy();
+                return;
+            }
+
+            if (!user.groups) {
+                return;
+            }
+
+            const groups = Array.isArray(user.groups) ? user.groups : JSON.parse(user.groups);
+            const totalGroups = groups.length + 1;
+
+            let index = 2;
+
+            socket.write(`LSG ${transactionID} ${syncID} 1 ${totalGroups} 0 Other%20Contacts 0\r\n`);
+
+            groups.forEach(group => {
+                socket.write(`LSG ${transactionID} ${syncID} ${index} ${totalGroups} ${index - 1} ${group.name} 0\r\n`);
+                index++;
+            });
+        }
     }
 
     if (socket.version >= 10) {
-        const [contacts] = await connection.query('SELECT * FROM contacts WHERE userID = ?', [socket.userID]);
-        const [reverseContacts] = await connection.query('SELECT * FROM contacts WHERE contactID = ? AND list = ?', [socket.userID, 'FL']);
+        const contacts = await Contact.find({ userID: socket.userID }).exec();
+        const reverseContacts = await Contact.find({ contactID: socket.userID, list: 'FL' }).exec();
 
         if (contacts.length === 0 && reverseContacts.length === 0) {
             console.log(`${chalk.magentaBright.bold('[SYN]')} ${socket.passport} has no contacts.`);
@@ -77,14 +131,14 @@ module.exports = async (socket, args) => {
         let contactsMap = new Map();
 
         for (const contact of contacts) {
-            const [user] = await connection.query('SELECT * FROM users WHERE id = ?', [contact.contactID]);
+            const user = await User.findById(contact.contactID).exec();
 
-            if (user.length === 0) {
+            if (!user) {
                 console.log(`${chalk.magentaBright.bold('[SYN]')} ${socket.passport} has a contact that does not exist.`);
                 continue;
             }
 
-            const userId = contact.contactID;
+            const userId = contact.contactID.toString();
             const contactLists = contact.list.split(',').map(list => listsInt[list]);
             const totalListsNumber = contactLists.reduce((acc, num) => acc + num, 0);
 
@@ -92,32 +146,32 @@ module.exports = async (socket, args) => {
                 contactsMap.get(userId).lists_number |= totalListsNumber;
             } else {
                 contactsMap.set(userId, {
-                    email: user[0].email,
-                    friendly_name: user[0].friendly_name,
-                    uuid: user[0].uuid,
+                    email: user.email,
+                    friendly_name: user.friendly_name,
+                    uuid: user.uuid,
                     lists_number: totalListsNumber
                 });
             }
         }
 
         for (const contact of reverseContacts) {
-            const [user] = await connection.query('SELECT * FROM users WHERE id = ?', [contact.userID]);
+            const user = await User.findById(contact.userID).exec();
 
-            if (user.length === 0) {
+            if (!user) {
                 console.log(`${chalk.magentaBright.bold('[SYN]')} ${socket.passport} has a reverse contact that does not exist.`);
                 continue;
             }
 
-            const userId = contact.userID;
+            const userId = contact.userID.toString();
             const totalListsNumber = listsInt.RL;
 
             if (contactsMap.has(userId)) {
                 contactsMap.get(userId).lists_number |= totalListsNumber;
             } else {
                 contactsMap.set(userId, {
-                    email: user[0].email,
-                    friendly_name: user[0].friendly_name,
-                    uuid: user[0].uuid,
+                    email: user.email,
+                    friendly_name: user.friendly_name,
+                    uuid: user.uuid,
                     lists_number: totalListsNumber
                 });
             }
@@ -131,13 +185,13 @@ module.exports = async (socket, args) => {
     } else {
         try {
             const lists = ['FL', 'AL', 'BL'];
-            const queries = lists.map(list => connection.query('SELECT * FROM contacts WHERE userID = ? AND list = ?', [socket.userID, list]));
-            queries.push(connection.query('SELECT * FROM contacts WHERE contactID = ? AND list = ?', [socket.userID, 'FL']));
+            const queries = lists.map(list => Contact.find({ userID: socket.userID, list }).exec());
+            queries.push(Contact.find({ contactID: socket.userID, list: 'FL' }).exec());
             const results = await Promise.all(queries);
 
-            results.forEach((result, i) => {
+            results.forEach(async (result, i) => {
                 const list = i < lists.length ? lists[i] : 'RL';
-                const contacts = result[0];
+                const contacts = result;
 
                 if (contacts.length === 0) {
                     console.log(`${chalk.magentaBright.bold('[SYN]')} ${socket.passport} has no contacts in list ${list}.`);
@@ -146,18 +200,17 @@ module.exports = async (socket, args) => {
                 }
 
                 const total = contacts.length;
-                contacts.forEach(async (contact, index) => {
+                for (const [index, contact] of contacts.entries()) {
                     const userID = list === 'RL' ? contact.userID : contact.contactID;
-                    const [users] = await connection.query('SELECT * FROM users WHERE id = ?', [userID]);
+                    const user = await User.findById(userID).exec();
 
-                    if (users.length === 0) {
+                    if (!user) {
                         console.log(`${chalk.magentaBright.bold('[SYN]')} ${socket.passport} has a contact in list ${list} that does not exist.`);
                         return;
                     }
 
-                    const user = users[0];
                     socket.write(`LST ${transactionID} ${list} ${syncID} ${index + 1} ${total} ${user.email} ${user.friendly_name} 0\r\n`);
-                });
+                }
             });
         } catch (err) {
             console.log(`${chalk.magentaBright.bold('[SYN]')} ${socket.passport} failed to get contacts from the database.`);

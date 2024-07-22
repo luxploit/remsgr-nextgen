@@ -4,7 +4,6 @@ const { getSocketByPassport } = require("../../utils/socket.util");
 const { switchboard_chats } = require("../../utils/sb.util");
 const config = require("../../config");
 const crypto = require('crypto');
-// const connection = require('../../db/connect').promise();
 
 module.exports = async (socket, args) => {
     const transactionID = args[0];

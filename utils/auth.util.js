@@ -1,8 +1,10 @@
-const chalk = require('chalk');
-const connection = require('../db/connect').promise();
 const jwt = require('jsonwebtoken');
 const { parse: uuidParse } = require('uuid');
-const { sockets, getSocketByPassport, getMultipleSocketsByPassport, getSocketByUserID } = require('./socket.util');
+const chalk = require('chalk');
+const { getMultipleSocketsByPassport, getSocketByUserID } = require('./socket.util');
+
+const User = require('../models/User');
+const Contact = require('../models/Contact');
 
 class MD5Auth {
     static algorithm = 'md5';
@@ -12,16 +14,16 @@ class MD5Auth {
         if (state === 'I') {
             console.log(`${chalk.yellow.bold('[USR MD5 INITIAL]')} ${passport} is trying to log in.`);
 
-            const [rows] = await connection.query('SELECT legacy_pass FROM users WHERE email = ?', [passport]);
+            const user = await User.findOne({ email: passport });
 
-            if (rows.length === 0) {
+            if (!user) {
                 console.log(`${chalk.yellow.bold('[USR MD5 INITIAL]')} ${passport} does not exist in the database.`);
                 socket.write(`911 ${transactionID}\r\n`);
                 socket.destroy();
                 return;
             }
 
-            const legacyPass = rows[0].legacy_pass;
+            const legacyPass = user.legacy_pass;
 
             if (!legacyPass) {
                 console.log(`${chalk.yellow.bold('[USR MD5 INITIAL]')} ${passport} has no legacy password.`);
@@ -31,21 +33,20 @@ class MD5Auth {
             }
 
             const md5Hash = this.extractMD5Hash(legacyPass);
-    
+
             console.log(`${chalk.yellow.bold('[USR MD5 INITIAL]')} Returned MD5 hash to ${passport}`);
             socket.write(`USR ${transactionID} MD5 S ${md5Hash}\r\n`);
         } else if (state === 'S') {
-            const [rows] = await connection.query('SELECT * FROM users WHERE email = ?', [passport]);
+            const user = await User.findOne({ email: passport });
 
-            if (rows.length === 0) {
+            if (!user) {
                 console.log(`${chalk.yellow.bold('[USR MD5 SUBSEQUENT]')} ${passport} does not exist in the database.`);
                 socket.write(`911 ${transactionID}\r\n`);
                 socket.destroy();
                 return;
             }
 
-            const legacyPass = rows[0].legacy_pass;
-            const friendly_name = rows[0].friendly_name;
+            const legacyPass = user.legacy_pass;
 
             if (!legacyPass) {
                 console.log(`${chalk.yellow.bold('[USR MD5 SUBSEQUENT]')} ${passport} has no legacy password.`);
@@ -73,19 +74,20 @@ class MD5Auth {
                 }
             });
 
-            const token = jwt.sign({ id: rows[0].id, uuid: rows[0].uuid, email: rows[0].email }, process.env.JWT_SECRET, { expiresIn: '1d' });
+            const token = jwt.sign({ id: user._id, uuid: user.uuid, email: user.email }, process.env.JWT_SECRET, { expiresIn: '1d' });
             socket.token = token;
-            socket.userID = rows[0].id;
-            socket.friendly_name = friendly_name;
+            socket.userID = user._id.toString();
+            socket.friendly_name = user.friendly_name;
 
-            await connection.query('UPDATE users SET last_login = NOW() WHERE email = ?', [passport]);
+            user.last_login = new Date();
+            await user.save();
 
             console.log(`${chalk.yellow.bold('[USR MD5 SUBSEQUENT]')} ${passport} has successfully logged in.`);
-            socket.write(`USR ${transactionID} OK ${passport} ${friendly_name} 1\r\n`);
+            socket.write(`USR ${transactionID} OK ${passport} ${user.friendly_name} 1\r\n`);
 
             if (version >= 7) {
                 const timestamp = Math.floor(Date.now() / 1000);
-                const [high, low] = uuidToHighLow(rows[0].uuid);
+                const [high, low] = uuidToHighLow(user.uuid);
                 const ip = socket.remoteAddress.replace('::ffff:', '');
                 const port = socket.remotePort;
 
@@ -94,12 +96,12 @@ class MD5Auth {
                 const newLineCount = (messageTemplate.match(/\r\n/g) || []).length;
                 const initialHeader = `MSG Hotmail Hotmail `;
                 const lengthWithoutPlaceholder = initialHeader.length + messageTemplate.length - newLineCount;
-                
+
                 const messageLength = lengthWithoutPlaceholder + String(lengthWithoutPlaceholder).length + 1;
                 const messageHeader = `MSG Hotmail Hotmail ${messageLength}\r\n`;
-                
+
                 const finalMessage = messageHeader + messageTemplate;
-                
+
                 socket.write(finalMessage);
             }
         }
@@ -137,9 +139,9 @@ class TWNAuth {
                 return;
             }
 
-            const [rows] = await connection.query('SELECT * FROM users WHERE email = ?', [passport]);
+            const user = await User.findOne({ email: passport });
 
-            if (rows.length === 0) {
+            if (!user) {
                 console.log(`${chalk.yellow.bold('[USR TWN SUBSEQUENT]')} ${passport} does not exist in the database.`);
                 socket.write(`911 ${transactionID}\r\n`);
                 socket.destroy();
@@ -157,17 +159,18 @@ class TWNAuth {
             });
 
             socket.token = token;
-            socket.userID = rows[0].id;
-            socket.friendly_name = rows[0].friendly_name;
+            socket.userID = user._id.toString();
+            socket.friendly_name = user.friendly_name;
 
-            await connection.query('UPDATE users SET last_login = NOW() WHERE email = ?', [passport]);
+            user.last_login = new Date();
+            await user.save();
 
             console.log(`${chalk.yellow.bold('[USR TWN SUBSEQUENT]')} ${passport} has successfully logged in.`);
             if (version >= 10) {
                 socket.write(`USR ${transactionID} OK ${passport} 1 0\r\n`);
 
                 const timestamp = Math.floor(Date.now() / 1000);
-                const [high, low] = uuidToHighLow(rows[0].uuid);
+                const [high, low] = uuidToHighLow(user.uuid);
                 const ip = socket.remoteAddress.replace('::ffff:', '');
                 const port = socket.remotePort;
 
@@ -176,18 +179,18 @@ class TWNAuth {
                 const newLineCount = (messageTemplate.match(/\r\n/g) || []).length;
                 const initialHeader = `MSG Hotmail Hotmail `;
                 const lengthWithoutPlaceholder = initialHeader.length + messageTemplate.length - newLineCount;
-                
+
                 const messageLength = lengthWithoutPlaceholder + String(lengthWithoutPlaceholder).length + 1;
                 const messageHeader = `MSG Hotmail Hotmail ${messageLength}\r\n`;
-                
+
                 const finalMessage = messageHeader + messageTemplate;
-                
+
                 socket.write(finalMessage);
             } else {
                 socket.write(`USR ${transactionID} OK ${passport} ${socket.friendly_name} 1 0\r\n`);
 
                 const timestamp = Math.floor(Date.now() / 1000);
-                const [high, low] = uuidToHighLow(rows[0].uuid);
+                const [high, low] = uuidToHighLow(user.uuid);
                 const ip = socket.remoteAddress.replace('::ffff:', '');
                 const port = socket.remotePort;
 
@@ -196,12 +199,12 @@ class TWNAuth {
                 const newLineCount = (messageTemplate.match(/\r\n/g) || []).length;
                 const initialHeader = `MSG Hotmail Hotmail `;
                 const lengthWithoutPlaceholder = initialHeader.length + messageTemplate.length - newLineCount;
-                
+
                 const messageLength = lengthWithoutPlaceholder + String(lengthWithoutPlaceholder).length + 1;
                 const messageHeader = `MSG Hotmail Hotmail ${messageLength}\r\n`;
-                
+
                 const finalMessage = messageHeader + messageTemplate;
-                
+
                 socket.write(finalMessage);
             }
         }
@@ -231,23 +234,24 @@ async function verifyJWT(token) {
 }
 
 async function logOut(socket) {
-    if (!socket.userID && !socket.token && !socket.passport) {
+    if (!socket.userID || !socket.token || !socket.passport) {
         socket.write(`OUT\r\n`);
         socket.destroy();
         return;
     }
 
     try {
-        const [contacts] = await connection.query('SELECT * FROM contacts WHERE userID = ? AND list = ?', [socket.userID, 'FL']);
-        
+        const contacts = await Contact.find({ userID: socket.userID, list: 'FL' });
+
         for (const contact of contacts) {
-            const contactSocket = getSocketByUserID(contact.contactID);
+            const contactID = contact.contactID.toString();
+            const contactSocket = getSocketByUserID(contactID);
 
             if (!contactSocket) {
                 continue;
             }
 
-            const [contactContacts] = await connection.query('SELECT * FROM contacts WHERE userID = ? AND contactID = ? AND list = ?', [contact.contactID, socket.userID, 'FL']);
+            const contactContacts = await Contact.find({ userID: contact.contactID, contactID: socket.userID, list: 'FL' });
 
             if (contactContacts.length > 0) {
                 contactSocket.write(`FLN ${socket.passport}\r\n`);

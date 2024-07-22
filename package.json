@@ -23,6 +23,7 @@
     "http": "^0.0.1-security",
     "https": "^1.0.0",
     "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.4.3",
     "mysql2": "^3.10.0",
     "net": "^1.0.2",
     "uuid": "^9.0.1"

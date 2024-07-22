@@ -1,5 +1,3 @@
-const { Socket } = require("net");
-
 const switchboard_chats = [];
 
 const checkIfChatExists = (chatID) => {

@@ -1,7 +1,8 @@
 const chalk = require('chalk');
 const { getSocketByUserID } = require('../utils/socket.util');
 const { verifyJWT } = require('../utils/auth.util');
-const connection = require('../db/connect').promise();
+const Contact = require('../models/Contact');
+const User = require('../models/User');
 
 module.exports = async (socket, args, command) => {
     const transactionID = args[0];
@@ -21,9 +22,9 @@ module.exports = async (socket, args, command) => {
         return;
     }
 
-    const [rows] = await connection.query('SELECT * FROM users WHERE id = ?', [socket.userID]);
+    const user = await User.findById(socket.userID).exec();
 
-    if (rows.length === 0) {
+    if (!user) {
         console.log(`${chalk.red.bold('[CHG]')} ${socket.passport} has an invalid user ID.`);
         socket.write(`201 ${transactionID}\r\n`);
         socket.destroy();
@@ -40,25 +41,30 @@ module.exports = async (socket, args, command) => {
         socket.initial_status = false;
     }
 
-    const [contacts] = await connection.query('SELECT * FROM contacts WHERE userID = ? AND list = ?', [socket.userID, 'AL']);
+    const contacts = await Contact.find({ userID: socket.userID, list: 'AL' }).exec();
 
     for (const contact of contacts) {
-        const contactSocket = getSocketByUserID(contact.contactID);
+        const contactID = contact.contactID.toString();
+        const contactSocket = getSocketByUserID(contactID);
+
+        console.log(contactSocket + contactID);
 
         if (!contactSocket) {
             continue;
         }
 
-        const [contactContacts] = await connection.query('SELECT * FROM contacts WHERE userID = ? AND contactID = ? AND list = ?', [contact.contactID, socket.userID, 'FL']);
+        const contactContacts = await Contact.find({ userID: contact.contactID, contactID: socket.userID, list: 'FL' }).exec();
+
+        console.log(contactContacts);
 
         if (contactContacts.length === 0) {
             continue;
         }
 
         if (status === 'HDN') {
-            contactSocket.write(`FLN ${rows[0].email}\r\n`);
+            contactSocket.write(`FLN ${user.email}\r\n`);
         } else {
-            contactSocket.write(`NLN ${status} ${rows[0].email} ${rows[0].friendly_name}\r\n`);
+            contactSocket.write(`NLN ${status} ${user.email} ${user.friendly_name}\r\n`);
         }
     }
 
@@ -67,18 +73,19 @@ module.exports = async (socket, args, command) => {
     socket.status = status;
 
     if (socket.initial_status === false) {
-        const [contacts] = await connection.query('SELECT * FROM contacts WHERE userID = ? AND list = ?', [socket.userID, 'FL']);
+        const contactsFL = await Contact.find({ userID: socket.userID, list: 'FL' }).exec();
 
-        for (const contact of contacts) {
-            const contactSocket = getSocketByUserID(contact.contactID);
+        for (const contact of contactsFL) {
+            const contactID = contact.contactID.toString();
+            const contactSocket = getSocketByUserID(contactID);
 
             if (!contactSocket) {
                 continue;
             }
 
-            const [contactContacts] = await connection.query('SELECT * FROM contacts WHERE userID = ? AND contactID = ? AND list = ?', [contact.contactID, socket.userID, 'AL']);
+            const contactContactsAL = await Contact.find({ userID: contact.contactID, contactID: socket.userID, list: 'AL' }).exec();
 
-            if (contactContacts.length === 0) {
+            if (contactContactsAL.length === 0) {
                 continue;
             }
 
@@ -86,9 +93,11 @@ module.exports = async (socket, args, command) => {
                 continue;
             }
 
-            const [contactUser] = await connection.query('SELECT * FROM users WHERE id = ?', [contact.contactID]);
+            const contactUser = await User.findById(contact.contactID).exec();
 
-            socket.write(`ILN ${transactionID} ${contactSocket.status} ${contactUser[0].email} ${contactUser[0].friendly_name}\r\n`);
+            console.log(contactUser);
+
+            socket.write(`ILN ${transactionID} ${contactSocket.status} ${contactUser.email} ${contactUser.friendly_name}\r\n`);
         }
 
         socket.initial_status = true;
