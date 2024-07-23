@@ -1,7 +1,7 @@
 {
     "server": {
-        "host": "https://192.168.1.62/",
-        "ip": "192.168.1.62",
+        "host": "https://10.147.18.54/",
+        "ip": "10.147.18.54",
         "notification_port": 1863,
         "switchboard_port": 1864,
         "http_port": 80,

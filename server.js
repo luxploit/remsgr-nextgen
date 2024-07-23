@@ -502,7 +502,7 @@ const switchboard = net.createServer((socket) => {
 		if (fs.existsSync(handlerPath)) {
 			const handler = require(handlerPath);
 			try {
-				handler(socket, commandParts.slice(1), command);
+				handler(socket, commandParts.slice(1), command, data);
 			} catch (err) {
 				console.log(command);
 				console.error(err);

@@ -17,6 +17,8 @@ module.exports = async (socket, args) => {
 
     const decoded = await verifyJWT(socket.token);
 
+    const user = await User.findById(decoded.id).exec();
+
     if (!decoded) {
         console.log(`${chalk.red.bold('[REA]')} ${socket.remoteAddress} has an invalid token.`);
         socket.write(`OUT\r\n`);
@@ -30,7 +32,7 @@ module.exports = async (socket, args) => {
         return;
     }
 
-    if (email == decoded.email && socket.passport == email) {
+    if (email == user.email && socket.passport == email) {
         await User.updateOne({ _id: decoded.id }, { friendly_name }).exec();
 
         const sbSocket = getSwitchboardSocketByPassport(email);

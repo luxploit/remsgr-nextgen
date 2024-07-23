@@ -48,7 +48,7 @@ exports.twnAuth = async (req, res) => {
                 return;
             }
 
-            const token = jwt.sign({ id: user._id, uuid: user.uuid, email: user.email }, process.env.JWT_SECRET, { expiresIn: '1d' });
+            const token = jwt.sign({ id: user._id, uuid: user.uuid }, process.env.JWT_SECRET, { expiresIn: '1d' });
 
             res.set({
                 'Content-Type': 'text/plain',
@@ -74,14 +74,14 @@ exports.twnAuth = async (req, res) => {
 
 exports.createAccount = async (req, res) => {
     try {
-        const { username, email, password } = req.body;
-
-        console.log(req.body)
+        const { displayname, username, email, password } = req.body;
 
         if (!username || !email || !password) {
             res.status(400).send('Bad Request');
             return;
         }
+
+        const friendly_name = displayname || username + "@xirk.org";
 
         const user = await User.findOne({ email }).exec();
 
@@ -94,6 +94,7 @@ exports.createAccount = async (req, res) => {
 
         const newUser = new User({
             uuid: uuidv4(),
+            friendly_name,
             username,
             email,
             password: hashedPassword,

@@ -47,15 +47,11 @@ module.exports = async (socket, args, command) => {
         const contactID = contact.contactID.toString();
         const contactSocket = getSocketByUserID(contactID);
 
-        console.log(contactSocket + contactID);
-
         if (!contactSocket) {
             continue;
         }
 
         const contactContacts = await Contact.find({ userID: contact.contactID, contactID: socket.userID, list: 'FL' }).exec();
-
-        console.log(contactContacts);
 
         if (contactContacts.length === 0) {
             continue;
@@ -94,8 +90,6 @@ module.exports = async (socket, args, command) => {
             }
 
             const contactUser = await User.findById(contact.contactID).exec();
-
-            console.log(contactUser);
 
             socket.write(`ILN ${transactionID} ${contactSocket.status} ${contactUser.email} ${contactUser.friendly_name}\r\n`);
         }

@@ -74,7 +74,7 @@ class MD5Auth {
                 }
             });
 
-            const token = jwt.sign({ id: user._id, uuid: user.uuid, email: user.email }, process.env.JWT_SECRET, { expiresIn: '1d' });
+            const token = jwt.sign({ id: user._id, uuid: user.uuid }, process.env.JWT_SECRET, { expiresIn: '1d' });
             socket.token = token;
             socket.userID = user._id.toString();
             socket.friendly_name = user.friendly_name;
