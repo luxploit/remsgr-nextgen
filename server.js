@@ -382,10 +382,7 @@ httpsServer.listen(443, () => {
 	console.log(`${chalk.magenta.bold('[HTTPS SERVER]')} Listening on port ${chalk.green.bold("443")}`);
 });
 
-const httpServer = http.createServer((req, res) => {
-	res.writeHead(301, { Location: 'https://' + req.headers.host + req.url });
-	res.end();
-});
+const httpServer = http.createServer(app);
 
 httpServer.listen(80, () => {
 	console.log(`${chalk.magenta.bold('[HTTP SERVER]')} Listening on port ${chalk.green.bold("80")}`);

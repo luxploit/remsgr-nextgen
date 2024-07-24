@@ -18,7 +18,7 @@ module.exports = async (socket, args) => {
 
     if (!socket.chat) {
         console.log(`${chalk.yellow.bold('[SB: CAL]')} ${socket.remoteAddress} has no chatroom assigned, cannot call.`);
-        socket.write(`911 ${transactionID}\r\n`);
+        socket.write(`280 ${transactionID}\r\n`);
         socket.destroy();
         return;
     }
@@ -26,8 +26,8 @@ module.exports = async (socket, args) => {
     const regularSocket = getSocketByPassport(email);
 
     if (!regularSocket) {
-        console.log(`${chalk.yellow.bold('[SB: CAL]')} ${socket.remoteAddress} has an invalid user ID.`);
-        socket.write(`911 ${transactionID}\r\n`);
+        console.log(`${chalk.yellow.bold('[SB: CAL]')} ${email} is not online or doesn't exist.`);
+        socket.write(`217 ${transactionID}\r\n`);
         socket.destroy();
         return;
     }

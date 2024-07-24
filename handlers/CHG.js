@@ -7,6 +7,8 @@ const User = require('../models/User');
 module.exports = async (socket, args, command) => {
     const transactionID = args[0];
     const status = args[1];
+    const capabilities = args[2] || 0;
+    const msnobjectpfp = args[3] || '';
 
     if (isNaN(transactionID)) {
         socket.destroy();
@@ -30,6 +32,9 @@ module.exports = async (socket, args, command) => {
         socket.destroy();
         return;
     }
+
+    socket.capabilities = capabilities;
+    socket.msnobjectpfp = msnobjectpfp;
 
     if (!['NLN', 'BSY', 'IDL', 'BRB', 'AWY', 'PHN', 'LUN', 'HDN'].includes(status)) {
         console.log(`${chalk.red.bold('[CHG]')} ${socket.passport} has attempted to change their status to an invalid status. (${status})`);
@@ -60,7 +65,11 @@ module.exports = async (socket, args, command) => {
         if (status === 'HDN') {
             contactSocket.write(`FLN ${user.email}\r\n`);
         } else {
-            contactSocket.write(`NLN ${status} ${user.email} ${user.friendly_name}\r\n`);
+            if (contactSocket.version >= 8) {
+                contactSocket.write(`NLN ${status} ${user.email} ${user.friendly_name} ${capabilities}\r\n`);
+            } else {
+                contactSocket.write(`NLN ${status} ${user.email} ${user.friendly_name}\r\n`);
+            }
         }
     }
 
@@ -91,7 +100,11 @@ module.exports = async (socket, args, command) => {
 
             const contactUser = await User.findById(contact.contactID).exec();
 
-            socket.write(`ILN ${transactionID} ${contactSocket.status} ${contactUser.email} ${contactUser.friendly_name}\r\n`);
+            if (socket.version >= 8) {
+                socket.write(`ILN ${transactionID} ${contactSocket.status} ${contactUser.email} ${contactUser.friendly_name} ${contactSocket.capabilities}\r\n`);
+            } else {
+                socket.write(`ILN ${transactionID} ${contactSocket.status} ${contactUser.email} ${contactUser.friendly_name}\r\n`);
+            }
         }
 
         socket.initial_status = true;

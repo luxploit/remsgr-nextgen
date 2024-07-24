@@ -37,6 +37,7 @@ const userSchema = new mongoose.Schema({
   },
   groups: {
     type: mongoose.Schema.Types.Mixed,
+    required: true,
     default: {}
   },
   created_at: {
