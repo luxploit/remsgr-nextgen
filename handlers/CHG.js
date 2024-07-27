@@ -66,7 +66,7 @@ module.exports = async (socket, args, command) => {
             contactSocket.write(`FLN ${user.email}\r\n`);
         } else {
             if (contactSocket.version >= 8) {
-                contactSocket.write(`NLN ${status} ${user.email} ${user.friendly_name} ${capabilities}\r\n`);
+                contactSocket.write(`NLN ${status} ${user.email} ${user.friendly_name} ${capabilities} ${msnobjectpfp}\r\n`);
             } else {
                 contactSocket.write(`NLN ${status} ${user.email} ${user.friendly_name}\r\n`);
             }
@@ -101,7 +101,7 @@ module.exports = async (socket, args, command) => {
             const contactUser = await User.findById(contact.contactID).exec();
 
             if (socket.version >= 8) {
-                socket.write(`ILN ${transactionID} ${contactSocket.status} ${contactUser.email} ${contactUser.friendly_name} ${contactSocket.capabilities}\r\n`);
+                socket.write(`ILN ${transactionID} ${contactSocket.status} ${contactUser.email} ${contactUser.friendly_name} ${contactSocket.capabilities}${" " + socket.msnobjectpfp}\r\n`);
             } else {
                 socket.write(`ILN ${transactionID} ${contactSocket.status} ${contactUser.email} ${contactUser.friendly_name}\r\n`);
             }
