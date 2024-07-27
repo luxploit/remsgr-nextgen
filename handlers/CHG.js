@@ -63,12 +63,12 @@ module.exports = async (socket, args, command) => {
         }
 
         if (status === 'HDN') {
-            contactSocket.write(`FLN ${user.email}\r\n`);
+            contactSocket.write(`FLN ${user.username + "@xirk.org"}\r\n`);
         } else {
             if (contactSocket.version >= 8) {
-                contactSocket.write(`NLN ${status} ${user.email} ${user.friendly_name} ${capabilities} ${msnobjectpfp}\r\n`);
+                contactSocket.write(`NLN ${status} ${user.username + "@xirk.org"} ${user.friendly_name} ${capabilities} ${msnobjectpfp}\r\n`);
             } else {
-                contactSocket.write(`NLN ${status} ${user.email} ${user.friendly_name}\r\n`);
+                contactSocket.write(`NLN ${status} ${user.username + "@xirk.org"} ${user.friendly_name}\r\n`);
             }
         }
     }
@@ -101,9 +101,9 @@ module.exports = async (socket, args, command) => {
             const contactUser = await User.findById(contact.contactID).exec();
 
             if (socket.version >= 8) {
-                socket.write(`ILN ${transactionID} ${contactSocket.status} ${contactUser.email} ${contactUser.friendly_name} ${contactSocket.capabilities}${" " + socket.msnobjectpfp}\r\n`);
+                socket.write(`ILN ${transactionID} ${contactSocket.status} ${user.username + "@xirk.org"} ${contactUser.friendly_name} ${contactSocket.capabilities}${" " + socket.msnobjectpfp}\r\n`);
             } else {
-                socket.write(`ILN ${transactionID} ${contactSocket.status} ${contactUser.email} ${contactUser.friendly_name}\r\n`);
+                socket.write(`ILN ${transactionID} ${contactSocket.status} ${user.username + "@xirk.org"} ${contactUser.friendly_name}\r\n`);
             }
         }
 

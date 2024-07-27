@@ -146,7 +146,7 @@ module.exports = async (socket, args) => {
                 contactsMap.get(userId).lists_number |= totalListsNumber;
             } else {
                 contactsMap.set(userId, {
-                    email: user.email,
+                    email: user.username + "@xirk.org",
                     friendly_name: user.friendly_name,
                     uuid: user.uuid,
                     lists_number: totalListsNumber
@@ -169,7 +169,7 @@ module.exports = async (socket, args) => {
                 contactsMap.get(userId).lists_number |= totalListsNumber;
             } else {
                 contactsMap.set(userId, {
-                    email: user.email,
+                    email: user.username + "@xirk.org",
                     friendly_name: user.friendly_name,
                     uuid: user.uuid,
                     lists_number: totalListsNumber
@@ -180,7 +180,7 @@ module.exports = async (socket, args) => {
         const contactsData = Array.from(contactsMap.values());
 
         for (const contact of contactsData) {
-            socket.write(`LST N=${contact.email} F=${contact.friendly_name} C=${contact.uuid} ${contact.lists_number}\r\n`);
+            socket.write(`LST N=${contact.username + "@xirk.org"} F=${contact.friendly_name} C=${contact.uuid} ${contact.lists_number}\r\n`);
         }
     } else {
         try {
@@ -209,7 +209,7 @@ module.exports = async (socket, args) => {
                         return;
                     }
 
-                    socket.write(`LST ${transactionID} ${list} ${syncID} ${index + 1} ${total} ${user.email} ${user.friendly_name} 0\r\n`);
+                    socket.write(`LST ${transactionID} ${list} ${syncID} ${index + 1} ${total} ${user.username + "@xirk.org"} ${user.friendly_name} 0\r\n`);
                 }
             });
         } catch (err) {

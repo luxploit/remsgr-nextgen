@@ -24,7 +24,16 @@ exports.twnAuth = async (req, res) => {
             const passport = signInMatch[1];
             const password = pwdMatch[1];
 
-            const user = await User.findOne({ email: passport });
+            const email = passport.split('@');
+
+            if (email[1] !== 'xirk.org' && email[1] !== 'hotmail.com') {
+                console.log(`${chalk.yellow.bold('[USR MD5 INITIAL]')} ${passport} has an invalid email domain.`);
+                socket.write(`911 ${transactionID}\r\n`);
+                socket.destroy();
+                return;
+            }
+
+            const user = await User.findOne({ username: email[0] });
 
             if (!user) {
                 console.log(`${chalk.yellow.bold('[USR MD5 INITIAL]')} ${passport} does not exist in the database.`);

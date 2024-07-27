@@ -14,7 +14,16 @@ class MD5Auth {
         if (state === 'I') {
             console.log(`${chalk.yellow.bold('[USR MD5 INITIAL]')} ${passport} is trying to log in.`);
 
-            const user = await User.findOne({ email: passport });
+            const email = passport.split('@');
+
+            if (email[1] !== 'xirk.org' && email[1] !== 'hotmail.com') {
+                console.log(`${chalk.yellow.bold('[USR MD5 INITIAL]')} ${passport} has an invalid email domain.`);
+                socket.write(`911 ${transactionID}\r\n`);
+                socket.destroy();
+                return;
+            }
+
+            const user = await User.findOne({ username: email[0] });
 
             if (!user) {
                 console.log(`${chalk.yellow.bold('[USR MD5 INITIAL]')} ${passport} does not exist in the database.`);
@@ -37,7 +46,16 @@ class MD5Auth {
             console.log(`${chalk.yellow.bold('[USR MD5 INITIAL]')} Returned MD5 hash to ${passport}`);
             socket.write(`USR ${transactionID} MD5 S ${md5Hash}\r\n`);
         } else if (state === 'S') {
-            const user = await User.findOne({ email: passport });
+            const email = passport.split('@');
+
+            if (email[1] !== 'xirk.org' && email[1] !== 'hotmail.com') {
+                console.log(`${chalk.yellow.bold('[USR MD5 INITIAL]')} ${passport} has an invalid email domain.`);
+                socket.write(`911 ${transactionID}\r\n`);
+                socket.destroy();
+                return;
+            }
+
+            const user = await User.findOne({ username: email[0] });
 
             if (!user) {
                 console.log(`${chalk.yellow.bold('[USR MD5 SUBSEQUENT]')} ${passport} does not exist in the database.`);
@@ -139,7 +157,16 @@ class TWNAuth {
                 return;
             }
 
-            const user = await User.findOne({ email: passport });
+            const email = passport.split('@');
+
+            if (email[1] !== 'xirk.org' && email[1] !== 'hotmail.com') {
+                console.log(`${chalk.yellow.bold('[USR MD5 INITIAL]')} ${passport} has an invalid email domain.`);
+                socket.write(`911 ${transactionID}\r\n`);
+                socket.destroy();
+                return;
+            }
+
+            const user = await User.findOne({ username: email[0] });
 
             if (!user) {
                 console.log(`${chalk.yellow.bold('[USR TWN SUBSEQUENT]')} ${passport} does not exist in the database.`);

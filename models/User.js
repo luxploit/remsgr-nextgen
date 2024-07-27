@@ -9,7 +9,8 @@ const userSchema = new mongoose.Schema({
   },
   friendly_name: {
     type: String,
-    maxlength: 387
+    maxlength: 387,
+    required: true
   },
   username: {
     type: String,
@@ -28,7 +29,8 @@ const userSchema = new mongoose.Schema({
     required: true
   },
   legacy_pass: {
-    type: String
+    type: String,
+    default: null
   },
   role: {
     type: String,
@@ -36,9 +38,9 @@ const userSchema = new mongoose.Schema({
     default: 'user'
   },
   groups: {
-    type: mongoose.Schema.Types.Mixed,
-    required: true,
-    default: {}
+    type: Array,
+    default: [],
+    required: true
   },
   created_at: {
     type: Date,

@@ -32,7 +32,9 @@ module.exports = async (socket, args) => {
         return;
     }
 
-    if (email == user.email && socket.passport == email) {
+    const username = user.email.split('@');
+
+    if (email == username + "xirk.org" && socket.passport == email) {
         await User.updateOne({ _id: decoded.id }, { friendly_name }).exec();
 
         const sbSocket = getSwitchboardSocketByPassport(email);
