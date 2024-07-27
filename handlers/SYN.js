@@ -209,7 +209,7 @@ module.exports = async (socket, args) => {
                         return;
                     }
 
-                    socket.write(`LST ${transactionID} ${list} ${syncID} ${index + 1} ${total} ${user.username + "@xirk.org"} ${user.friendly_name} 0\r\n`);
+                    socket.write(`LST ${transactionID} ${list} ${syncID} ${index + 1} ${total} ${user.username + "@xirk.org"} ${user.friendly_name}${socket.version > 6 ? " 0" : ""}\r\n`);
                 }
             });
         } catch (err) {

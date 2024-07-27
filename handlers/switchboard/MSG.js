@@ -4,7 +4,8 @@ const { getAllParticipantsSockets } = require("../../utils/sb.util");
 const MimeParser = require("../../utils/parsers/mime.util");
 
 module.exports = async (socket, args, command, data) => {
-    const state = args[1];
+    const transactionID = args[0];
+    const acknowledgement = args[1];
     const messageTotal = args[2].split('\r\n')[0];
 
     const fullPayload = command.substring(command.indexOf('\r\n') + 2);
@@ -40,7 +41,23 @@ module.exports = async (socket, args, command, data) => {
     //    return;
     //}
 
-    allSockets.forEach(s => {
-        s.write(`MSG ${socket.passport} ${socket.friendly_name} ${messageTotal}\r\n${payload}`);
-    });
+    try {
+        allSockets.forEach(s => {
+            s.write(`MSG ${socket.passport} ${socket.friendly_name} ${messageTotal}\r\n${payload}`);
+        });
+        if (acknowledgement == "A") {
+            socket.write(`ACK ${transactionID}\r\n`);
+        }
+    } catch (e) {
+        switch (acknowledgement) {
+            case "N":
+                socket.write(`NAK ${transactionID}\r\n`);
+                break;
+            case "A":
+                socket.write(`NAK ${transactionID}\r\n`);
+                break;
+            default:
+                break;
+        }
+    }
 }

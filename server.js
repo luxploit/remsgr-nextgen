@@ -485,32 +485,36 @@ const switchboard = net.createServer((socket) => {
 	switchboard_sockets.push(socket);
 
 	socket.on('data', (data) => {
-		const command = data.toString().trim();
-		const commandParts = command.toString().trim().split(' ');
-
-		if (process.env.DEBUG === 'true') {
-			console.log(`${chalk.red.bold('[MSN SWITCHBOARD]')} Received command: ${command}`);
-		}
-
-		const commandName = commandParts[0];
-
-		const handlerPath = `./handlers/switchboard/${commandName}.js`;
-
-		if (fs.existsSync(handlerPath)) {
-			const handler = require(handlerPath);
-			try {
-				handler(socket, commandParts.slice(1), command, data);
-			} catch (err) {
-				console.log(command);
-				console.error(err);
-			}
-		} else {
-			console.log(`${chalk.red.bold('[MSN SWITCHBOARD]')} No handler found for command: ${commandName}`);
+		// Split data by "MSG " and filter out empty strings
+		const commands = data.toString().split(/(?=MSG \d+ [ND] \d+)/).filter(command => command.trim());
+	
+		commands.forEach(command => {
+			const commandParts = command.trim().split(' ');
+	
 			if (process.env.DEBUG === 'true') {
-				console.log(`${chalk.red.bold('[MSN SWITCHBOARD]')} Full command: ${command}`);
+				console.log(`${chalk.red.bold('[MSN SWITCHBOARD]')} Received command: ${command}`);
 			}
-			socket.write(`200 ${commandParts[1]}\r\n`);
-		}
+	
+			const commandName = commandParts[0];
+	
+			const handlerPath = `./handlers/switchboard/${commandName}.js`;
+	
+			if (fs.existsSync(handlerPath)) {
+				const handler = require(handlerPath);
+				try {
+					handler(socket, commandParts.slice(1), command, data);
+				} catch (err) {
+					console.log(command);
+					console.error(err);
+				}
+			} else {
+				console.log(`${chalk.red.bold('[MSN SWITCHBOARD]')} No handler found for command: ${commandName}`);
+				if (process.env.DEBUG === 'true') {
+					console.log(`${chalk.red.bold('[MSN SWITCHBOARD]')} Full command: ${command}`);
+				}
+				socket.write(`200 ${commandParts[1]}\r\n`);
+			}
+		});
 	});
 
 	socket.on('close', () => {

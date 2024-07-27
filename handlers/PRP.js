@@ -7,8 +7,7 @@ const Contact = require('../models/Contact');
 
 module.exports = async (socket, args) => {
     const transactionID = args[0];
-    const username = args[1].split('@')[0];
-    const email = args[1];
+    const type = args[1];
     const friendly_name = args[2];
 
     if (isNaN(transactionID)) {
@@ -18,22 +17,22 @@ module.exports = async (socket, args) => {
 
     const decoded = await verifyJWT(socket.token);
 
-    const user = await User.findById(decoded.id).exec();
+    if (type == "MFN") {
+        const user = await User.findById(decoded.id).exec();
 
-    if (!decoded) {
-        console.log(`${chalk.red.bold('[REA]')} ${socket.remoteAddress} has an invalid token.`);
-        socket.write(`OUT\r\n`);
-        socket.destroy();
-        return;
-    }
+        if (!decoded) {
+            console.log(`${chalk.red.bold('[REA]')} ${socket.remoteAddress} has an invalid token.`);
+            socket.write(`OUT\r\n`);
+            socket.destroy();
+            return;
+        }
 
-    if (friendly_name.length > 387) {
-        console.log(`${chalk.red.bold('[REA]')} ${socket.remoteAddress} has a friendly name that is too long.`);
-        socket.write(`REA ${transactionID} 0\r\n`);
-        return;
-    }
+        if (friendly_name.length > 387) {
+            console.log(`${chalk.red.bold('[REA]')} ${socket.remoteAddress} has a friendly name that is too long.`);
+            socket.write(`REA ${transactionID} 0\r\n`);
+            return;
+        }
 
-    if (username == socket.passport.split('@')[0] && socket.passport == username + "@xirk.org") {
         await User.updateOne({ _id: user.id }, { friendly_name }).exec();
 
         const sbSocket = getSwitchboardSocketByPassport(socket.passport);
@@ -62,7 +61,7 @@ module.exports = async (socket, args) => {
 
             contactSocket.write(`NLN ${socket.status} ${socket.passport} ${socket.friendly_name}\r\n`);
         }
-    }
 
-    socket.write(`REA ${transactionID} 1 ${email} ${friendly_name}\r\n`);
+        socket.write(`PRP ${transactionID} MFN ${friendly_name}\r\n`);
+    }
 }
