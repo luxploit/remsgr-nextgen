@@ -98,12 +98,10 @@ module.exports = async (socket, args, command) => {
                 continue;
             }
 
-            const contactUser = await User.findById(contact.contactID).exec();
-
             if (socket.version >= 8) {
-                socket.write(`ILN ${transactionID} ${contactSocket.status} ${user.username + "@xirk.org"} ${contactUser.friendly_name} ${contactSocket.capabilities}${" " + socket.msnobjectpfp}\r\n`);
+                socket.write(`ILN ${transactionID} ${contactSocket.status} ${contactSocket.passport} ${contactSocket.friendly_name} ${contactSocket.capabilities}${" " + contactSocket.msnobjectpfp}\r\n`);
             } else {
-                socket.write(`ILN ${transactionID} ${contactSocket.status} ${user.username + "@xirk.org"} ${contactUser.friendly_name}\r\n`);
+                socket.write(`ILN ${transactionID} ${contactSocket.status} ${contactSocket.passport} ${contactSocket.friendly_name}\r\n`);
             }
         }
 

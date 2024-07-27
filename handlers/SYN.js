@@ -180,7 +180,7 @@ module.exports = async (socket, args) => {
         const contactsData = Array.from(contactsMap.values());
 
         for (const contact of contactsData) {
-            socket.write(`LST N=${contact.username + "@xirk.org"} F=${contact.friendly_name} C=${contact.uuid} ${contact.lists_number}\r\n`);
+            socket.write(`LST N=${contact.email} F=${contact.friendly_name} C=${contact.uuid} ${contact.lists_number}\r\n`);
         }
     } else {
         try {

@@ -14,7 +14,7 @@ module.exports = async (socket, args) => {
 
     if (scheme === 'SSO') {
         if (state === 'I') {
-            socket.passport = args[3];
+            socket.passport = args[3].split('@')[0] + "@xirk.org";
             console.log(`${chalk.yellow.bold('[USR SSO INITIAL]')} ${socket.passport} is trying to log in.`);
             
             const random = crypto.randomBytes(48).toString('hex');
@@ -38,7 +38,7 @@ module.exports = async (socket, args) => {
 
     else if (scheme === 'TWN') {
         if (state === 'I') {
-            socket.passport = args[3];
+            socket.passport = args[3].split('@')[0] + "@xirk.org";
             TWNAuth.login(socket, socket.version, state, transactionID, socket.passport);
         }
         
@@ -53,7 +53,7 @@ module.exports = async (socket, args) => {
 
     else if (scheme === 'MD5') {
         if (state === 'I') {
-            socket.passport = args[3];
+            socket.passport = args[3].split('@')[0] + "@xirk.org";
             MD5Auth.login(socket, socket.version, state, transactionID, socket.passport);
         }
         

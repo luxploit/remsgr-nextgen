@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const config = require('../../config.json');
 const { v4: uuidv4 } = require('uuid');
+const MD5PasswordHasher = require('../../utils/hash/MD5');
 
 const User = require('../../models/User');
 
@@ -83,16 +84,17 @@ exports.twnAuth = async (req, res) => {
 
 exports.createAccount = async (req, res) => {
     try {
-        const { displayname, username, email, password } = req.body;
+        const { displayname, username, email, password, legacypassword } = req.body;
 
         if (!username || !email || !password) {
             res.status(400).send('Bad Request');
             return;
         }
 
-        const friendly_name = displayname || username + "@xirk.org";
+        const displaynameEncoded = encodeURIComponent(displayname);
+        const friendly_name = displaynameEncoded || username + "@xirk.org";
 
-        const user = await User.findOne({ email }).exec();
+        const user = await User.findOne({ $or: [{ username }, { email }] });
 
         if (user) {
             res.status(409).send('Conflict');
@@ -101,12 +103,16 @@ exports.createAccount = async (req, res) => {
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
+        const salt = Math.random().toString(36).substring(2, 17);
+        const hashedLegacyPassword = MD5PasswordHasher.encode(legacypassword, salt);
+
         const newUser = new User({
             uuid: uuidv4(),
             friendly_name,
             username,
             email,
             password: hashedPassword,
+            legacy_pass: hashedLegacyPassword || null
         });
 
         await newUser.save();

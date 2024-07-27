@@ -9,7 +9,7 @@ const User = require('../models/User');
 module.exports = async (socket, args) => {
     const transactionID = args[0];
     const list = args[1];
-    const email = args[2];
+    const username = args[2].split('@')[0];
 
     if (isNaN(transactionID)) {
         socket.destroy();
@@ -25,16 +25,10 @@ module.exports = async (socket, args) => {
     }
 
     if (['FL', 'BL', 'AL'].includes(list)) {
-        if (!validator.validate(email)) {
-            console.log(`${chalk.red.bold('[REM]')} ${socket.remoteAddress} has an invalid email address.`);
-            socket.write(`REM ${transactionID} 0\r\n`);
-            return;
-        }
-
-        const user = await User.findOne({ email }).exec();
+        const user = await User.findOne({ username }).exec();
 
         if (!user) {
-            console.log(`${chalk.red.bold('[REM]')} ${socket.passport} attempted to remove a contact that does not exist. (${email})`);
+            console.log(`${chalk.red.bold('[REM]')} ${socket.passport} attempted to remove a contact that does not exist. (${username})`);
             socket.write(`REM ${transactionID} 0\r\n`);
             return;
         }
@@ -42,7 +36,7 @@ module.exports = async (socket, args) => {
         const contact = await Contact.findOne({ userID: socket.userID, contactID: user._id, list }).exec();
 
         if (!contact) {
-            console.log(`${chalk.red.bold('[REM]')} ${socket.passport} attempted to remove a contact that is not in their list. (${email})`);
+            console.log(`${chalk.red.bold('[REM]')} ${socket.passport} attempted to remove a contact that is not in their list. (${username})`);
             socket.write(`REM ${transactionID} 0\r\n`);
             return;
         }
@@ -52,8 +46,8 @@ module.exports = async (socket, args) => {
         const contactID = user._id.toString();
         const contactSocket = getSocketByUserID(contactID);
 
-        console.log(`${chalk.green.bold('[REM]')} ${socket.passport} removed ${email} from their list.`);
-        socket.write(`REM ${transactionID} ${list} 1 ${email}\r\n`);
+        console.log(`${chalk.green.bold('[REM]')} ${socket.passport} removed ${username} from their list.`);
+        socket.write(`REM ${transactionID} ${list} 1 ${username}@xirk.org\r\n`);
 
         if (contactSocket) {
             const contactContact = await Contact.findOne({ userID: user._id, contactID: socket.userID, list }).exec();
