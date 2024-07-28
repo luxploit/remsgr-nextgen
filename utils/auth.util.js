@@ -196,41 +196,19 @@ class TWNAuth {
             if (version >= 10) {
                 socket.write(`USR ${transactionID} OK ${passport} 1 0\r\n`);
 
-                const timestamp = Math.floor(Date.now() / 1000);
                 const [high, low] = uuidToHighLow(user.uuid);
-                const ip = socket.remoteAddress.replace('::ffff:', '');
-                const port = socket.remotePort;
-
-                const messageTemplate = `MIME-Version: 1.0\r\nContent-Type: text/x-msmsgsprofile; charset=UTF-8\r\nLoginTime: ${timestamp}\r\nEmailEnabled: 0\r\nMemberIdHigh: ${high}\r\nMemberIdLow: ${low}\r\nlang_preference: 0\r\npreferredEmail: \r\ncountry: \r\nPostalCode: \r\nGender: \r\nKid: 0\r\nAge: \r\nBDayPre: \r\nBirthday: \r\nWallet: \r\nFlags: 536872513\r\nsid: 507\r\nMSPAuth: ${token}\r\nClientIP: ${ip}\r\nClientPort: ${port}\r\nABCHMigrated: 1\r\nMPOPEnabled: 0\r\n\r\n`;
-
-                const newLineCount = (messageTemplate.match(/\r\n/g) || []).length;
-                const initialHeader = `MSG Hotmail Hotmail `;
-                const lengthWithoutPlaceholder = initialHeader.length + messageTemplate.length - newLineCount;
-
-                const messageLength = lengthWithoutPlaceholder + String(lengthWithoutPlaceholder).length + 1;
-                const messageHeader = `MSG Hotmail Hotmail ${messageLength}\r\n`;
-
-                const finalMessage = messageHeader + messageTemplate;
+                const messageTemplate = `MIME-Version: 1.0\r\nContent-Type: text/x-msmsgsprofile; charset=UTF-8\r\nLoginTime: ${Math.floor(Date.now() / 1000)}\r\nEmailEnabled: 0\r\nMemberIdHigh: ${high}\r\nMemberIdLow: ${low}\r\nlang_preference: 0\r\npreferredEmail: \r\ncountry: \r\nPostalCode: \r\nGender: \r\nKid: 0\r\nAge: \r\nBDayPre: \r\nBirthday: \r\nWallet: \r\nFlags: 536872513\r\nsid: 507\r\nMSPAuth: ${token}\r\nClientIP: ${socket.remoteAddress.replace('::ffff:', '')}\r\nClientPort: ${socket.remotePort}\r\nABCHMigrated: 1\r\nMPOPEnabled: 0\r\n\r\n`;
+                const messageLength = Buffer.byteLength(messageTemplate, 'utf8');
+                const finalMessage = `MSG Hotmail Hotmail ${messageLength}\r\n` + messageTemplate;
 
                 socket.write(finalMessage);
             } else {
                 socket.write(`USR ${transactionID} OK ${passport} ${socket.friendly_name} 1 0\r\n`);
 
-                const timestamp = Math.floor(Date.now() / 1000);
                 const [high, low] = uuidToHighLow(user.uuid);
-                const ip = socket.remoteAddress.replace('::ffff:', '');
-                const port = socket.remotePort;
-
-                const messageTemplate = `MIME-Version: 1.0\r\nContent-Type: text/x-msmsgsprofile; charset=UTF-8\r\nLoginTime: ${timestamp}\r\nEmailEnabled: 0\r\nMemberIdHigh: ${high}\r\nMemberIdLow: ${low}\r\nlang_preference: 0\r\npreferredEmail: \r\ncountry: \r\nPostalCode: \r\nGender: \r\nKid: 0\r\nAge: \r\nBDayPre: \r\nBirthday: \r\nWallet: \r\nFlags: 536872513\r\nsid: 507\r\nMSPAuth: ${token}\r\nClientIP: ${ip}\r\nClientPort: ${port}\r\nABCHMigrated: 1\r\nMPOPEnabled: 0\r\n\r\n`;
-
-                const newLineCount = (messageTemplate.match(/\r\n/g) || []).length;
-                const initialHeader = `MSG Hotmail Hotmail `;
-                const lengthWithoutPlaceholder = initialHeader.length + messageTemplate.length - newLineCount;
-
-                const messageLength = lengthWithoutPlaceholder + String(lengthWithoutPlaceholder).length + 1;
-                const messageHeader = `MSG Hotmail Hotmail ${messageLength}\r\n`;
-
-                const finalMessage = messageHeader + messageTemplate;
+                const messageTemplate = `MIME-Version: 1.0\r\nContent-Type: text/x-msmsgsprofile; charset=UTF-8\r\nLoginTime: ${Math.floor(Date.now() / 1000)}\r\nEmailEnabled: 0\r\nMemberIdHigh: ${high}\r\nMemberIdLow: ${low}\r\nlang_preference: 0\r\npreferredEmail: \r\ncountry: \r\nPostalCode: \r\nGender: \r\nKid: 0\r\nAge: \r\nBDayPre: \r\nBirthday: \r\nWallet: \r\nFlags: 536872513\r\nsid: 507\r\nMSPAuth: ${token}\r\nClientIP: ${socket.remoteAddress.replace('::ffff:', '')}\r\nClientPort: ${socket.remotePort}\r\nABCHMigrated: 1\r\nMPOPEnabled: 0\r\n\r\n`;
+                const messageLength = Buffer.byteLength(messageTemplate, 'utf8');
+                const finalMessage = `MSG Hotmail Hotmail ${messageLength}\r\n` + messageTemplate;
 
                 socket.write(finalMessage);
             }

@@ -1,7 +1,8 @@
 const chalk = require('chalk');
 const { verifyJWT } = require("../../utils/auth.util");
 const { getAllParticipantsSockets } = require("../../utils/sb.util");
-const MimeParser = require("../../utils/parsers/mime.util");
+// const MimeParser = require("../../utils/parsers/mime.util");
+const mailparser = require('mailparser');
 
 module.exports = async (socket, args, command, data) => {
     const transactionID = args[0];
@@ -12,8 +13,6 @@ module.exports = async (socket, args, command, data) => {
 
     const payload = rawPayload.substring(rawPayload.indexOf('\r\n') + 2);
 
-    const parser = new MimeParser(fullPayload);
-
     const decoded = await verifyJWT(socket.token);
 
     if (!decoded) {
@@ -23,6 +22,12 @@ module.exports = async (socket, args, command, data) => {
     }
 
     const email = socket.passport;
+
+    // parse the full payload
+    const parsed = await mailparser.simpleParser(fullPayload);
+
+    // console log the parsed email
+    console.log(parsed);
 
     const allSockets = getAllParticipantsSockets(socket.chat, email);
 
