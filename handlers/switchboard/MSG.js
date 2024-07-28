@@ -6,7 +6,6 @@ const MimeParser = require("../../utils/parsers/mime.util");
 module.exports = async (socket, args, command, data) => {
     const transactionID = args[0];
     const acknowledgement = args[1];
-    const messageTotal = args[2].split('\r\n')[0];
 
     const fullPayload = command.substring(command.indexOf('\r\n') + 2);
     const rawPayload = data.toString('utf8', 0, data.length);
@@ -41,11 +40,14 @@ module.exports = async (socket, args, command, data) => {
     //    return;
     //}
 
+    // get length of message
+    const messageTotal = Buffer.byteLength(payload, 'utf8');
+
     try {
         allSockets.forEach(s => {
             s.write(`MSG ${socket.passport} ${socket.friendly_name} ${messageTotal}\r\n${payload}`);
         });
-        if (acknowledgement == "A") {
+        if (acknowledgement == "A" || acknowledgement == "D") {
             socket.write(`ACK ${transactionID}\r\n`);
         }
     } catch (e) {
@@ -54,6 +56,9 @@ module.exports = async (socket, args, command, data) => {
                 socket.write(`NAK ${transactionID}\r\n`);
                 break;
             case "A":
+                socket.write(`NAK ${transactionID}\r\n`);
+                break;
+            case "D":
                 socket.write(`NAK ${transactionID}\r\n`);
                 break;
             default:
