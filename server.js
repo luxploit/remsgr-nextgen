@@ -13,6 +13,7 @@ const switchboardPORT = 1864;
 
 const chalk = require('chalk');
 const dotenv = require('dotenv');
+const config = require('./config.json');
 dotenv.config();
 
 const options = {
@@ -39,6 +40,7 @@ app.use(cors());
 app.use(express.text({ type: 'application/xml' }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use("/static", express.static('public'));
 
 // app.use((req, res, next) => {
 // 	let body = "";
@@ -57,6 +59,29 @@ const { pprdr, twnAuth, createAccount } = require('./services/authentication/twe
 app.get('/rdr/pprdr.asp', pprdr);
 app.get('/tweener/auth', twnAuth);
 app.post('/create', createAccount);
+
+// Config
+app.post("/Config/MsgrConfig.asmx", (req, res) => {
+	const template = fs.readFileSync('./templates/MsgrConfig.asmx', 'utf8');
+	const modified = template.replace(/{{ host }}/g, config.server.host).replace(/{{ config_host }}/g, config.server.host);
+	res.set('Content-Type', 'text/xml');
+	res.send(modified);
+});
+
+app.get("/games/list", (req, res) => {
+	res.send("Games are not currently supported.");
+});
+
+app.get("/msn/bannersads", (req, res) => {
+	if (config.ads.enabled) {
+		const ad = config.ads.ad_list[Math.floor(Math.random() * config.ads.ad_list.length)];
+		const template = fs.readFileSync('./templates/ads/MSNAd.html', 'utf8');
+		const modified = template.replace(/{{ ad_url }}/g, ad.url).replace(/{{ ad_img }}/g, ad.image);
+		res.send(modified);
+	} else {
+		res.send("");
+	}
+});
 
 app.post("/RST2.srf", async (req, res) => {
 	const username = req.body["s:Envelope"]["s:Header"]["wsse:Security"]["wsse:UsernameToken"]["wsse:Username"];

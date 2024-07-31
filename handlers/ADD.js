@@ -11,6 +11,7 @@ module.exports = async (socket, args) => {
     const list = args[1];
     const username = args[2].split('@')[0];
 
+    // Check if the transaction ID is a number
     if (isNaN(transactionID)) {
         socket.destroy();
         return;

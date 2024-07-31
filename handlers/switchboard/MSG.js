@@ -8,9 +8,9 @@ module.exports = async (socket, args, command, data) => {
     const acknowledgement = args[1];
 
     const fullPayload = command.substring(command.indexOf('\r\n') + 2);
-    const rawPayload = data.toString('utf8', 0, data.length);
 
-    const payload = rawPayload.substring(rawPayload.indexOf('\r\n') + 2);
+    const rawPayload = data;
+    const payload = rawPayload.slice(rawPayload.indexOf('\r\n') + 2);
 
     const decoded = await verifyJWT(socket.token);
 
@@ -22,16 +22,22 @@ module.exports = async (socket, args, command, data) => {
 
     const email = socket.passport;
 
-    // const parsed = await mailparser.simpleParser(fullPayload);
+    const parsed = await mailparser.simpleParser(fullPayload);
     // console.log(parsed);
+    console.log(parsed.headers.get('content-type'));
 
     const allSockets = getAllParticipantsSockets(socket.chat, email);
 
-    const messageTotal = Buffer.byteLength(payload, 'utf8');
+    const messageTotal = payload.length;
 
     try {
         allSockets.forEach(s => {
-            s.write(`MSG ${socket.passport} ${socket.friendly_name} ${messageTotal}\r\n${payload}`);
+            const messageBuffer = Buffer.concat([
+                Buffer.from(`MSG ${socket.passport} ${socket.friendly_name} ${messageTotal}\r\n`),
+                Buffer.from(payload)
+            ]);
+            
+            s.write(messageBuffer);
         });
         if (acknowledgement == "A" || acknowledgement == "D") {
             socket.write(`ACK ${transactionID}\r\n`);

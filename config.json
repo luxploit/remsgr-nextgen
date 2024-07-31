@@ -6,5 +6,19 @@
         "switchboard_port": 1864,
         "http_port": 80,
         "https_port": 443
+    },
+    "msn": {},
+    "ads": {
+        "enabled": true,
+        "ad_list": [
+            {
+                "url": "https://xirk.org",
+                "image": "http://10.147.18.54/static/ad_images/xirk.png"
+            },
+            {
+                "url": "https://xirk.org",
+                "image": "http://10.147.18.54/static/ad_images/brat.png"
+            }
+        ]
     }
 }
