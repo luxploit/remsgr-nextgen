@@ -22,8 +22,6 @@ module.exports = async (socket, args, command) => {
     // Send to the entire contact list (FL) that the user has changed their status
     const contacts = await Contact.find({ userID: socket.userID, list: 'FL' }).exec();
 
-    console.log(contacts)
-
     contacts.forEach(async (contact) => {
         const user = await User.findOne({ _id: contact.contactID }).exec();
 

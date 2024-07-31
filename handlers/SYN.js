@@ -69,6 +69,15 @@ module.exports = async (socket, args) => {
         socket.write(`GTC A\r\n`);
         socket.write(`BLP AL\r\n`);
         socket.write(`PRP MFN ${socket.friendly_name}\r\n`);
+        if (user.settings.phone.PHH) {
+            socket.write(`PRP PHH ${user.settings.phone.PHH}\r\n`);
+        }
+        if (user.settings.phone.PHM) {
+            socket.write(`PRP PHM ${user.settings.phone.PHM}\r\n`);
+        }
+        if (user.settings.phone.PHW) {
+            socket.write(`PRP PHW ${user.settings.phone.PHW}\r\n`);
+        }
 
         if (!user) {
             console.log(`${chalk.magentaBright.bold('[SYN]')} ${socket.passport} does not exist.`);
@@ -149,7 +158,8 @@ module.exports = async (socket, args) => {
                     email: user.username + "@xirk.org",
                     friendly_name: user.friendly_name,
                     uuid: user.uuid,
-                    lists_number: totalListsNumber
+                    lists_number: totalListsNumber,
+                    settings: user.settings
                 });
             }
         }
@@ -172,7 +182,8 @@ module.exports = async (socket, args) => {
                     email: user.username + "@xirk.org",
                     friendly_name: user.friendly_name,
                     uuid: user.uuid,
-                    lists_number: totalListsNumber
+                    lists_number: totalListsNumber,
+                    settings: user.settings
                 });
             }
         }
@@ -181,6 +192,15 @@ module.exports = async (socket, args) => {
 
         for (const contact of contactsData) {
             socket.write(`LST N=${contact.email} F=${contact.friendly_name} C=${contact.uuid} ${contact.lists_number}\r\n`);
+            if (contact.settings.phone.PHH) {
+                socket.write(`BPR PHH ${contact.settings.phone.PHH}\r\n`);
+            }
+            if (contact.settings.phone.PHM) {
+                socket.write(`BPR PHM ${contact.settings.phone.PHM}\r\n`);
+            }
+            if (contact.settings.phone.PHW) {
+                socket.write(`BPR PHW ${contact.settings.phone.PHW}\r\n`);
+            }
         }
     } else {
         try {

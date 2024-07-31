@@ -8,7 +8,7 @@ const Contact = require('../models/Contact');
 module.exports = async (socket, args) => {
     const transactionID = args[0];
     const type = args[1];
-    const friendly_name = args[2];
+    const newSetting = args[2];
 
     if (isNaN(transactionID)) {
         socket.destroy();
@@ -17,33 +17,33 @@ module.exports = async (socket, args) => {
 
     const decoded = await verifyJWT(socket.token);
 
-    if (type == "MFN") {
-        const user = await User.findById(decoded.id).exec();
+    if (!decoded) {
+        console.log(`${chalk.red.bold('[REA]')} ${socket.remoteAddress} has an invalid token.`);
+        socket.write(`OUT\r\n`);
+        socket.destroy();
+        return;
+    }
 
-        if (!decoded) {
-            console.log(`${chalk.red.bold('[REA]')} ${socket.remoteAddress} has an invalid token.`);
-            socket.write(`OUT\r\n`);
-            socket.destroy();
-            return;
-        }
+    const user = await User.findById(decoded.id).exec();
+    const contacts = await Contact.find({ userID: socket.userID, list: 'FL' }).exec();
 
-        if (friendly_name.length > 387) {
+    if (type === "MFN") {
+        if (newSetting.length > 387) {
             console.log(`${chalk.red.bold('[REA]')} ${socket.remoteAddress} has a friendly name that is too long.`);
             socket.write(`REA ${transactionID} 0\r\n`);
             return;
         }
 
-        await User.updateOne({ _id: user.id }, { friendly_name }).exec();
+        user.friendly_name = newSetting;
+        await user.save();
 
         const sbSocket = getSwitchboardSocketByPassport(socket.passport);
 
         if (sbSocket) {
-            sbSocket.friendly_name = friendly_name;
+            sbSocket.friendly_name = newSetting;
         }
 
-        socket.friendly_name = friendly_name;
-
-        const contacts = await Contact.find({ userID: socket.userID, list: 'FL' }).exec();
+        socket.friendly_name = newSetting;
 
         for (const contact of contacts) {
             const contactID = contact.contactID.toString();
@@ -66,6 +66,48 @@ module.exports = async (socket, args) => {
             }
         }
 
-        socket.write(`PRP ${transactionID} MFN ${friendly_name}\r\n`);
+        socket.write(`PRP ${transactionID} MFN ${newSetting}\r\n`);
+    } else if (type === "PHH") {
+        if (!user) {
+            console.log(`${chalk.red.bold('[REA]')} ${socket.passport} does not exist.`);
+            socket.destroy();
+            return;
+        }
+
+        await User.updateOne(
+            { _id: decoded.id },
+            { $set: { 'settings.phone.PHH': newSetting } }
+        ).exec();
+
+        socket.write(`PRP ${transactionID} PHH ${newSetting}\r\n`);
+    } else if (type === "PHW") {
+        if (!user) {
+            console.log(`${chalk.red.bold('[REA]')} ${socket.passport} does not exist.`);
+            socket.destroy();
+            return;
+        }
+
+        await User.updateOne(
+            { _id: decoded.id },
+            { $set: { 'settings.phone.PHW': newSetting } }
+        ).exec();
+
+        socket.write(`PRP ${transactionID} PHW ${newSetting}\r\n`);
+    } else if (type === "PHM") {
+        if (!user) {
+            console.log(`${chalk.red.bold('[REA]')} ${socket.passport} does not exist.`);
+            socket.destroy();
+            return;
+        }
+
+        await User.updateOne(
+            { _id: decoded.id },
+            { $set: { 'settings.phone.PHM': newSetting } }
+        ).exec();
+
+        socket.write(`PRP ${transactionID} PHM ${newSetting}\r\n`);
+    } else {
+        console.log(`${chalk.red.bold('[REA]')} ${socket.remoteAddress} has an invalid setting type.`);
+        socket.write(`200 ${transactionID}\r\n`);
     }
 }

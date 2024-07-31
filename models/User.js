@@ -49,6 +49,10 @@ const userSchema = new mongoose.Schema({
   last_login: {
     type: Date,
     default: null
+  },
+  settings: {
+    type: Object,
+    default: {"phone": {}}
   }
 });
 
