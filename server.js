@@ -58,6 +58,7 @@ const { pprdr, twnAuth, createAccount } = require('./services/authentication/twe
 // Tweener Auth
 app.get('/rdr/pprdr.asp', pprdr);
 app.get('/tweener/auth', twnAuth);
+app.get('/login2.srf', twnAuth);
 app.post('/create', createAccount);
 
 // Config

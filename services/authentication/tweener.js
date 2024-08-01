@@ -26,8 +26,9 @@ exports.twnAuth = async (req, res) => {
             const password = pwdMatch[1];
 
             const email = passport.split('@');
+            const urlEmail = email[0].split('%40');
 
-            if (email[1] !== 'xirk.org' && email[1] !== 'hotmail.com') {
+            if (email[1] !== 'xirk.org' && email[1] !== 'hotmail.com' && urlEmail[1] !== 'xirk%2Eorg') {
                 console.log(`${chalk.yellow.bold('[USR MD5 INITIAL]')} ${passport} has an invalid email domain.`);
                 res.set({
                     'Content-Type': 'text/plain',
@@ -37,7 +38,22 @@ exports.twnAuth = async (req, res) => {
                 return;
             }
 
-            const user = await User.findOne({ username: email[0] });
+            const urlUser = await User.findOne({ username: urlEmail[0] });
+            let user = await User.findOne({ username: email[0] });
+
+            if (!urlUser) {
+                console.log(`${chalk.yellow.bold('[USR MD5 INITIAL]')} ${passport} does not exist in the database (URL).`);
+                res.set({
+                    'Content-Type': 'text/plain',
+                    'WWW-Authenticate': 'Passport1.4 da-status=failed'
+                });
+                res.status(401).send('Unauthorized');
+                return;
+            }
+
+            if (urlUser) {
+                user = urlUser;
+            }
 
             if (!user) {
                 console.log(`${chalk.yellow.bold('[USR MD5 INITIAL]')} ${passport} does not exist in the database.`);
@@ -65,7 +81,7 @@ exports.twnAuth = async (req, res) => {
 
             res.set({
                 'Content-Type': 'text/plain',
-                'Authentication-Info': `Passport 1.4 da-status=success,from-PP='${token}'`,
+                'Authentication-Info': `Passport 1.4 da-status=success,from-PP='t=${token}'`,
             });
 
             res.status(200).send('OK');

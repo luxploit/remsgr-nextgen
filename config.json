@@ -13,11 +13,11 @@
         "ad_list": [
             {
                 "url": "https://xirk.org",
-                "image": "http://10.147.18.54/static/ad_images/xirk.png"
+                "image": "https://10.147.18.54/static/ad_images/xirk.png"
             },
             {
                 "url": "https://xirk.org",
-                "image": "http://10.147.18.54/static/ad_images/brat.png"
+                "image": "https://10.147.18.54/static/ad_images/brat.png"
             }
         ]
     }

@@ -148,6 +148,7 @@ class TWNAuth {
             console.log(`${chalk.yellow.bold('[USR TWN INITIAL]')} ${passport} is trying to log in.`);
             socket.write(`USR ${transactionID} TWN S ct=1,rver=1,wp=FS_40SEC_0_COMPACT,lc=1,id=1\r\n`);
         } else if (state === 'S') {
+            token = token.split('=')[1];
             const decoded = await verifyJWT(token);
 
             if (!decoded) {
