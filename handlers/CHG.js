@@ -101,7 +101,7 @@ module.exports = async (socket, args, command) => {
             if (socket.version >= 8) {
                 socket.write(`ILN ${transactionID} ${contactSocket.status} ${contactSocket.passport} ${contactSocket.friendly_name} ${contactSocket.capabilities}${" " + contactSocket.msnobjectpfp}\r\n`);
                 if (socket.version >= 11) {
-                    if (socket.customStatus) {
+                    if (contactSocket.customStatus) {
                         const payload = contactSocket.customStatus;
                         const payloadLength = Buffer.byteLength(payload, 'utf8');
                         socket.write(`UBX ${contactSocket.passport} ${payloadLength}\r\n${payload}`);

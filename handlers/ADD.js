@@ -34,7 +34,7 @@ module.exports = async (socket, args) => {
         return;
     }
 
-    const contacts = await Contact.find({ userID: decoded.id, list }).exec();
+    const contacts = await Contact.find({ userID: decoded.id, list: "FL" }).exec();
 
     if (contacts.length >= 150) {
         console.log(`${chalk.red.bold('[ADD]')} ${socket.passport} has attempted to add a user to a list that is full. (${username})`);

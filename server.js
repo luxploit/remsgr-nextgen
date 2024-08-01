@@ -379,13 +379,10 @@ if (process.env.DEBUG === 'true') {
 	});
 
 	app.get("/send", (req, res) => {
-		const message = req.query.message;
-		if (!message) {
-			return res.status(400).json({ error: "No message provided" });
-		}
-
+		const template = `MIME-Version: 1.0\r\nContent-Type: application/x-msmsgssystemmessage\r\n\r\nType: 1\r\nArg1: 10\r\n`
+		const templateLength = Buffer.byteLength(template, 'utf8');
 		for (const socket of sockets) {
-			socket.write(message + "\r\n");
+			socket.write(`MSG Hotmail Hotmail ${templateLength}\r\n${template}`);
 		}
 
 		res.json({ success: true });

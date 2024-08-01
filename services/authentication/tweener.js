@@ -29,8 +29,11 @@ exports.twnAuth = async (req, res) => {
 
             if (email[1] !== 'xirk.org' && email[1] !== 'hotmail.com') {
                 console.log(`${chalk.yellow.bold('[USR MD5 INITIAL]')} ${passport} has an invalid email domain.`);
-                socket.write(`911 ${transactionID}\r\n`);
-                socket.destroy();
+                res.set({
+                    'Content-Type': 'text/plain',
+                    'WWW-Authenticate': 'Passport1.4 da-status=failed'
+                });
+                res.status(401).send('Unauthorized');
                 return;
             }
 

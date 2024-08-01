@@ -15,6 +15,12 @@ module.exports = async (socket, args, command) => {
     // get payload from the command (get after first \r\n)
     const payload = command.split('\r\n').slice(1).join('\r\n');
 
+    if (!payload.startsWith('<Data><PSM>') || !payload.endsWith('</CurrentMedia></Data>')) {
+        console.log(`${chalk.red.bold('[UUX]')} ${socket.passport} has sent an invalid payload.`);
+        socket.destroy();
+        return;
+    }
+
     socket.customStatus = payload;
 
     const payloadLength = Buffer.byteLength(payload, 'utf8');
