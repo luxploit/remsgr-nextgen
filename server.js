@@ -84,7 +84,16 @@ app.get("/msn/bannersads", (req, res) => {
 	}
 });
 
-app.post("/RST2.srf", async (req, res) => {
+app.post("/RST2.srf", (req, res, next) => {
+	let body = "";
+	req.on("data", (chunk) => {
+		body += chunk.toString();
+	});
+	req.on("end", () => {
+		req.body = parser.parse(body);
+		next();
+	});
+}, async (req, res) => {
 	const username = req.body["s:Envelope"]["s:Header"]["wsse:Security"]["wsse:UsernameToken"]["wsse:Username"];
 	const password = req.body["s:Envelope"]["s:Header"]["wsse:Security"]["wsse:UsernameToken"]["wsse:Password"];
 	const getSortaISODate = () => { return new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '') };
@@ -504,79 +513,79 @@ const notification = net.createServer((socket) => {
 });
 
 const switchboard = net.createServer((socket) => {
-    console.log(`${chalk.magenta.bold('[MSN SWITCHBOARD]')} New connection: ${socket.remoteAddress}:${socket.remotePort}`);
-    switchboard_sockets.push(socket);
+	console.log(`${chalk.magenta.bold('[MSN SWITCHBOARD]')} New connection: ${socket.remoteAddress}:${socket.remotePort}`);
+	switchboard_sockets.push(socket);
 
-    let buffer = Buffer.alloc(0);
+	let buffer = Buffer.alloc(0);
 
-    socket.on('data', (data) => {
-        buffer = Buffer.concat([buffer, data]);
+	socket.on('data', (data) => {
+		buffer = Buffer.concat([buffer, data]);
 
-        while (buffer.length > 0) {
-            // Find the end of the command header
-            const headerEndIndex = buffer.indexOf('\r\n');
-            if (headerEndIndex === -1) break;
+		while (buffer.length > 0) {
+			// Find the end of the command header
+			const headerEndIndex = buffer.indexOf('\r\n');
+			if (headerEndIndex === -1) break;
 
-            const header = buffer.slice(0, headerEndIndex).toString();
-            const headerParts = header.split(' ');
+			const header = buffer.slice(0, headerEndIndex).toString();
+			const headerParts = header.split(' ');
 
-            if (headerParts[0] === 'MSG' && headerParts.length >= 4) {
-                // Handle MSG command with payload
-                const payloadLength = parseInt(headerParts[3], 10);
-                const totalLength = headerEndIndex + 2 + payloadLength;
+			if (headerParts[0] === 'MSG' && headerParts.length >= 4) {
+				// Handle MSG command with payload
+				const payloadLength = parseInt(headerParts[3], 10);
+				const totalLength = headerEndIndex + 2 + payloadLength;
 
-                if (buffer.length < totalLength) break; // Wait for the full payload to be received
+				if (buffer.length < totalLength) break; // Wait for the full payload to be received
 
-                const command = buffer.slice(0, headerEndIndex + 2).toString();
-                const payload = buffer.slice(headerEndIndex + 2, totalLength);
-                buffer = buffer.slice(totalLength); // Remove the processed command from the buffer
+				const command = buffer.slice(0, headerEndIndex + 2).toString();
+				const payload = buffer.slice(headerEndIndex + 2, totalLength);
+				buffer = buffer.slice(totalLength); // Remove the processed command from the buffer
 
-                const handlerPath = `./handlers/switchboard/${headerParts[0]}.js`;
-                if (fs.existsSync(handlerPath)) {
-                    const handler = require(handlerPath);
-                    try {
-                        handler(socket, headerParts.slice(1), command, payload);
-                    } catch (err) {
-                        console.log(command);
-                        console.error(err);
-                    }
-                } else {
-                    console.log(`${chalk.red.bold('[MSN SWITCHBOARD]')} No handler found for command: ${headerParts[0]}`);
-                    socket.write(`200 ${headerParts[1]}\r\n`);
-                }
-            } else {
-                // Handle other commands without payload or with different structures
-                buffer = buffer.slice(headerEndIndex + 2); // Remove the processed command from the buffer
+				const handlerPath = `./handlers/switchboard/${headerParts[0]}.js`;
+				if (fs.existsSync(handlerPath)) {
+					const handler = require(handlerPath);
+					try {
+						handler(socket, headerParts.slice(1), command, payload);
+					} catch (err) {
+						console.log(command);
+						console.error(err);
+					}
+				} else {
+					console.log(`${chalk.red.bold('[MSN SWITCHBOARD]')} No handler found for command: ${headerParts[0]}`);
+					socket.write(`200 ${headerParts[1]}\r\n`);
+				}
+			} else {
+				// Handle other commands without payload or with different structures
+				buffer = buffer.slice(headerEndIndex + 2); // Remove the processed command from the buffer
 
-                const handlerPath = `./handlers/switchboard/${headerParts[0]}.js`;
-                if (fs.existsSync(handlerPath)) {
-                    const handler = require(handlerPath);
-                    try {
-                        handler(socket, headerParts.slice(1), header);
-                    } catch (err) {
-                        console.log(header);
-                        console.error(err);
-                    }
-                } else {
-                    console.log(`${chalk.red.bold('[MSN SWITCHBOARD]')} No handler found for command: ${headerParts[0]}`);
-                    socket.write(`200 ${headerParts[1]}\r\n`);
-                }
-            }
-        }
-    });
+				const handlerPath = `./handlers/switchboard/${headerParts[0]}.js`;
+				if (fs.existsSync(handlerPath)) {
+					const handler = require(handlerPath);
+					try {
+						handler(socket, headerParts.slice(1), header);
+					} catch (err) {
+						console.log(header);
+						console.error(err);
+					}
+				} else {
+					console.log(`${chalk.red.bold('[MSN SWITCHBOARD]')} No handler found for command: ${headerParts[0]}`);
+					socket.write(`200 ${headerParts[1]}\r\n`);
+				}
+			}
+		}
+	});
 
-    socket.on('close', () => {
-        SB_logOut(socket);
-        const index = switchboard_sockets.indexOf(socket);
-        if (index > -1) {
-            switchboard_sockets.splice(index, 1);
-        }
-        console.log(`${chalk.magenta.bold('[MSN SWITCHBOARD]')} Connection closed: ${socket.remoteAddress}:${socket.remotePort}`);
-    });
+	socket.on('close', () => {
+		SB_logOut(socket);
+		const index = switchboard_sockets.indexOf(socket);
+		if (index > -1) {
+			switchboard_sockets.splice(index, 1);
+		}
+		console.log(`${chalk.magenta.bold('[MSN SWITCHBOARD]')} Connection closed: ${socket.remoteAddress}:${socket.remotePort}`);
+	});
 
-    socket.on('error', (err) => {
-        console.error(err);
-    });
+	socket.on('error', (err) => {
+		console.error(err);
+	});
 });
 
 notification.listen(notificationPORT, () => {
