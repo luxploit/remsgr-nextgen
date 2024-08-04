@@ -16,6 +16,11 @@ module.exports = async (socket, args) => {
         return;
     }
 
+    if (socket.version >= 10) {
+        socket.destroy();
+        return;
+    }
+
     const decoded = await verifyJWT(socket.token);
 
     const user = await User.findById(decoded.id).exec();

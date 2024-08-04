@@ -82,14 +82,14 @@ module.exports = async (socket, args) => {
         socket.write(`ADC ${transactionID} ${list} N=${email}\r\n`);
     }
 
-    // if the other user is online and has sent a friend request to the user, send a notification to the user that they have been added by saying that theyre online
-    const contactSocket = getSocketByUserID(user._id.toString());
+    // const contactSocket = getSocketByUserID(user._id.toString());
 
-    if (contactSocket) {
-        // check if the user has sent a friend request (FL) to the user
-        const contact = await Contact.findOne({ userID: user._id, contactID: decoded.id, list: 'FL' }).exec();
-        contactSocket.write(`ADC ${transactionID} RL N=${socket.passport} F=${socket.friendly_name}\r\n`);
-    }
+    // if (contactSocket) {
+    //     const contact = await Contact.findOne({ userID: user._id, contactID: decoded.id, list: 'FL' }).exec();
+    //     if (contact) {
+    //         // TODO
+    //     }
+    // }
 
     console.log(`${chalk.green.bold('[ADD]')} ${socket.passport} has added ${email} to their ${list} list.`);
 };

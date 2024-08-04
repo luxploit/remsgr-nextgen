@@ -79,6 +79,17 @@ module.exports = async (socket, args) => {
         ).exec();
 
         socket.write(`PRP ${transactionID} PHH ${newSetting}\r\n`);
+
+        for (const contact of contacts) {
+            const contactID = contact.contactID.toString();
+            const contactSocket = getSocketByUserID(contactID);
+
+            if (!contactSocket) {
+                continue;
+            }
+
+            contactSocket.write(`BPR ${socket.passport} PHH ${newSetting}\r\n`);
+        }
     } else if (type === "PHW") {
         if (!user) {
             console.log(`${chalk.red.bold('[REA]')} ${socket.passport} does not exist.`);
@@ -92,6 +103,17 @@ module.exports = async (socket, args) => {
         ).exec();
 
         socket.write(`PRP ${transactionID} PHW ${newSetting}\r\n`);
+
+        for (const contact of contacts) {
+            const contactID = contact.contactID.toString();
+            const contactSocket = getSocketByUserID(contactID);
+
+            if (!contactSocket) {
+                continue;
+            }
+
+            contactSocket.write(`BPR ${socket.passport} PHW ${newSetting}\r\n`);
+        }
     } else if (type === "PHM") {
         if (!user) {
             console.log(`${chalk.red.bold('[REA]')} ${socket.passport} does not exist.`);
@@ -105,6 +127,17 @@ module.exports = async (socket, args) => {
         ).exec();
 
         socket.write(`PRP ${transactionID} PHM ${newSetting}\r\n`);
+
+        for (const contact of contacts) {
+            const contactID = contact.contactID.toString();
+            const contactSocket = getSocketByUserID(contactID);
+
+            if (!contactSocket) {
+                continue;
+            }
+
+            contactSocket.write(`BPR ${socket.passport} PHM ${newSetting}\r\n`);
+        }
     } else {
         console.log(`${chalk.red.bold('[REA]')} ${socket.remoteAddress} has an invalid setting type.`);
         socket.write(`200 ${transactionID}\r\n`);
