@@ -30,6 +30,7 @@ module.exports = async (socket, args) => {
     socket.token = regularSocket.token;
     socket.userID = regularSocket.userID;
     socket.friendly_name = regularSocket.friendly_name;
+    socket.capabilities = regularSocket.capabilities || "0";
 
     const verified = verifyJWT(socket.token);
 
