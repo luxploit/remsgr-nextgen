@@ -142,3 +142,29 @@ exports.createAccount = async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 }
+
+exports.createAccountPage = async (req, res) => {
+    res.send(`
+        <html>
+            <head>
+                <title>Xirk - Create Account</title>
+            </head>
+            <body>
+                <h1>Create Account</h1>
+                <form action="/create" method="POST">
+                    <label for="displayname">Display Name:</label><br>
+                    <input type="text" id="displayname" name="displayname"><br>
+                    <label for="username">Username:</label><br>
+                    <input type="text" id="username" name="username"><br>
+                    <label for="email">Email:</label><br>
+                    <input type="text" id="email" name="email"><br>
+                    <label for="password">Password:</label><br>
+                    <input type="password" id="password" name="password"><br>
+                    <label for="legacypassword">Legacy Password:</label><br>
+                    <input type="password" id="legacypassword" name="legacypassword"><br>
+                    <input type="submit" value="Submit">
+                </form>
+            </body>
+        </html>
+    `);
+}

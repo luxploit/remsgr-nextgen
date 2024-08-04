@@ -44,6 +44,7 @@ module.exports = async (socket, args) => {
         }
 
         socket.friendly_name = newSetting;
+        socket.write(`PRP ${transactionID} MFN ${newSetting}\r\n`);
 
         for (const contact of contacts) {
             const contactID = contact.contactID.toString();
@@ -65,8 +66,6 @@ module.exports = async (socket, args) => {
                 contactSocket.write(`NLN ${socket.status} ${socket.passport} ${socket.friendly_name}\r\n`);
             }
         }
-
-        socket.write(`PRP ${transactionID} MFN ${newSetting}\r\n`);
     } else if (type === "PHH") {
         if (!user) {
             console.log(`${chalk.red.bold('[REA]')} ${socket.passport} does not exist.`);

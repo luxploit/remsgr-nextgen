@@ -53,13 +53,14 @@ app.use("/static", express.static('public'));
 // 	});
 // });
 
-const { pprdr, twnAuth, createAccount } = require('./services/authentication/tweener');
+const { pprdr, twnAuth, createAccount, createAccountPage } = require('./services/authentication/tweener');
 
 // Tweener Auth
 app.get('/rdr/pprdr.asp', pprdr);
 app.get('/tweener/auth', twnAuth);
 app.get('/login2.srf', twnAuth);
 app.post('/create', createAccount);
+app.get('/create', createAccountPage);
 
 // Config
 app.post("/Config/MsgrConfig.asmx", (req, res) => {
