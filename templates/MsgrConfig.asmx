@@ -15,9 +15,9 @@
         <TrustedDomains>
             <domain name="192.168.1.62"/>
             <domain name="10.147.18.54"/>
-            <domain name="xirk.org"/>
-            <domain name="messenger.xirk.org"/>
-            <domain name="config.xirk.org"/>
+            <domain name="remsgr.net"/>
+            <domain name="messenger.remsgr.net"/>
+            <domain name="config.remsgr.net"/>
         </TrustedDomains>
         <ErrorResponseTable>
             <Feature type="0" name="Login">
@@ -127,7 +127,7 @@
             <SharedSearchURL2>https://www.google.com/search?q=$QUERY$&amp;source=hp</SharedSearchURL2>
         </MSNSearch>
         <MsnTodayConfig>
-            <MsnTodayURL>http://xirk.org/</MsnTodayURL>
+            <MsnTodayURL>http://remsgr.net/</MsnTodayURL>
         </MsnTodayConfig>
         <MusicIntegration URL="https://www.last.fm/search/tracks?q=$ARTIST$+$TITLE$"/>
         <RL>

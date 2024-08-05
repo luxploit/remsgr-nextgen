@@ -75,5 +75,5 @@ module.exports = async (socket, args) => {
     const friendly_name = user.friendly_name;
 
     console.log(`${chalk.green.bold('[ADD]')} ${socket.passport} has added ${username} to their ${list} list.`);
-    socket.write(`ADD ${transactionID} ${list} 1 ${username}@xirk.org ${friendly_name} 0\r\n`);
+    socket.write(`ADD ${transactionID} ${list} 1 ${username}@remsgr.net ${friendly_name} 0\r\n`);
 }

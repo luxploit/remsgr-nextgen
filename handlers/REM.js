@@ -54,7 +54,7 @@ module.exports = async (socket, args) => {
         const contactSocket = getSocketByUserID(contactID);
 
         console.log(`${chalk.green.bold('[REM]')} ${socket.passport} removed ${identifier} from their list.`);
-        socket.write(`REM ${transactionID} ${list} 1 ${user.username || identifier}@xirk.org\r\n`);
+        socket.write(`REM ${transactionID} ${list} 1 ${user.username || identifier}@remsgr.net\r\n`);
 
         if (contactSocket) {
             const contactContact = await Contact.findOne({ userID: user._id, contactID: socket.userID, list }).exec();

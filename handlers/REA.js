@@ -38,7 +38,7 @@ module.exports = async (socket, args) => {
         return;
     }
 
-    if (username == socket.passport.split('@')[0] && socket.passport == username + "@xirk.org") {
+    if (username == socket.passport.split('@')[0] && socket.passport == username + "@remsgr.net") {
         await User.updateOne({ _id: user.id }, { friendly_name }).exec();
 
         const sbSocket = getSwitchboardSocketByPassport(socket.passport);

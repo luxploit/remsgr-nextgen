@@ -16,7 +16,7 @@ class MD5Auth {
 
             const email = passport.split('@');
 
-            if (email[1] !== 'xirk.org' && email[1] !== 'hotmail.com') {
+            if (email[1] !== 'remsgr.net' && email[1] !== 'hotmail.com') {
                 console.log(`${chalk.yellow.bold('[USR MD5 INITIAL]')} ${passport} has an invalid email domain.`);
                 socket.write(`911 ${transactionID}\r\n`);
                 socket.destroy();
@@ -48,7 +48,7 @@ class MD5Auth {
         } else if (state === 'S') {
             const email = passport.split('@');
 
-            if (email[1] !== 'xirk.org' && email[1] !== 'hotmail.com') {
+            if (email[1] !== 'remsgr.net' && email[1] !== 'hotmail.com') {
                 console.log(`${chalk.yellow.bold('[USR MD5 INITIAL]')} ${passport} has an invalid email domain.`);
                 socket.write(`911 ${transactionID}\r\n`);
                 socket.destroy();
@@ -160,7 +160,7 @@ class TWNAuth {
 
             const email = passport.split('@');
 
-            if (email[1] !== 'xirk.org' && email[1] !== 'hotmail.com') {
+            if (email[1] !== 'remsgr.net' && email[1] !== 'hotmail.com') {
                 console.log(`${chalk.yellow.bold('[USR MD5 INITIAL]')} ${passport} has an invalid email domain.`);
                 socket.write(`911 ${transactionID}\r\n`);
                 socket.destroy();

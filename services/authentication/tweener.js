@@ -28,7 +28,7 @@ exports.twnAuth = async (req, res) => {
             const email = passport.split('@');
             const urlEmail = email[0].split('%40');
 
-            if (email[1] !== 'xirk.org' && email[1] !== 'hotmail.com' && urlEmail[1] !== 'xirk%2Eorg') {
+            if (email[1] !== 'remsgr.net' && email[1] !== 'hotmail.com' && urlEmail[1] !== 'remsgr%2Eorg') {
                 console.log(`${chalk.yellow.bold('[USR MD5 INITIAL]')} ${passport} has an invalid email domain.`);
                 res.set({
                     'Content-Type': 'text/plain',
@@ -111,7 +111,7 @@ exports.createAccount = async (req, res) => {
         }
 
         const displaynameEncoded = encodeURIComponent(displayname);
-        const friendly_name = displaynameEncoded || username + "@xirk.org";
+        const friendly_name = displaynameEncoded || username + "@remsgr.net";
 
         const user = await User.findOne({ $or: [{ username }, { email }] });
 
@@ -147,7 +147,7 @@ exports.createAccountPage = async (req, res) => {
     res.send(`
         <html>
             <head>
-                <title>Xirk - Create Account</title>
+                <title>remsgr - Create Account</title>
             </head>
             <body>
                 <h1>Create Account</h1>

@@ -155,7 +155,7 @@ module.exports = async (socket, args) => {
                 contactsMap.get(userId).lists_number |= totalListsNumber;
             } else {
                 contactsMap.set(userId, {
-                    email: user.username + "@xirk.org",
+                    email: user.username + "@remsgr.net",
                     friendly_name: user.friendly_name,
                     uuid: user.uuid,
                     lists_number: totalListsNumber,
@@ -179,7 +179,7 @@ module.exports = async (socket, args) => {
                 contactsMap.get(userId).lists_number |= totalListsNumber;
             } else {
                 contactsMap.set(userId, {
-                    email: user.username + "@xirk.org",
+                    email: user.username + "@remsgr.net",
                     friendly_name: user.friendly_name,
                     uuid: user.uuid,
                     lists_number: totalListsNumber,
@@ -229,7 +229,7 @@ module.exports = async (socket, args) => {
                         return;
                     }
 
-                    socket.write(`LST ${transactionID} ${list} ${syncID} ${index + 1} ${total} ${user.username + "@xirk.org"} ${user.friendly_name}${socket.version > 6 ? " 0" : ""}\r\n`);
+                    socket.write(`LST ${transactionID} ${list} ${syncID} ${index + 1} ${total} ${user.username + "@remsgr.net"} ${user.friendly_name}${socket.version > 6 ? " 0" : ""}\r\n`);
                 }
             });
         } catch (err) {
