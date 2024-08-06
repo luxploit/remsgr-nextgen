@@ -54,6 +54,7 @@ app.use("/static", express.static('public'));
 // });
 
 const { pprdr, twnAuth, createAccount, createAccountPage } = require('./services/authentication/tweener');
+const { parseBodyMiddleware ,rst } = require('./services/authentication/rst');
 
 // Tweener Auth
 app.get('/rdr/pprdr.asp', pprdr);
@@ -61,6 +62,9 @@ app.get('/tweener/auth', twnAuth);
 app.get('/login2.srf', twnAuth);
 app.post('/create', createAccount);
 app.get('/create', createAccountPage);
+
+// RST Auth
+app.post('/RST.srf', parseBodyMiddleware, rst);
 
 // Config
 app.post("/Config/MsgrConfig.asmx", (req, res) => {
