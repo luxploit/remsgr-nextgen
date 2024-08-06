@@ -122,7 +122,7 @@ exports.rst = async (req, res) => {
         TOMORROW_Z: moment().add(1, 'days').utc().format('YYYY-MM-DDTHH:mm:ss[Z]'),
         cid: user._id,
         email: email,
-        ip: "127.0.0.1",
+        ip: req.ip.replace('::ffff:', ''),
         tokens: allTokens
     }
 
