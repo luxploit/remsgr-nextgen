@@ -6,15 +6,15 @@ const validator = require('email-validator');
 const Contact = require('../models/Contact');
 const User = require('../models/User');
 
-module.exports = async (socket, args) => {
+module.exports = async (socket, args, command) => {
     const transactionID = args[0];
     const list = args[1];
 
     let identifier;
-    if (socket.version >= 10) {
-        identifier = args[2];
+    if (socket.version >= 10 && list === 'FL') {
+        identifier = args[2]; // Use UUID for FL in MSNP10+
     } else {
-        identifier = args[2].split('@')[0];
+        identifier = args[2].split('@')[0]; // Use email (or the username part of it) for other lists and versions
     }
 
     if (isNaN(transactionID)) {
@@ -31,7 +31,7 @@ module.exports = async (socket, args) => {
     }
 
     if (['FL', 'BL', 'AL'].includes(list)) {
-        const query = socket.version >= 10 ? { uuid: identifier } : { username: identifier };
+        const query = socket.version >= 10 && list === 'FL' ? { uuid: identifier } : { username: identifier };
         const user = await User.findOne(query).exec();
 
         if (!user) {
@@ -54,7 +54,7 @@ module.exports = async (socket, args) => {
         const contactSocket = getSocketByUserID(contactID);
 
         console.log(`${chalk.green.bold('[REM]')} ${socket.passport} removed ${identifier} from their list.`);
-        socket.write(`REM ${transactionID} ${list} 1 ${user.username || identifier}@remsgr.net\r\n`);
+        socket.write(command + '\r\n');
 
         if (contactSocket) {
             const contactContact = await Contact.findOne({ userID: user._id, contactID: socket.userID, list }).exec();
