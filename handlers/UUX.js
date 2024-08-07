@@ -2,6 +2,9 @@ const chalk = require('chalk');
 const User = require('../models/User');
 const Contact = require('../models/Contact');
 const { getSocketByUserID } = require('../utils/socket.util');
+const { XMLParser } = require('fast-xml-parser');
+
+const parser = new XMLParser();
 
 module.exports = async (socket, args, command) => {
     const transactionID = args[0];
@@ -14,17 +17,22 @@ module.exports = async (socket, args, command) => {
 
     // get payload from the command (get after first \r\n)
     const payload = command.split('\r\n').slice(1).join('\r\n');
+    const parsed = parser.parse(payload);
 
     console.log(payload)
 
-    if (!payload.startsWith('<Data><PSM>') || !payload.endsWith('</CurrentMedia></Data>')) {
+    if (parsed.Data.PSM === undefined || parsed.Data.CurrentMedia === undefined) {
         console.log(`${chalk.red.bold('[UUX]')} ${socket.passport} has sent an invalid payload.`);
         return;
     }
+    console.log(parsed)
 
     socket.customStatus = payload;
 
     const payloadLength = Buffer.byteLength(payload, 'utf8');
+
+    // Send acknowledgement
+    socket.write(`UUX ${transactionID} 0\r\n`);
 
     // Send to the entire contact list (FL) that the user has changed their status
     const contacts = await Contact.find({ userID: socket.userID, list: 'FL' }).exec();
@@ -40,7 +48,4 @@ module.exports = async (socket, args, command) => {
             }
         }
     });
-
-    // Send acknowledgement
-    socket.write(`UUX ${transactionID} 0\r\n`);
 }
