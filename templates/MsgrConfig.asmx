@@ -66,11 +66,11 @@
         <msntabdata>
             <tab>
                 <type>page</type>
-                <contenturl>https://open.spotify.com/intl-fr/artist/25uiPmTg16RbhZWAqwLBy5</contenturl>
-                <hiturl>https://open.spotify.com/intl-fr/artist/25uiPmTg16RbhZWAqwLBy5</hiturl>
-                <image>https://i.scdn.co/image/ab6761610000e5eb936885667ef44c306483c838</image>
-                <name>Listen to Charli XCX today!</name>
-                <tooltip>Listen to Charli XCX today!</tooltip>
+                <contenturl>https://mbasic.facebook.com/</contenturl>
+                <hiturl>https://mbasic.facebook.com/</hiturl>
+                <image>http://10.147.18.54/static/shortcuts/fb.png</image>
+                <name>Facebook</name>
+                <tooltip>Facebook</tooltip>
                 <siteid>0</siteid>
                 <notificationid>0</notificationid>
             </tab>

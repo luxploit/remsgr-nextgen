@@ -3,7 +3,7 @@
 	<S:Header>
 		<psf:pp xmlns:psf="http://schemas.microsoft.com/Passport/SoapServices/SOAPFault">
 			<psf:serverVersion>1</psf:serverVersion>
-			<psf:PUID>00030000358BBE81</psf:PUID>
+			<psf:PUID>{{ puid }}</psf:PUID>
 			<psf:configVersion>16.000.28985.00</psf:configVersion>
 			<psf:uiVersion>3.100.2179.0</psf:uiVersion>
 			<psf:mobileConfigVersion>16.000.26208.0</psf:mobileConfigVersion>

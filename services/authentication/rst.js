@@ -2,16 +2,14 @@ const chalk = require('chalk');
 const fs = require('fs');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
-const config = require('../../config.json');
-const { v4: uuidv4 } = require('uuid');
 const { XMLParser } = require('fast-xml-parser');
 const Handlebars = require('handlebars');
 const moment = require('moment');
 const parser = new XMLParser();
 const crypto = require('crypto');
 
+const { formatPUID, formatCID } = require('../../utils/auth.util');
 const User = require('../../models/User');
-const { isPromise } = require('util/types');
 
 exports.parseBodyMiddleware = (req, res, next) => {
     let body = "";
@@ -117,9 +115,12 @@ exports.rst = async (req, res) => {
 
     const compiledTemplate = Handlebars.compile(finalTemplate);
 
+    const PUID = formatPUID(user.uuid);
+
     const data = {
         DATE_Z: moment().utc().format('YYYY-MM-DDTHH:mm:ss[Z]'),
         TOMORROW_Z: moment().add(1, 'days').utc().format('YYYY-MM-DDTHH:mm:ss[Z]'),
+        puid: PUID,
         cid: user._id,
         email: email,
         ip: req.ip.replace('::ffff:', ''),

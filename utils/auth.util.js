@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const { parse: uuidParse } = require('uuid');
 const chalk = require('chalk');
 const { getMultipleSocketsByPassport, getSocketByUserID } = require('./socket.util');
@@ -221,7 +222,26 @@ function uuidToHighLow(uuid) {
     const parsedUuid = uuidParse(uuid);
     const high = (parsedUuid[0] << 24) | (parsedUuid[1] << 16) | (parsedUuid[2] << 8) | parsedUuid[3];
     const low = (parsedUuid[10] << 24) | (parsedUuid[11] << 16) | (parsedUuid[12] << 8) | parsedUuid[13];
-    return [high >>> 0, low >>> 0]; // >>> 0 to convert to unsigned 32-bit integer
+    return [high >>> 0, low >>> 0];
+}
+
+function formatPUID(uuid) {
+    const [highPart, lowPart] = uuidToHighLow(uuid);
+    const combinedValue = (BigInt(highPart) << BigInt(32)) + BigInt(lowPart);
+    return combinedValue.toString(16).toUpperCase();
+}
+
+function formatCID(uuid, convertToDecimal = false) {
+    const cidPart = uuid.slice(19, 23) + uuid.slice(24, 36);
+    const cid = cidPart.toLowerCase();
+
+    if (!convertToDecimal) {
+        return cid;
+    }
+
+    const buffer = Buffer.from(cid, 'hex');
+    const decimalValue = buffer.readBigInt64LE();
+    return decimalValue.toString();
 }
 
 async function verifyJWT(token) {
@@ -273,6 +293,9 @@ async function logOut(socket) {
 module.exports = {
     MD5Auth: new MD5Auth(),
     TWNAuth: new TWNAuth(),
+    uuidToHighLow,
+    formatPUID,
+    formatCID,
     verifyJWT,
     logOut
 };
