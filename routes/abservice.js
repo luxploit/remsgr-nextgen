@@ -21,22 +21,7 @@ router.post("/SharingService.asmx", (req, res) => {
 					<Service>
 						<Memberships><Membership>
 									<MemberRole>Allow</MemberRole>
-									<Members><Member xsi:type="PassportMember">
-													<MembershipId>Allow/aa1888d5-0df9-4388-b264-8d8befac2421</MembershipId>
-													<Type>Passport</Type>
-													<State>Accepted</State>
-													<Deleted>false</Deleted>
-													<LastChanged>2024-02-01T19:14:18Z</LastChanged>
-													<JoinedDate>2023-08-21T15:58:33Z</JoinedDate>
-													<ExpirationDate>0001-01-01T00:00:00</ExpirationDate>
-													<Changes />
-													<PassportName>nullptralt@escargot.chat</PassportName>
-													<IsPassportNameHidden>false</IsPassportNameHidden>
-													<PassportId>0</PassportId>
-													<CID>2388223847251666098</CID>
-													<PassportChanges />
-													<LookedupByCID>false</LookedupByCID>
-												</Member></Members>
+									<Members></Members>
 									<MembershipIsComplete>true</MembershipIsComplete>
 								</Membership><Membership>
 									<MemberRole>Block</MemberRole>

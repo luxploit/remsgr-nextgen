@@ -38,6 +38,7 @@ module.exports = async (socket, args) => {
     socket.token = check.token;
     socket.userID = check.userID;
     socket.friendly_name = check.friendly_name;
+    socket.capabilities = check.capabilities || "0";
 
     const verified = verifyJWT(socket.token);
 
@@ -80,7 +81,7 @@ module.exports = async (socket, args) => {
         const sbSocket = participant.socket;
     
         if (sbSocket) {
-            iro += ` ${participant.email} ${sbSocket.friendly_name}\r\n`;
+            iro += ` ${participant.email} ${sbSocket.friendly_name}${socket.version >= 12 ? " " + sbSocket.capabilities : ""}\r\n`;
         } else {
             iro += ` ${participant.email} ${participant}\r\n`;
         }
@@ -88,7 +89,7 @@ module.exports = async (socket, args) => {
         socket.write(iro);
         
         if (participant.email !== email) {
-            sbSocket.write(`JOI ${email} ${socket.friendly_name}\r\n`);
+            sbSocket.write(`JOI ${email} ${socket.friendly_name}${sbSocket.version >= 12 ? " " + sbSocket.capabilities : ""}\r\n`);
         }
     }
 
