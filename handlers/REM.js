@@ -30,6 +30,53 @@ module.exports = async (socket, args, command) => {
         return;
     }
 
+    if (args[3]) {
+        const groupUUID = args[3];
+    
+        // Find the current user by ID
+        const user = await User.findOne({ _id: decoded.id }).exec();
+        const group = user.groups.find(g => g.id === groupUUID);
+    
+        if (!group) {
+            console.log(`${chalk.red.bold('[REM]')} ${socket.passport} attempted to remove a contact from a group that does not exist. (${groupUUID})`);
+            socket.write(`REM ${transactionID} 0\r\n`);
+            return;
+        }
+    
+        const contactUser = await User.findOne({ uuid: identifier }).exec();
+        if (!contactUser) {
+            console.log(`${chalk.red.bold('[REM]')} ${socket.passport} attempted to remove a non-existent contact. (${identifier})`);
+            socket.write(`REM ${transactionID} 0\r\n`);
+            return;
+        }
+    
+        const contact = await Contact.findOne({ userID: decoded.id, contactID: contactUser._id, list: 'FL' }).exec();
+        if (!contact) {
+            console.log(`${chalk.red.bold('[REM]')} ${socket.passport} attempted to remove a contact from a group that is not in their FL list. (${identifier})`);
+            socket.write(`REM ${transactionID} 0\r\n`);
+            return;
+        }
+    
+        const groupIndex = contact.groups.indexOf(groupUUID);
+        if (groupIndex === -1) {
+            console.log(`${chalk.red.bold('[REM]')} ${socket.passport} attempted to remove a contact from a group they are not in. (${groupUUID})`);
+            socket.write(`REM ${transactionID} 0\r\n`);
+            return;
+        }
+    
+        // Use findOneAndUpdate to remove the group without version conflict
+        await Contact.findOneAndUpdate(
+            { _id: contact._id },
+            { $pull: { groups: groupUUID } },
+            { new: true, useFindAndModify: false }
+        ).exec();
+    
+        console.log(`${chalk.green.bold('[REM]')} ${socket.passport} removed ${identifier} from group ${groupUUID}.`);
+        socket.write(command + `\r\n`);
+        return;
+    }
+    
+
     if (['FL', 'BL', 'AL'].includes(list)) {
         const query = socket.version >= 10 && list === 'FL' ? { uuid: identifier } : { username: identifier };
         const user = await User.findOne(query).exec();

@@ -11,7 +11,7 @@ const contactSchema = new mongoose.Schema({
   },
   list: {
     type: String,
-    enum: ['FL', 'AL', 'BL', 'PL'],
+    enum: ['FL', 'AL', 'BL', 'RL'],
     required: true
   },
   groups: {

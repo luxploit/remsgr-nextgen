@@ -39,7 +39,7 @@ app.use(cors());
 
 app.use(express.text({ type: 'application/xml' }));
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: false }));
 app.use("/static", express.static('public'));
 
 // app.use((req, res, next) => {
