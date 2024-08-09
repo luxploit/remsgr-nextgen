@@ -138,6 +138,7 @@ exports.rst = async (req, res) => {
 
         const formattedTemplate = compiledTemplate(data);
 
+        res.set('Content-Type', 'text/xml; charset=utf-8');
         res.send(formattedTemplate);
     } catch (error) {
         console.log(`${chalk.yellow.bold('[RST.srf]')} An error occurred while processing the tokens.`);

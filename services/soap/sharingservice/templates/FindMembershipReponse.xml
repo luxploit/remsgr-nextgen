@@ -17,21 +17,21 @@
 							<Membership> 
 								<MemberRole>Allow</MemberRole> 
 								<Members>
-                                    {{ allowMembers }}
+                                    {{{ allowMembers }}}
                                 </Members> 
 								<MembershipIsComplete>true</MembershipIsComplete> 
 							</Membership>
 							<Membership> 
 								<MemberRole>Block</MemberRole> 
 								<Members>
-                                    {{ blockMembers }}
+                                    {{{ blockMembers }}}
                                 </Members> 
 								<MembershipIsComplete>true</MembershipIsComplete> 
 							</Membership>
 							<Membership> 
 								<MemberRole>Reverse</MemberRole> 
 								<Members>
-                                    {{ reverseMembers }}
+                                    {{{ reverseMembers }}}
                                 </Members> 
 								<MembershipIsComplete>true</MembershipIsComplete> 
 							</Membership>

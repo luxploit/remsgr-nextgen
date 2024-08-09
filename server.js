@@ -425,6 +425,24 @@ app.post("/abservice/abservice.asmx", parseBodyMiddleware, (req, res) => {
 	}
 });
 
+app.post("/abservice/SharingService.asmx", parseBodyMiddleware, (req, res) => {
+	try {
+		const soapAction = req.headers.soapaction;
+		const action = soapAction.split('/').pop().replace(/"/g, '');
+		const handlerPath = `./services/soap/sharingservice/${action}.js`;
+	
+		if (fs.existsSync(handlerPath)) {
+			const handler = require(handlerPath);
+			handler(req, res);
+		} else {
+			console.log(`${chalk.red.bold('[SOAP]')} No handler found for action: ${action}`);
+			res.status(404).send();
+		}
+	} catch (err) {
+		res.status(500).send();
+	}
+});
+
 const httpsServer = https.createServer({
 	key: fs.readFileSync('./certs/key.pem'),
 	cert: fs.readFileSync('./certs/cert.pem')

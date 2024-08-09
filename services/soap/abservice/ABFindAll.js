@@ -143,7 +143,7 @@ module.exports = async (req, res) => {
             "CID": user._id.toString(),
             "IsNotMobileVisible": "false",
             "isMobileIMEnabled": "false",
-            "isMessengerUser": "true",
+            "isMessengerUser": "false",
             "isFavorite": "false",
             "isSmtp": "false",
             "hasSpace": "false",
@@ -182,5 +182,6 @@ module.exports = async (req, res) => {
 
     const formattedXML = xmlFormat(formattedTemplate, { collapseContent: true });
 
+    res.set('Content-Type', 'text/xml; charset=utf-8');
     res.send(formattedXML);
 }
