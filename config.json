@@ -1,7 +1,7 @@
 {
     "server": {
-        "host": "https://10.147.18.54/",
-        "ip": "10.147.18.54",
+        "host": "https://192.168.1.62/",
+        "ip": "192.168.1.62",
         "notification_port": 1863,
         "switchboard_port": 1864,
         "http_port": 80,
@@ -13,11 +13,11 @@
         "ad_list": [
             {
                 "url": "https://remsgr.net",
-                "image": "https://10.147.18.54/static/ad_images/xirk.png"
+                "image": "https://192.168.1.62/static/ad_images/xirk.png"
             },
             {
                 "url": "https://remsgr.net",
-                "image": "https://10.147.18.54/static/ad_images/brat.png"
+                "image": "https://192.168.1.62/static/ad_images/brat.png"
             }
         ]
     }

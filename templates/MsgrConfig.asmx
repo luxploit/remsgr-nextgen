@@ -14,7 +14,7 @@
         </Relay>
         <TrustedDomains>
             <domain name="192.168.1.62"/>
-            <domain name="10.147.18.54"/>
+            <domain name="192.168.1.62"/>
             <domain name="remsgr.net"/>
             <domain name="messenger.remsgr.net"/>
             <domain name="config.remsgr.net"/>
@@ -68,7 +68,7 @@
                 <type>page</type>
                 <contenturl>https://mbasic.facebook.com/</contenturl>
                 <hiturl>https://mbasic.facebook.com/</hiturl>
-                <image>http://10.147.18.54/static/shortcuts/fb.png</image>
+                <image>http://192.168.1.62/static/shortcuts/fb.png</image>
                 <name>Facebook</name>
                 <tooltip>Facebook</tooltip>
                 <siteid>0</siteid>

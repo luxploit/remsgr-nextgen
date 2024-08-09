@@ -171,7 +171,7 @@ module.exports = async (req, res) => {
 
     const formattedTemplate = compiledTemplate({
         sessionid: v4(),
-        domain: "10.147.18.54",
+        domain: "192.168.1.62",
         key: tokenUrlSafe(172),
         now: moment().utc().format('YYYY-MM-DDTHH:mm:ss[Z]'),
         created: moment(user.created_at).utc().format('YYYY-MM-DDTHH:mm:ss[Z]'),

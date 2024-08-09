@@ -8,7 +8,7 @@ const moment = require('moment');
 const parser = new XMLParser();
 const crypto = require('crypto');
 
-const { formatPUID, formatCID } = require('../../utils/auth.util');
+const { formatPUID } = require('../../utils/auth.util');
 const User = require('../../models/User');
 
 exports.parseBodyMiddleware = (req, res, next) => {
