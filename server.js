@@ -37,7 +37,6 @@ app.set("etag", false);
 app.use(cookieParser());
 app.use(cors());
 
-app.use(express.text({ type: 'application/xml' }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use("/static", express.static('public'));
@@ -54,7 +53,7 @@ app.use("/static", express.static('public'));
 // });
 
 const { pprdr, twnAuth, createAccount, createAccountPage } = require('./services/authentication/tweener');
-const { parseBodyMiddleware ,rst } = require('./services/authentication/rst');
+const { parseBodyMiddleware, rst } = require('./services/authentication/rst');
 
 // Tweener Auth
 app.get('/rdr/pprdr.asp', pprdr);
@@ -408,7 +407,23 @@ app.get("/online", (req, res) => {
 	res.json({ online: sockets.length, on_switchboard: switchboard_sockets.length });
 });
 
-app.use("/abservice", require("./routes/abservice"));
+app.post("/abservice/abservice.asmx", parseBodyMiddleware, (req, res) => {
+	try {
+		const soapAction = req.headers.soapaction;
+		const action = soapAction.split('/').pop().replace(/"/g, '');
+		const handlerPath = `./services/soap/abservice/${action}.js`;
+	
+		if (fs.existsSync(handlerPath)) {
+			const handler = require(handlerPath);
+			handler(req, res);
+		} else {
+			console.log(`${chalk.red.bold('[SOAP]')} No handler found for action: ${action}`);
+			res.status(404).send();
+		}
+	} catch (err) {
+		res.status(500).send();
+	}
+});
 
 const httpsServer = https.createServer({
 	key: fs.readFileSync('./certs/key.pem'),

@@ -250,6 +250,10 @@ async function verifyJWT(token) {
         return false;
     }
 
+    if (token.startsWith('t=')) {
+        token = token.slice(2);
+    }
+
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         return decoded;
