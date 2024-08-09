@@ -65,5 +65,5 @@ module.exports = async (socket, args) => {
     const groupNumber = user.groups.length + 1;
 
     console.log(`${chalk.green.bold('[ADG]')} ${socket.passport} has created a group named ${groupName}.`);
-    socket.write(`ADG ${transactionID} 1 ${groupName} ${groupNumber} 0\r\n`);
+    socket.write(`ADG ${transactionID} 1 ${groupName} ${socket.version < 10 ? groupNumber : groupID} 0\r\n`);
 }

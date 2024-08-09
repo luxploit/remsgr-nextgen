@@ -89,7 +89,7 @@ module.exports = async (socket, args) => {
         socket.write(iro);
         
         if (participant.email !== email) {
-            sbSocket.write(`JOI ${email} ${socket.friendly_name}${sbSocket.version >= 12 ? " " + sbSocket.capabilities : ""}\r\n`);
+            sbSocket.write(`JOI ${email} ${socket.friendly_name}${sbSocket.version >= 12 ? " " + socket.capabilities : ""}\r\n`);
         }
     }
 

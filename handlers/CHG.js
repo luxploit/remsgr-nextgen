@@ -7,7 +7,7 @@ const User = require('../models/User');
 module.exports = async (socket, args, command) => {
     const transactionID = args[0];
     const status = args[1];
-    const capabilities = args[2] || 0;
+    const capabilities = args[2] || "0";
     const msnobjectpfp = args[3] || '';
 
     if (isNaN(transactionID)) {
