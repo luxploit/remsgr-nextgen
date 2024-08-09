@@ -35,6 +35,13 @@ exports.rst = async (req, res) => {
         return;
     }
 
+    if (!email || !password) {
+        console.log(`${chalk.yellow.bold('[RST.srf]')} No email or password provided.`);
+        const invalid = fs.readFileSync('./services/authentication/templates/rst/InvalidRequest.xml', 'utf8');
+        res.send(invalid);
+        return;
+    }
+
     const username = email.split('@')[0];
     const user = await User.findOne({ username: username });
 
@@ -67,6 +74,7 @@ exports.rst = async (req, res) => {
 
     try {
         requestedTokens = req.body["Envelope"]["Body"]["ps:RequestMultipleSecurityTokens"]["wst:RequestSecurityToken"];
+        console.log(requestedTokens)
     } catch (error) {
         console.log(`${chalk.yellow.bold('[RST.srf]')} No tokens provided.`);
         const invalid = fs.readFileSync('./services/authentication/templates/rst/InvalidRequest.xml', 'utf8');
@@ -78,56 +86,63 @@ exports.rst = async (req, res) => {
 
     let index = 0;
 
-    requestedTokens.forEach((tokenRequest) => {
-        let address;
-        try {
-            address = tokenRequest["wsp:AppliesTo"]["wsa:EndpointReference"]["wsa:Address"];
-        } catch (error) {
-            console.log(`${chalk.yellow.bold('[RST.srf]')} No address provided.`);
-            const invalid = fs.readFileSync('./services/authentication/templates/rst/InvalidRequest.xml', 'utf8');
-            res.send(invalid);
-            return;
+    try {
+        requestedTokens.forEach((tokenRequest) => {
+            let address;
+            try {
+                address = tokenRequest["wsp:AppliesTo"]["wsa:EndpointReference"]["wsa:Address"];
+            } catch (error) {
+                console.log(`${chalk.yellow.bold('[RST.srf]')} No address provided.`);
+                const invalid = fs.readFileSync('./services/authentication/templates/rst/InvalidRequest.xml', 'utf8');
+                res.send(invalid);
+                return;
+            }
+
+            if (address !== 'http://Passport.NET/tb') {
+                index += 1;
+                const compiledTemplate = Handlebars.compile(tokenTemplate);
+
+                Handlebars.registerHelper('ifeq', function (a, b, options) {
+                    if (a == b) { return options.fn(this); }
+                    return options.inverse(this);
+                });
+
+                const formattedTemplate = compiledTemplate({
+                    domain: address,
+                    token: token,
+                    i: index,
+                    dateTodayZ: moment().utc().format('YYYY-MM-DDTHH:mm:ss[Z]'),
+                    dateTomorrowZ: moment().add(1, 'days').utc().format('YYYY-MM-DDTHH:mm:ss[Z]'),
+                    binarysecret: crypto.randomBytes(24).toString('base64')
+                });
+
+                tokenResponses.push(formattedTemplate);
+            }
+        });
+
+        const allTokens = tokenResponses.join('\n');
+
+        const compiledTemplate = Handlebars.compile(finalTemplate);
+
+        const PUID = formatPUID(user.uuid);
+
+        const data = {
+            DATE_Z: moment().utc().format('YYYY-MM-DDTHH:mm:ss[Z]'),
+            TOMORROW_Z: moment().add(1, 'days').utc().format('YYYY-MM-DDTHH:mm:ss[Z]'),
+            puid: PUID,
+            cid: user._id,
+            email: email,
+            ip: req.ip.replace('::ffff:', ''),
+            tokens: allTokens
         }
 
-        if (address !== 'http://Passport.NET/tb') {
-            index += 1;
-            const compiledTemplate = Handlebars.compile(tokenTemplate);
+        const formattedTemplate = compiledTemplate(data);
 
-            Handlebars.registerHelper('ifeq', function (a, b, options) {
-                if (a == b) { return options.fn(this); }
-                return options.inverse(this);
-            });
-
-            const formattedTemplate = compiledTemplate({
-                domain: address,
-                token: token,
-                i: index,
-                dateTodayZ: moment().utc().format('YYYY-MM-DDTHH:mm:ss[Z]'),
-                dateTomorrowZ: moment().add(1, 'days').utc().format('YYYY-MM-DDTHH:mm:ss[Z]'),
-                binarysecret: crypto.randomBytes(24).toString('base64')
-            });
-
-            tokenResponses.push(formattedTemplate);
-        }
-    });
-
-    const allTokens = tokenResponses.join('\n');
-
-    const compiledTemplate = Handlebars.compile(finalTemplate);
-
-    const PUID = formatPUID(user.uuid);
-
-    const data = {
-        DATE_Z: moment().utc().format('YYYY-MM-DDTHH:mm:ss[Z]'),
-        TOMORROW_Z: moment().add(1, 'days').utc().format('YYYY-MM-DDTHH:mm:ss[Z]'),
-        puid: PUID,
-        cid: user._id,
-        email: email,
-        ip: req.ip.replace('::ffff:', ''),
-        tokens: allTokens
+        res.send(formattedTemplate);
+    } catch (error) {
+        console.log(`${chalk.yellow.bold('[RST.srf]')} An error occurred while processing the tokens.`);
+        const invalid = fs.readFileSync('./services/authentication/templates/rst/InvalidRequest.xml', 'utf8');
+        res.send(invalid);
+        return;
     }
-
-    const formattedTemplate = compiledTemplate(data);
-
-    res.send(formattedTemplate);
 }

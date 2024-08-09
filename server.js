@@ -518,80 +518,114 @@ const notification = net.createServer((socket) => {
 });
 
 const switchboard = net.createServer((socket) => {
-	console.log(`${chalk.magenta.bold('[MSN SWITCHBOARD]')} New connection: ${socket.remoteAddress}:${socket.remotePort}`);
-	switchboard_sockets.push(socket);
+    console.log(`${chalk.magenta.bold('[MSN SWITCHBOARD]')} New connection: ${socket.remoteAddress}:${socket.remotePort}`);
+    switchboard_sockets.push(socket);
 
-	let buffer = Buffer.alloc(0);
+    let buffer = Buffer.alloc(0);
+    let messageBuffer = {};
+    let processingTimeout = null;
+    const processingDelay = 100;
 
-	socket.on('data', (data) => {
-		buffer = Buffer.concat([buffer, data]);
+    socket.on('data', (data) => {
+        buffer = Buffer.concat([buffer, data]);
 
-		while (buffer.length > 0) {
-			// Find the end of the command header
-			const headerEndIndex = buffer.indexOf('\r\n');
-			if (headerEndIndex === -1) break;
+        while (buffer.length > 0) {
+            const headerEndIndex = buffer.indexOf('\r\n');
+            if (headerEndIndex === -1) break;
 
-			const header = buffer.slice(0, headerEndIndex).toString();
-			const headerParts = header.split(' ');
+            const header = buffer.slice(0, headerEndIndex).toString();
+            const headerParts = header.split(' ');
 
-			if (headerParts[0] === 'MSG' && headerParts.length >= 4) {
-				// Handle MSG command with payload
-				const payloadLength = parseInt(headerParts[3], 10);
-				const totalLength = headerEndIndex + 2 + payloadLength;
+            console.log(`${chalk.blue.bold('[MSN SWITCHBOARD]')} Received header:`, header);
 
-				if (buffer.length < totalLength) break; // Wait for the full payload to be received
+            if (headerParts[0] === 'MSG' && headerParts.length >= 4) {
+                const transactionId = parseInt(headerParts[1], 10);
+                const payloadLength = parseInt(headerParts[3], 10);
+                const totalLength = headerEndIndex + 2 + payloadLength;
 
-				const command = buffer.slice(0, headerEndIndex + 2).toString();
-				const payload = buffer.slice(headerEndIndex + 2, totalLength);
-				buffer = buffer.slice(totalLength); // Remove the processed command from the buffer
+                if (buffer.length < totalLength) break;
 
-				const handlerPath = `./handlers/switchboard/${headerParts[0]}.js`;
-				if (fs.existsSync(handlerPath)) {
-					const handler = require(handlerPath);
-					try {
-						handler(socket, headerParts.slice(1), command, payload);
-					} catch (err) {
-						console.log(command);
-						console.error(err);
-					}
-				} else {
-					console.log(`${chalk.red.bold('[MSN SWITCHBOARD]')} No handler found for command: ${headerParts[0]}`);
-					socket.write(`200 ${headerParts[1]}\r\n`);
-				}
-			} else {
-				// Handle other commands without payload or with different structures
-				buffer = buffer.slice(headerEndIndex + 2); // Remove the processed command from the buffer
+                const command = buffer.slice(0, headerEndIndex + 2).toString();
+                const payload = buffer.slice(headerEndIndex + 2, totalLength);
+                buffer = buffer.slice(totalLength);
 
-				const handlerPath = `./handlers/switchboard/${headerParts[0]}.js`;
-				if (fs.existsSync(handlerPath)) {
-					const handler = require(handlerPath);
-					try {
-						handler(socket, headerParts.slice(1), header);
-					} catch (err) {
-						console.log(header);
-						console.error(err);
-					}
-				} else {
-					console.log(`${chalk.red.bold('[MSN SWITCHBOARD]')} No handler found for command: ${headerParts[0]}`);
-					socket.write(`200 ${headerParts[1]}\r\n`);
-				}
-			}
-		}
-	});
+                console.log(`${chalk.blue.bold('[MSN SWITCHBOARD]')} Storing message with transaction ID: ${transactionId}`);
 
-	socket.on('close', () => {
-		SB_logOut(socket);
-		const index = switchboard_sockets.indexOf(socket);
-		if (index > -1) {
-			switchboard_sockets.splice(index, 1);
-		}
-		console.log(`${chalk.magenta.bold('[MSN SWITCHBOARD]')} Connection closed: ${socket.remoteAddress}:${socket.remotePort}`);
-	});
+                messageBuffer[transactionId] = { socket, headerParts, command, payload };
 
-	socket.on('error', (err) => {
-		console.error(err);
-	});
+                if (processingTimeout) {
+                    clearTimeout(processingTimeout);
+                }
+
+                processingTimeout = setTimeout(() => {
+                    processBufferedMessages();
+                }, processingDelay);
+            } else {
+                buffer = buffer.slice(headerEndIndex + 2);
+
+                console.log(`${chalk.blue.bold('[MSN SWITCHBOARD]')} Processing non-MSG command: ${headerParts[0]}`);
+
+                const handlerPath = `./handlers/switchboard/${headerParts[0]}.js`;
+                if (fs.existsSync(handlerPath)) {
+                    const handler = require(handlerPath);
+                    try {
+                        handler(socket, headerParts.slice(1), header);
+                    } catch (err) {
+                        console.log(header);
+                        console.error(err);
+                    }
+                } else {
+                    console.log(`${chalk.red.bold('[MSN SWITCHBOARD]')} No handler found for command: ${headerParts[0]}`);
+                    socket.write(`200 ${headerParts[1]}\r\n`);
+                }
+            }
+        }
+    });
+
+    socket.on('close', () => {
+        SB_logOut(socket);
+        const index = switchboard_sockets.indexOf(socket);
+        if (index > -1) {
+            switchboard_sockets.splice(index, 1);
+        }
+        console.log(`${chalk.magenta.bold('[MSN SWITCHBOARD]')} Connection closed: ${socket.remoteAddress}:${socket.remotePort}`);
+    });
+
+    socket.on('error', (err) => {
+        console.error(err);
+    });
+
+    function processBufferedMessages() {
+        let transactionIds = Object.keys(messageBuffer).map(Number).sort((a, b) => a - b);
+
+        console.log(`${chalk.green.bold('[MSN SWITCHBOARD]')} Attempting to process buffered messages. Transaction IDs in buffer: ${transactionIds.join(', ')}`);
+
+        while (transactionIds.length > 0) {
+            const currentTransactionId = transactionIds.shift();
+            const { socket, headerParts, command, payload } = messageBuffer[currentTransactionId];
+            const handlerPath = `./handlers/switchboard/${headerParts[0]}.js`;
+
+            console.log(`${chalk.green.bold('[MSN SWITCHBOARD]')} Processing message with transaction ID: ${currentTransactionId}`);
+
+            if (fs.existsSync(handlerPath)) {
+                const handler = require(handlerPath);
+                try {
+                    handler(socket, headerParts.slice(1), command, payload);
+                } catch (err) {
+                    console.log(command);
+                    console.error(err);
+                }
+            } else {
+                console.log(`${chalk.red.bold('[MSN SWITCHBOARD]')} No handler found for command: ${headerParts[0]}`);
+                socket.write(`200 ${headerParts[1]}\r\n`);
+            }
+
+            delete messageBuffer[currentTransactionId];
+            transactionIds = Object.keys(messageBuffer).map(Number).sort((a, b) => a - b);
+        }
+    }
 });
+
 
 notification.listen(notificationPORT, () => {
 	console.log(`${chalk.magenta.bold('[MSN NOTIFICATION]')} Listening on port ${chalk.green.bold(notificationPORT)}`);

@@ -19,6 +19,7 @@ module.exports = async (socket, args, command, payload) => {
 
     const parsed = await mailparser.simpleParser(payload.toString());
     console.log(parsed.headers.get('content-type'));
+    console.log(parsed);
 
     const allSockets = getAllParticipantsSockets(socket.chat, email);
     const messageTotal = payload.length;
@@ -38,7 +39,7 @@ module.exports = async (socket, args, command, payload) => {
         }
     } catch (e) {
         if (acknowledgement === "N" || acknowledgement === "A" || acknowledgement === "D") {
-        socket.write(`NAK ${transactionID}\r\n`);
+            socket.write(`NAK ${transactionID}\r\n`);
         }
         console.error(e);
     }
