@@ -231,14 +231,7 @@ function formatPUID(uuid) {
     return combinedValue.toString(16).toUpperCase();
 }
 
-function formatCID(uuid, convertToDecimal = false) {
-    const cidPart = uuid.slice(19, 23) + uuid.slice(24, 36);
-    const cid = cidPart.toLowerCase();
-
-    if (!convertToDecimal) {
-        return cid;
-    }
-
+function formatDecimalCID(cid) {
     const buffer = Buffer.from(cid, 'hex');
     const decimalValue = buffer.readBigInt64LE();
     return decimalValue.toString();
@@ -299,7 +292,7 @@ module.exports = {
     TWNAuth: new TWNAuth(),
     uuidToHighLow,
     formatPUID,
-    formatCID,
+    formatDecimalCID,
     verifyJWT,
     logOut
 };

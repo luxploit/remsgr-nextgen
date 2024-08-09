@@ -10,7 +10,7 @@
 			<psf:appDataVersion>1</psf:appDataVersion>
 			<psf:authstate>0x48803</psf:authstate>
 			<psf:reqstatus>0x0</psf:reqstatus>
-			<psf:serverInfo LocVersion="0" ServerTime="{{ DATE_Z }}" BuildVersion="16.0.30293.2">PH1PEPF00018C0C 2024.07.10.14.41.15</psf:serverInfo>
+			<psf:serverInfo Path="Live1" RollingUpgradeState="ExclusiveNew" LocVersion="0" ServerTime="{{ DATE_Z }}" BuildVersion="16.0.30293.2">REMSGR</psf:serverInfo>
 			<psf:cookies/>
 			<psf:browserCookies>
 				<psf:browserCookie Name="MH" URL="http://www.msn.com">MSFT; path=/; domain=.msn.com; expires=Sun, 31-Aug-2025 13:19:07 GMT</psf:browserCookie>

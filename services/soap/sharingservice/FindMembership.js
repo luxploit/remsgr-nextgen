@@ -9,6 +9,7 @@ const crypto = require('crypto');
 
 const { verifyJWT } = require("../../../utils/auth.util");
 const { v4: uuidv4, v4 } = require('uuid');
+const { formatDecimalCID } = require('../../../utils/auth.util');
 const { json2xml } = require('xml-js');
 
 const User = require('../../../models/User');
@@ -80,7 +81,7 @@ module.exports = async (req, res) => {
             "PassportName": contact.username + "@remsgr.net",
             "IsPassportNameHidden": "false",
             "PassportID": "0",
-            "CID": contact._id.toString(),
+            "CID": formatDecimalCID(contact._id.toString()),
             "PassportChanges": "",
             "LookedupByCID": "false",
         });
@@ -102,7 +103,7 @@ module.exports = async (req, res) => {
             "PassportName": contact.username + "@remsgr.net",
             "IsPassportNameHidden": "false",
             "PassportID": "0",
-            "CID": contact._id.toString(),
+            "CID": formatDecimalCID(contact._id.toString()),
             "PassportChanges": "",
             "LookedupByCID": "false",
         });
@@ -124,7 +125,7 @@ module.exports = async (req, res) => {
             "PassportName": contact.username + "@remsgr.net",
             "IsPassportNameHidden": "false",
             "PassportID": "0",
-            "CID": contact._id.toString(),
+            "CID": formatDecimalCID(contact._id.toString()),
             "PassportChanges": "",
             "LookedupByCID": "false",
         });
@@ -143,7 +144,7 @@ module.exports = async (req, res) => {
         domain: "10.147.18.54",
         key: tokenUrlSafe(172),
         now: moment().utc().format('YYYY-MM-DDTHH:mm:ss[Z]'),
-        cid: user._id,
+        cid: formatDecimalCID(user._id.toString()),
         email: user.username + "@remsgr.net",
         allowMembers: xmlAllow,
         blockMembers: xmlBlock,

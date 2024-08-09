@@ -467,87 +467,94 @@ const { logOut } = require('./utils/auth.util');
 
 const isCommand = (line) => line.match(/^[A-Z]{3}/);
 
+const payloadCommands = ['QRY', 'PAG', 'PGD', 'SDC', 'UUN', 'MSG', 'UUX', 'ADL', 'RML'];
+
 const notification = net.createServer((socket) => {
-	console.log(`${chalk.magenta.bold('[MSN NOTIFICATION]')} New connection: ${socket.remoteAddress}:${socket.remotePort}`);
-	sockets.push(socket);
+    console.log(`${chalk.magenta.bold('[MSN NOTIFICATION]')} New connection: ${socket.remoteAddress}:${socket.remotePort}`);
+    sockets.push(socket);
 
-	let buffer = '';
+    let buffer = '';
 
-	socket.on('data', (data) => {
-		buffer += data.toString();
+    socket.on('data', (data) => {
+        buffer += data.toString();
 
-		const messages = buffer.trim().split('\r\n');
-		buffer = '';
+        let parsedCommands = [];
+        let tempBuffer = '';
 
-		let parsedCommands = [];
-		let tempBuffer = '';
+        while (buffer.length > 0) {
+            const commandEndIndex = buffer.indexOf('\r\n');
+            if (commandEndIndex === -1) break;
 
-		for (const message of messages) {
-			if (isCommand(message)) {
-				if (tempBuffer) {
-					parsedCommands.push(tempBuffer);
-					tempBuffer = '';
-				}
-				tempBuffer = message;
-			} else {
-				if (tempBuffer) {
-					tempBuffer += `\r\n${message}`;
-				} else {
-					if (process.env.DEBUG === 'true') {
-						console.log(`${chalk.red.bold('[MSN NOTIFICATION]')} Received non-command message without a preceding command: ${message}`);
-					}
-				}
-			}
-		}
+            const command = buffer.slice(0, commandEndIndex);
+            buffer = buffer.slice(commandEndIndex + 2);
 
-		if (tempBuffer) {
-			parsedCommands.push(tempBuffer);
-		}
+            const commandParts = command.split(' ');
+            const commandName = commandParts[0];
 
-		if (buffer === '' || isCommand(messages[messages.length - 1])) {
-			for (const command of parsedCommands) {
-				const commandParts = command.toString().trim().split(' ');
+            if (payloadCommands.includes(commandName)) {
+                const transactionId = parseInt(commandParts[1], 10);
+                const nextCommandRegex = new RegExp(`\\b[A-Z]{3} ${transactionId + 1}\\b`);
+                const match = nextCommandRegex.exec(buffer);
 
-				const commandName = commandParts[0];
-				if (process.env.DEBUG === 'true') {
-					console.log(`${chalk.red.bold('[MSN NOTIFICATION]')} Received command: ${commandName}.`);
-				}
+                if (match) {
+                    const nextCommandIndex = match.index;
+                    const payload = buffer.slice(0, nextCommandIndex);
+                    buffer = buffer.slice(nextCommandIndex);
 
-				const handlerPath = `./handlers/${commandName}.js`;
+                    parsedCommands.push(`${command}\r\n${payload}`);
+                } else {
+                    tempBuffer = command;
+                    break;
+                }
+            } else {
+                parsedCommands.push(command);
+            }
+        }
 
-				if (fs.existsSync(handlerPath)) {
-					const handler = require(handlerPath);
-					try {
-						handler(socket, commandParts.slice(1), command);
-					} catch (err) {
-						console.log(command);
-						console.error(err);
-					}
-				} else {
-					console.log(`${chalk.red.bold('[MSN NOTIFICATION]')} No handler found for command: ${commandName}`);
-					if (process.env.DEBUG === 'true') {
-						console.log(`${chalk.red.bold('[MSN NOTIFICATION]')} Full command: ${command}`);
-					}
-					socket.write(`200 ${commandParts[1]}\r\n`);
-				}
+        if (tempBuffer) {
+            buffer = `${tempBuffer}\r\n${buffer}`;
+        }
 
-			}
-			parsedCommands = [];
-		}
-	});
+        for (const command of parsedCommands) {
+            const commandParts = command.toString().trim().split(' ');
 
-	socket.on('close', () => {
-		logOut(socket);
-		const index = sockets.indexOf(socket);
-		if (index > -1) {
-			sockets.splice(index, 1);
-		}
-		console.log(`${chalk.magenta.bold('[MSN NOTIFICATION]')} Connection closed: ${socket.remoteAddress}:${socket.remotePort}`);
-	});
+            const commandName = commandParts[0];
+            if (process.env.DEBUG === 'true') {
+                console.log(`${chalk.red.bold('[MSN NOTIFICATION]')} Received command: ${command}`);
+            }
 
-	socket.on('error', (err) => {
-		console.error(err);
-	});
+            const handlerPath = `./handlers/${commandName}.js`;
+
+            if (fs.existsSync(handlerPath)) {
+                const handler = require(handlerPath);
+                try {
+                    handler(socket, commandParts.slice(1), command);
+                } catch (err) {
+                    console.log(command);
+                    console.error(err);
+                }
+            } else {
+                console.log(`${chalk.red.bold('[MSN NOTIFICATION]')} No handler found for command: ${commandName}`);
+                if (process.env.DEBUG === 'true') {
+                    console.log(`${chalk.red.bold('[MSN NOTIFICATION]')} Full command: ${command}`);
+                }
+                socket.write(`200 ${commandParts[1]}\r\n`);
+            }
+        }
+    });
+
+    socket.on('close', () => {
+        logOut(socket);
+        const index = sockets.indexOf(socket);
+        if (index > -1) {
+            sockets.splice(index, 1);
+        }
+        console.log(`${chalk.magenta.bold('[MSN NOTIFICATION]')} Connection closed: ${socket.remoteAddress}:${socket.remotePort}`);
+    });
+
+    socket.on('error', (err) => {
+        console.error(err);
+    });
 });
 
 const switchboard = net.createServer((socket) => {

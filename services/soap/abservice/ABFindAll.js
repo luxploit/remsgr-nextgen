@@ -9,6 +9,7 @@ const crypto = require('crypto');
 
 const { verifyJWT } = require("../../../utils/auth.util");
 const { v4: uuidv4, v4 } = require('uuid');
+const { formatDecimalCID } = require('../../../utils/auth.util');
 const { json2xml } = require('xml-js');
 
 const User = require('../../../models/User');
@@ -93,7 +94,7 @@ module.exports = async (req, res) => {
                 "IsPassportNameHidden": "false",
                 "displayName": decodeURI(contactUser.friendly_name),
                 "puid": "0",
-                "CID": contactUser._id.toString(),
+                "CID": formatDecimalCID(contactUser._id.toString()),
                 "IsNotMobileVisible": "false",
                 "isMobileIMEnabled": "false",
                 "isMessengerUser": "true",
@@ -140,7 +141,7 @@ module.exports = async (req, res) => {
             "IsPassportNameHidden": "false",
             "displayName": decodeURI(user.friendly_name),
             "puid": "0",
-            "CID": user._id.toString(),
+            "CID": formatDecimalCID(user._id.toString()),
             "IsNotMobileVisible": "false",
             "isMobileIMEnabled": "false",
             "isMessengerUser": "false",
@@ -174,7 +175,7 @@ module.exports = async (req, res) => {
         key: tokenUrlSafe(172),
         now: moment().utc().format('YYYY-MM-DDTHH:mm:ss[Z]'),
         created: moment(user.created_at).utc().format('YYYY-MM-DDTHH:mm:ss[Z]'),
-        cid: user._id,
+        cid: formatDecimalCID(user._id.toString()),
         email: user.username + "@remsgr.net",
         contacts: xmlContacts,
         groups: xmlGroups
