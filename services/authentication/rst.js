@@ -75,7 +75,6 @@ exports.rst = async (req, res) => {
 
     try {
         requestedTokens = req.body["Envelope"]["Body"]["ps:RequestMultipleSecurityTokens"]["wst:RequestSecurityToken"];
-        console.log(requestedTokens)
     } catch (error) {
         console.log(`${chalk.yellow.bold('[RST.srf]')} No tokens provided.`);
         const invalid = fs.readFileSync('./services/authentication/templates/rst/InvalidRequest.xml', 'utf8');
@@ -93,9 +92,10 @@ exports.rst = async (req, res) => {
             try {
                 address = tokenRequest["wsp:AppliesTo"]["wsa:EndpointReference"]["wsa:Address"];
             } catch (error) {
-                console.log(`${chalk.yellow.bold('[RST.srf]')} No address provided.`);
-                const invalid = fs.readFileSync('./services/authentication/templates/rst/InvalidRequest.xml', 'utf8');
-                res.send(invalid);
+                return;
+            }
+
+            if (!address) {
                 return;
             }
 
