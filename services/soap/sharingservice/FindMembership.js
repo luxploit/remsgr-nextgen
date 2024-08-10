@@ -24,12 +24,14 @@ function tokenUrlSafe(size) {
 
 module.exports = async (req, res) => {
     let token
-
-    try {
+    
+    if (req.body["soap:Envelope"]["soap:Header"]["ABAuthHeader"]["TicketToken"]) {
         token = req.body["soap:Envelope"]["soap:Header"]["ABAuthHeader"]["TicketToken"];
-    } catch (error) {
+    } else if (req.cookies.MSPAuth) {
+        token = req.cookies.MSPAuth;
+    } else {
         console.log(`${chalk.red.bold('[ABFindAll]')} No token provided.`);
-        res.send(`OUT\r\n`);
+        res.send(`OUT\r\n`).status(401);
         return;
     }
 
@@ -141,7 +143,7 @@ module.exports = async (req, res) => {
 
     const formattedTemplate = compiledTemplate({
         sessionid: v4(),
-        domain: "messenger.remsgr.net",
+        domain: "192.168.1.62",
         key: tokenUrlSafe(172),
         now: moment().utc().format('YYYY-MM-DDTHH:mm:ss[Z]'),
         cid: formatDecimalCID(user._id.toString()),

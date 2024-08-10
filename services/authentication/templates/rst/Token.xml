@@ -10,7 +10,7 @@
                     <wsu:Expires>{{ dateTomorrowZ }}</wsu:Expires>
                 </wst:LifeTime>
                 <wst:RequestedSecurityToken>
-                    <wsse:BinarySecurityToken Id="Compact{{ i }}">t={{ token }}</wsse:BinarySecurityToken>
+                    <wsse:BinarySecurityToken Id="Compact{{ i }}">t={{ token }}&amp;p=</wsse:BinarySecurityToken>
                 </wst:RequestedSecurityToken>
                 <wst:RequestedTokenReference>
                     <wsse:KeyIdentifier ValueType="urn:passport:compact"></wsse:KeyIdentifier>

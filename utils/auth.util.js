@@ -172,6 +172,7 @@ class TWNAuth {
         
         } else if (state === 'S') {
             token = token.split('=')[1];
+            token = token.split('&')[0];
             const decoded = await verifyJWT(token);
 
             if (!decoded) {
