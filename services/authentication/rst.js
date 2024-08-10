@@ -3,6 +3,7 @@ const fs = require('fs');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const { XMLParser } = require('fast-xml-parser');
+const xmlFormat = require('xml-formatter');
 const Handlebars = require('handlebars');
 const moment = require('moment');
 const parser = new XMLParser();
@@ -138,8 +139,10 @@ exports.rst = async (req, res) => {
 
         const formattedTemplate = compiledTemplate(data);
 
+        const formattedXML = xmlFormat.minify(formattedTemplate, { collapseContent: true });
+
         res.set('Content-Type', 'text/xml; charset=utf-8');
-        res.send(formattedTemplate);
+        res.send(formattedXML);
     } catch (error) {
         console.log(`${chalk.yellow.bold('[RST.srf]')} An error occurred while processing the tokens.`);
         const invalid = fs.readFileSync('./services/authentication/templates/rst/InvalidRequest.xml', 'utf8');

@@ -151,7 +151,7 @@ module.exports = async (req, res) => {
         reverseMembers: xmlReverse
     });
 
-    const formattedXML = xmlFormat(formattedTemplate, { collapseContent: true });
+    const formattedXML = xmlFormat.minify(formattedTemplate, { collapseContent: true });
 
     res.set('Content-Type', 'text/xml; charset=utf-8');
     res.send(formattedXML);
