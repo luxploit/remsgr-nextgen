@@ -141,7 +141,7 @@ module.exports = async (req, res) => {
 
     const formattedTemplate = compiledTemplate({
         sessionid: v4(),
-        domain: "192.168.1.62",
+        domain: "messenger.remsgr.net",
         key: tokenUrlSafe(172),
         now: moment().utc().format('YYYY-MM-DDTHH:mm:ss[Z]'),
         cid: formatDecimalCID(user._id.toString()),

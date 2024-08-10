@@ -43,6 +43,10 @@ module.exports = async (socket, args, command) => {
         if (user) {
             const contactSocket = getSocketByUserID(user._id.toString());
 
+            if (contactSocket < 11) {
+                return;
+            }
+
             if (contactSocket) {
                 contactSocket.write(`UBX ${socket.passport} ${payloadLength}\r\n${payload}`);
             }

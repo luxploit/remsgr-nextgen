@@ -148,6 +148,28 @@ class TWNAuth {
         if (state === 'I') {
             console.log(`${chalk.yellow.bold('[USR TWN INITIAL]')} ${passport} is trying to log in.`);
             socket.write(`USR ${transactionID} TWN S ct=1,rver=1,wp=FS_40SEC_0_COMPACT,lc=1,id=1\r\n`);
+            if (socket.version >= 13) {
+                const shields = `<Policies>
+	<Policy type="SHIELDS" checksum="D9705A71BA841CB38955822E048970C3"><config> <shield>\
+<cli maj="7" min="0" minbld="0" maxbld="9999" deny=" " /></shield> <block></block></config></Policy>
+	<Policy type="ABCH" checksum="03DC55910A9CB79133F1576221A80346"><policy><set id="push" service="ABCH" priority="200">\
+      <r id="pushstorage" threshold="180000" />    </set><set id="delaysup" service="ABCH" priority="150">\
+  <r id="whatsnew" threshold="1800000" />  <r id="whatsnew_storage_ABCH_delay" timer="1800000" />\
+  <r id="whatsnewt_link" threshold="900000" trigger="QueryActivities" /></set>  <c id="PROFILE_Rampup">100</c></policy></Policy>
+	<Policy type="ERRORRESPONSETABLE" checksum="6127EEDCE860F45C1692896F5248AF6F"><Policy> <Feature type="3" name="P2P">\
+  <Entry hr="0x81000398" action="3"/>  <Entry hr="0x82000020" action="3"/> </Feature> <Feature type="4">\
+  <Entry hr="0x81000440" /> </Feature> <Feature type="6" name="TURN">  <Entry hr="0x8007274C" action="3" />\
+  <Entry hr="0x82000020" action="3" />  <Entry hr="0x8007274A" action="3" /> </Feature></Policy></Policy>
+	<Policy type="P2P" checksum="815D4F1FF8E39A85F1F97C4B16C45177"><ObjStr SndDly="1" /></Policy>
+</Policies>`;
+            
+                const encodedShields = Buffer.from(shields, 'utf-8');
+                const encodedShieldsFinal = encodedShields.toString().replace(/\n/g, '\r\n');
+                const encodedShieldsLength = encodedShieldsFinal.length;
+
+                socket.write(`GCF 0 ${encodedShieldsLength}\r\n${encodedShieldsFinal}`);
+            }
+        
         } else if (state === 'S') {
             token = token.split('=')[1];
             const decoded = await verifyJWT(token);
@@ -199,10 +221,13 @@ class TWNAuth {
                 socket.write(`USR ${transactionID} OK ${passport} 1 0\r\n`);
 
                 const [high, low] = uuidToHighLow(user.uuid);
-                const messageTemplate = `MIME-Version: 1.0\r\nContent-Type: text/x-msmsgsprofile; charset=UTF-8\r\nLoginTime: ${Math.floor(Date.now() / 1000)}\r\nEmailEnabled: 0\r\nMemberIdHigh: ${high}\r\nMemberIdLow: ${low}\r\nlang_preference: 0\r\npreferredEmail: \r\ncountry: \r\nPostalCode: \r\nGender: \r\nKid: 0\r\nAge: \r\nBDayPre: \r\nBirthday: \r\nWallet: \r\nFlags: 536872513\r\nsid: 507\r\nMSPAuth: ${token}\r\nClientIP: ${socket.remoteAddress.replace('::ffff:', '')}\r\nClientPort: ${socket.remotePort}\r\nABCHMigrated: 1\r\nMPOPEnabled: 0\r\n\r\n`;
+                const messageTemplate = `MIME-Version: 1.0\r\nContent-Type: text/x-msmsgsprofile; charset=UTF-8\r\nLoginTime: ${Math.floor(Date.now() / 1000)}\r\nEmailEnabled: 0\r\nMemberIdHigh: ${high}\r\nMemberIdLow: ${low}\r\nlang_preference: 0\r\npreferredEmail: \r\ncountry: \r\nPostalCode: \r\nGender: \r\nKid: 0\r\nAge: \r\nBDayPre: \r\nBirthday: \r\nWallet: \r\nFlags: 536872513\r\nsid: 507\r\nMSPAuth: ${token}\r\nClientIP: ${socket.remoteAddress.replace('::ffff:', '')}\r\nClientPort: ${socket.remotePort}\r\nABCHMigrated: 1\r\nMPOPEnabled: 0\r\nBetaInvites: 1\r\n\r\n`;
                 const messageLength = Buffer.byteLength(messageTemplate, 'utf8');
                 const finalMessage = `MSG Hotmail Hotmail ${messageLength}\r\n` + messageTemplate;
 
+                if (socket.version >= 11) {
+                    socket.write(`SBS 0 null\r\n`);
+                }
                 socket.write(finalMessage);
             } else {
                 socket.write(`USR ${transactionID} OK ${passport} ${socket.friendly_name} 1 0\r\n`);
