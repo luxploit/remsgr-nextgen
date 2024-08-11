@@ -443,20 +443,26 @@ app.post("/abservice/SharingService.asmx", parseBodyMiddleware, (req, res) => {
 	}
 });
 
-const httpsServer = https.createServer({
-	key: fs.readFileSync('./certs/key.pem'),
-	cert: fs.readFileSync('./certs/cert.pem')
-}, app);
+if (process.env.DEBUG === 'true') {
+	const httpsServer = https.createServer({
+		key: fs.readFileSync('./certs/key.pem'),
+		cert: fs.readFileSync('./certs/cert.pem')
+	}, app);
 
-httpsServer.listen(443, () => {
-	console.log(`${chalk.magenta.bold('[HTTPS SERVER]')} Listening on port ${chalk.green.bold("443")}`);
-});
+	httpsServer.listen(443, () => {
+		console.log(`${chalk.magenta.bold('[HTTPS SERVER]')} Listening on port ${chalk.green.bold("443")}`);
+	});
 
-const httpServer = http.createServer(app);
+	const httpServer = http.createServer(app);
 
-httpServer.listen(80, () => {
-	console.log(`${chalk.magenta.bold('[HTTP SERVER]')} Listening on port ${chalk.green.bold("80")}`);
-});
+	httpServer.listen(80, () => {
+		console.log(`${chalk.magenta.bold('[HTTP SERVER]')} Listening on port ${chalk.green.bold("80")}`);
+	});
+} else {
+	app.listen(5787, () => {
+		console.log(`${chalk.magenta.bold('[HTTP SERVER]')} Listening on port ${chalk.green.bold("5787")}`);
+	});
+}
 
 
 // Socket
