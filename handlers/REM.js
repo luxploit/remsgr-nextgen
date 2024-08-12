@@ -72,7 +72,11 @@ module.exports = async (socket, args, command) => {
         ).exec();
     
         console.log(`${chalk.green.bold('[REM]')} ${socket.passport} removed ${identifier} from group ${groupUUID}.`);
-        socket.write(command + `\r\n`);
+        if (socket.version >= 10) {
+            socket.write(command + '\r\n');
+        } else {
+            socket.write(`REM ${transactionID} ${list} 1 ${identifier}@remsgr.net\r\n`);
+        }
         return;
     }
     
@@ -101,7 +105,11 @@ module.exports = async (socket, args, command) => {
         const contactSocket = getSocketByUserID(contactID);
 
         console.log(`${chalk.green.bold('[REM]')} ${socket.passport} removed ${identifier} from their list.`);
-        socket.write(command + '\r\n');
+        if (socket.version >= 10) {
+            socket.write(command + '\r\n');
+        } else {
+            socket.write(`REM ${transactionID} ${list} 1 ${identifier}@remsgr.net\r\n`);
+        }
 
         if (contactSocket) {
             const contactContact = await Contact.findOne({ userID: user._id, contactID: socket.userID, list }).exec();

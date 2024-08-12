@@ -24,15 +24,26 @@ module.exports = async (socket, args, command, payload) => {
     const allSockets = getAllParticipantsSockets(socket.chat, email);
     const messageTotal = payload.length;
 
-    try {
-        allSockets.forEach(s => {
-            const messageBuffer = Buffer.concat([
-                Buffer.from(`MSG ${socket.passport} ${socket.friendly_name} ${messageTotal}\r\n`),
-                payload
-            ]);
+    let failed = false;
 
-            s.write(messageBuffer);
-        });
+    try {
+        try {
+            allSockets.forEach(s => {
+                const messageBuffer = Buffer.concat([
+                    Buffer.from(`MSG ${socket.passport} ${socket.friendly_name} ${messageTotal}\r\n`),
+                    payload
+                ]);
+    
+                s.write(messageBuffer);
+            });
+        } catch (e) {
+            failed = true;
+        }
+
+        if (failed && (acknowledgement === "N" || acknowledgement === "A" || acknowledgement === "D")) {
+            socket.write(`NAK ${transactionID}\r\n`);
+            return;
+        }
 
         if (acknowledgement === "A" || acknowledgement === "D") {
             socket.write(`ACK ${transactionID}\r\n`);
