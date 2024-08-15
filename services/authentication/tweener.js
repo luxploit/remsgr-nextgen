@@ -4,13 +4,16 @@ const bcrypt = require('bcrypt');
 const config = require('../../config.json');
 const { v4: uuidv4 } = require('uuid');
 const MD5PasswordHasher = require('../../utils/hash/MD5');
+const emailValidator = require('email-validator');
 
 const User = require('../../models/User');
+const UniqueCode = require('../../models/UniqueCode');
 
 exports.pprdr = async (req, res) => {
     res.set({
         'Passporturls': `DALogin=${config.server.host}tweener/auth`,
-        'Server': 'Charli XBOX'
+        'PassportURLs': `DALogin=${config.server.host}tweener/auth`,
+        'Server': 'Charli XCX'
     });
     res.status(200).send('OK');
 }
@@ -103,10 +106,40 @@ exports.twnAuth = async (req, res) => {
 
 exports.createAccount = async (req, res) => {
     try {
+        let code
         const { displayname, username, email, password, legacypassword } = req.body;
+
+        if (config.server.environment === 'alpha') {
+            code = req.body.code;
+        }
 
         if (!username || !email || !password) {
             res.status(400).send('Bad Request');
+            return;
+        }
+
+        if (!/^[a-z0-9]{1,16}$/.test(username)) {
+            res.status(400).send('Username must be between 1 and 16 characters, be downcase, and can only contain letters and numbers.');
+            return;
+        }
+
+        if (!emailValidator.validate(email)) {
+            res.status(400).send('Invalid email');
+            return;
+        }
+
+        if (password.length < 6 || password.length > 16) {
+            res.status(400).send('Password must be between 6 and 32 characters');
+            return;
+        }
+
+        if (legacypassword && (legacypassword.length < 6 || legacypassword.length > 16)) {
+            res.status(400).send('Legacy Password must be between 6 and 32 characters');
+            return;
+        }
+
+        if (displayname && displayname.length > 128) {
+            res.status(400).send('Display Name must be less than 128 characters');
             return;
         }
 
@@ -133,6 +166,20 @@ exports.createAccount = async (req, res) => {
             password: hashedPassword,
             legacy_pass: hashedLegacyPassword || null
         });
+
+        if (config.server.environment === 'alpha') {
+            const code = await UniqueCode.findOne({ code: req.body.code });
+
+            if (!code || code.used) {
+                res.status(400).send('Invalid code');
+                return;
+            }
+
+            code.used = true;
+            code.usedBy = newUser._id;
+
+            await code.save();
+        }
 
         await newUser.save();
 
@@ -162,9 +209,38 @@ exports.createAccountPage = async (req, res) => {
                     <input type="password" id="password" name="password"><br>
                     <label for="legacypassword">Legacy Password:</label><br>
                     <input type="password" id="legacypassword" name="legacypassword"><br>
+                    <label for="code">Unique Code:</label><br>
+                    <input type="text" id="code" name="code"><br>
                     <input type="submit" value="Submit">
                 </form>
             </body>
         </html>
     `);
+}
+
+exports.createUniqueCode = async (req, res) => {
+    try {
+        if (req.query.secret !== config.server.secret) {
+            res.status(401).send('Unauthorized');
+            return;
+        }
+
+        const code = Math.random().toString(36).substring(2, 26);
+
+        if (!code) {
+            res.status(400).send('Bad Request');
+            return;
+        }
+
+        const newCode = new UniqueCode({
+            code
+        });
+
+        await newCode.save();
+
+        res.status(201).json({success: true, code});
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Internal Server Error');
+    }
 }

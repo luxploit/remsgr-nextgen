@@ -1,5 +1,7 @@
 {
     "server": {
+        "secret": "defaultsecret_CHANGETHISASAP",
+        "environment": "alpha",
         "host": "https://192.168.1.62/",
         "ip": "192.168.1.62",
         "notification_port": 1863,

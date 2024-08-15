@@ -17,9 +17,7 @@ module.exports = async (socket, args, command, payload) => {
 
     const email = socket.passport;
 
-    const parsed = await mailparser.simpleParser(payload.toString());
-    console.log(parsed.headers.get('content-type'));
-    console.log(parsed);
+    // const parsed = await mailparser.simpleParser(payload.toString());
 
     const allSockets = getAllParticipantsSockets(socket.chat, email);
     const messageTotal = payload.length;

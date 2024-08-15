@@ -19,13 +19,10 @@ module.exports = async (socket, args, command) => {
     const payload = command.split('\r\n').slice(1).join('\r\n');
     const parsed = parser.parse(payload);
 
-    console.log(payload)
-
     if (parsed.Data.PSM === undefined || parsed.Data.CurrentMedia === undefined) {
         console.log(`${chalk.red.bold('[UUX]')} ${socket.passport} has sent an invalid payload.`);
         return;
     }
-    console.log(parsed)
 
     socket.customStatus = payload;
 
