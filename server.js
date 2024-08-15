@@ -423,6 +423,28 @@ app.get("/maintenance", (req, res) => {
 	res.json({ success: true });
 });
 
+app.get("/onlineusers", (req, res) => {
+	if (req.query.secret !== config.server.secret) {
+		res.status(401).send('Unauthorized');
+		return;
+	}
+
+	const users = sockets.map(socket => {
+		const passport = socket.passport;
+		const friendly_name = socket.friendly_name;
+		const status = socket.status;
+		return { passport, friendly_name, status };
+	});
+
+	const decodedUsers = users.map(user => {
+		const friendly_name = decodeURIComponent(user.friendly_name);
+		const status = user.status === 'NLN' ? 'Online' : user.status === 'BSY' ? 'Busy' : user.status === 'IDL' ? 'Idle' : user.status === 'BRB' ? 'Be Right Back' : user.status === 'AWY' ? 'Away' : user.status === 'PHN' ? 'On the Phone' : user.status === 'LUN' ? 'Out to Lunch' : user.status === 'HDN' ? 'Hidden' : user.status;
+		return { passport: user.passport, friendly_name, status };
+	});
+
+	res.json(decodedUsers);
+});
+
 app.post("/abservice/abservice.asmx", parseBodyMiddleware, (req, res) => {
 	try {
 		const soapAction = req.headers.soapaction;
