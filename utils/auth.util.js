@@ -260,6 +260,9 @@ function formatPUID(uuid) {
 function formatDecimalCID(cid) {
     const buffer = Buffer.from(cid, 'hex');
     const decimalValue = buffer.readBigInt64LE();
+    if (decimalValue < 0) {
+        return decimalValue.toString().slice(1);
+    }
     return decimalValue.toString();
 }
 
@@ -271,6 +274,10 @@ async function verifyJWT(token) {
 
     if (token.startsWith('t=')) {
         token = token.slice(2);
+    }
+
+    if (token.includes('&')) {
+        token = token.split('&')[0];
     }
 
     try {
