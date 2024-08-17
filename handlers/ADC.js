@@ -116,7 +116,7 @@ module.exports = async (socket, args) => {
 
     // Use the correct command structure for the list type
     if (list === 'FL') {
-        socket.write(`ADC ${transactionID} FL N=${email} F=${user.friendly_name}\r\n`);
+        socket.write(`ADC ${transactionID} FL N=${email} F=${user.friendly_name} C=${user.uuid}\r\n`);
     } else if (list === 'AL' || list === 'BL' || list === 'RL') {
         socket.write(`ADC ${transactionID} ${list} N=${email}\r\n`);
     }
