@@ -423,6 +423,23 @@ app.get("/maintenance", (req, res) => {
 	res.json({ success: true });
 });
 
+app.get("/alerts", (req, res) => {
+	if (req.query.secret !== config.server.secret) {
+		res.status(401).send('Unauthorized');
+		return;
+	}
+
+	for (const socket of sockets) {
+		const message = Buffer.from(decodeURIComponent(req.query.message), 'utf8').toString('utf8');
+		const link = Buffer.from(decodeURIComponent(req.query.link), 'utf8').toString('utf8');
+		const template = `<NOTIFICATION ver="2" id="0000000000" siteid="000000000" siteurl="${link}"><TO pid="0x00000000:0x00000000" name="${socket.passport}"/><MSG pri="1" id="0000000000"><SUBSCR url=""/><ACTION url=""/><BODY lang="3076" icon=""><TEXT>${message}</TEXT></BODY></MSG></NOTIFICATION>`
+		const templateLength = Buffer.byteLength(template, 'utf8');
+		socket.write(`NOT ${templateLength}\r\n${template}`);
+	}
+
+	res.json({ success: true });
+});
+
 app.get("/onlineusers", (req, res) => {
 	if (req.query.secret !== config.server.secret) {
 		res.status(401).send('Unauthorized');
