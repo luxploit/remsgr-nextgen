@@ -5,6 +5,7 @@ const { switchboard_chats } = require("../../utils/sb.util");
 const config = require("../../config");
 const crypto = require('crypto');
 
+const User = require("../../models/User");
 const Contact = require("../../models/Contact");
 
 module.exports = async (socket, args) => {
@@ -34,8 +35,11 @@ module.exports = async (socket, args) => {
     const username = socket.passport.split('@')[0];
     const contactUsername = email.split('@')[0];
 
-    const blocked = await Contact.findOne({ userID: username, contactID: contactUsername, list: 'BL' });
-    const blockedBy = await Contact.findOne({ userID: contactUsername, contactID: username, list: 'BL' });
+    const user = await User.findOne({ username }).exec();
+    const contact = await User.findOne({ username: contactUsername }).exec();
+
+    const blocked = await Contact.findOne({ userID: user._id, contactID: contact._id, list: 'BL' });
+    const blockedBy = await Contact.findOne({ userID: contact._id, contactID: user._id, list: 'BL' });
 
     if (blocked || blockedBy) {
         console.log(`${chalk.yellow.bold('[SB: CAL]')} ${socket.remoteAddress} is blocked by ${email}.`);
