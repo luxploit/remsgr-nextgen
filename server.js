@@ -226,6 +226,7 @@ const isCommand = (line) => line.match(/^[A-Z]{3}/);
 
 const payloadCommands = ['QRY', 'PAG', 'PGD', 'SDC', 'UUN', 'MSG', 'UUX', 'ADL', 'RML'];
 
+// the parser for notification is pretty bad so we might need to rework this a bit
 const notification = net.createServer((socket) => {
     console.log(`${chalk.magenta.bold('[MSN NOTIFICATION]')} New connection: ${socket.remoteAddress}:${socket.remotePort}`);
     sockets.push(socket);
