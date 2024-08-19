@@ -111,8 +111,8 @@ module.exports = async (socket, args, command) => {
             socket.write(`REM ${transactionID} ${list} 1 ${identifier}@remsgr.net\r\n`);
         }
 
-        if (contactSocket) {
-            const contactContact = await Contact.findOne({ userID: user._id, contactID: socket.userID, list }).exec();
+        if (contactSocket && list === 'AL') {
+            const contactContact = await Contact.findOne({ userID: user._id, contactID: socket.userID, list: "FL" }).exec();
 
             if (!contactContact) {
                 return;

@@ -121,14 +121,22 @@ module.exports = async (socket, args) => {
         socket.write(`ADC ${transactionID} ${list} N=${email}\r\n`);
     }
 
-    // const contactSocket = getSocketByUserID(user._id.toString());
+    const contactSocket = getSocketByUserID(user._id.toString());
 
-    // if (contactSocket) {
-    //     const contact = await Contact.findOne({ userID: user._id, contactID: decoded.id, list: 'FL' }).exec();
-    //     if (contact) {
-    //         // TODO
-    //     }
-    // }
+    // i'm not even sure what the fuck im trying to do here honestly
+//    if (contactSocket) {
+//        const contactBlocked = await Contact.findOne({ userID: user._id, contactID: decoded.id, list: 'BL' }).exec();
+//        const contactAllowed = await Contact.findOne({ userID: user._id, contactID: decoded.id, list: 'AL' }).exec();
+//        const contactForward = await Contact.findOne({ userID: user._id, contactID: decoded.id, list: 'FL' }).exec();
+//
+//        if (!contactBlocked && contactAllowed) {
+//            socket.write(`NLN ${contactSocket.status} ${contactSocket.passport} ${contactSocket.friendly_name}\r\n`);
+//        }
+//
+//        if (!contactForward && list === 'FL') {
+//            contactSocket.write(`ADC ${transactionID} FL N=${socket.passport} F=${socket.friendly_name} C=${decoded.uuid}\r\n`);
+//        }
+//    }
 
     console.log(`${chalk.green.bold('[ADD]')} ${socket.passport} has added ${email} to their ${list} list.`);
 };

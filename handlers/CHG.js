@@ -56,7 +56,7 @@ module.exports = async (socket, args, command) => {
             continue;
         }
 
-        const contactContacts = await Contact.find({ userID: contact.contactID, contactID: socket.userID, list: 'FL' }).exec();
+        const contactContacts = await Contact.find({ userID: contact.contactID, contactID: socket.userID, list: 'AL' }).exec();
 
         if (contactContacts.length === 0) {
             continue;

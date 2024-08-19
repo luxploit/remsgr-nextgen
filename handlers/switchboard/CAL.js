@@ -5,6 +5,8 @@ const { switchboard_chats } = require("../../utils/sb.util");
 const config = require("../../config");
 const crypto = require('crypto');
 
+const Contact = require("../../models/Contact");
+
 module.exports = async (socket, args) => {
     const transactionID = args[0];
     const email = args[1];
@@ -14,11 +16,30 @@ module.exports = async (socket, args) => {
         return;
     }
 
+    if (!email) {
+        socket.write(`210 ${transactionID}\r\n`);
+        socket.destroy();
+        return;
+    }
+
     console.log(`${chalk.yellow.bold('[SB: CAL]')} ${socket.remoteAddress} is trying to call ${email}.`)
 
     if (!socket.chat) {
         console.log(`${chalk.yellow.bold('[SB: CAL]')} ${socket.remoteAddress} has no chatroom assigned, cannot call.`);
         socket.write(`280 ${transactionID}\r\n`);
+        socket.destroy();
+        return;
+    }
+
+    const username = socket.passport.split('@')[0];
+    const contactUsername = email.split('@')[0];
+
+    const blocked = await Contact.findOne({ userID: username, contactID: contactUsername, list: 'BL' });
+    const blockedBy = await Contact.findOne({ userID: contactUsername, contactID: username, list: 'BL' });
+
+    if (blocked || blockedBy) {
+        console.log(`${chalk.yellow.bold('[SB: CAL]')} ${socket.remoteAddress} is blocked by ${email}.`);
+        socket.write(`217 ${transactionID}\r\n`);
         socket.destroy();
         return;
     }
