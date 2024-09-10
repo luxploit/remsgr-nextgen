@@ -137,13 +137,13 @@ module.exports = async (req, res) => {
     const xmlBlock = json2xml(blockMembers, { compact: true, ignoreComment: true, spaces: 4 });
     const xmlReverse = json2xml(reverseMembers, { compact: true, ignoreComment: true, spaces: 4 });
 
-    const template = fs.readFileSync('./services/soap/sharingservice/templates/FindMembershipReponse.xml', 'utf8');
+    const template = fs.readFileSync('./services/soap/sharingservice/templates/FindMembershipResponse.xml', 'utf8');
 
     const compiledTemplate = Handlebars.compile(template);
 
     const formattedTemplate = compiledTemplate({
         sessionid: v4(),
-        domain: "testing.remsgr.net",
+        domain: "192.168.1.62",
         key: tokenUrlSafe(172),
         now: moment().utc().format('YYYY-MM-DDTHH:mm:ss[Z]'),
         cid: formatDecimalCID(user._id.toString()),

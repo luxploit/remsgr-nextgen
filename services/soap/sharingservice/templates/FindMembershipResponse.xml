@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <soap:Header>
+        <ServiceHeader xmlns="http://www.msn.com/webservices/AddressBook">
+            <Version>15.01.1408.0000</Version>
+            <CacheKey>12r1:{{ key }}</CacheKey>
+            <CacheKeyChanged>true</CacheKeyChanged>
+            <PreferredHostName>{{ domain }}</PreferredHostName>
+            <SessionId>{{ sessionid }}</SessionId>
+        </ServiceHeader>
+    </soap:Header>
+    <soap:Body>
+        <FindMembershipResponse xmlns="http://www.msn.com/webservices/AddressBook">
+            <FindMembershipResult>
+                <Services>
+                    <Service>
+                        <Memberships>
+                            <Membership>
+                                <MemberRole>Allow</MemberRole>
+                                <Members>
+                                    {{{ allowMembers }}}
+                                </Members>
+                                <MembershipIsComplete>true</MembershipIsComplete>
+                            </Membership>
+                            <Membership>
+                                <MemberRole>Block</MemberRole>
+                                <Members>
+                                    {{{ blockMembers }}}
+                                </Members>
+                                <MembershipIsComplete>true</MembershipIsComplete>
+                            </Membership>
+                            <Membership>
+                                <MemberRole>Reverse</MemberRole>
+                                <Members>
+                                    {{{ reverseMembers }}}
+                                </Members>
+                                <MembershipIsComplete>true</MembershipIsComplete>
+                            </Membership>
+                            <Membership>
+                                <MemberRole>Pending</MemberRole>
+                                <Members/>
+                                <MembershipIsComplete>true</MembershipIsComplete>
+                            </Membership>
+                        </Memberships>
+                    </Service>
+                </Services>
+                <PartnerScenario>Initial</PartnerScenario>
+                <CacheKey>12r1:{{ key }}</CacheKey>
+                <LastChanged>{{ now }}</LastChanged>
+            </FindMembershipResult>
+        </FindMembershipResponse>
+    </soap:Body>
+</soap:Envelope>

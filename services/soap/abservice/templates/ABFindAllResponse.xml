@@ -1,42 +1,38 @@
-<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"> 
-	<soap:Header> 
-		<ServiceHeader xmlns="http://www.msn.com/webservices/AddressBook"> 
-			<Version>15.01.1408.0000</Version> 
-			<CacheKey>12r1:{{ key }}</CacheKey> 
-			<CacheKeyChanged>true</CacheKeyChanged> 
-			<PreferredHostName>{{ domain }}</PreferredHostName> 
-			<SessionId>{{ sessionid }}</SessionId> 
-		</ServiceHeader> 
-	</soap:Header> 
-	<soap:Body> 
-		<ABFindAllResponse xmlns="http://www.msn.com/webservices/AddressBook"> 
-			<ABFindAllResult> 
-				<groups> 
+<?xml version="1.0" encoding="utf-8" ?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <soap:Header>
+        <ServiceHeader xmlns="http://www.msn.com/webservices/AddressBook">
+            <Version>15.01.1408.0000</Version>
+            <CacheKey>12r1:{{ key }}</CacheKey>
+            <CacheKeyChanged>true</CacheKeyChanged>
+            <PreferredHostName>{{ domain }}</PreferredHostName>
+            <SessionId>{{ sessionid }}</SessionId>
+        </ServiceHeader>
+    </soap:Header>
+    <soap:Body>
+        <ABFindAllResponse xmlns="http://www.msn.com/webservices/AddressBook">
+            <ABFindAllResult>
+                <groups>
                     {{{ groups }}}
-				</groups> 
-				<contacts>
+                </groups>
+                <contacts>
                     {{{ contacts }}}
-                </contacts> 
-				<ab> 
-					<abId>00000000-0000-0000-0000-000000000000</abId> 
-					<abInfo> 
-						<ownerPuid>0</ownerPuid> 
-						<OwnerCID>{{ cid }}</OwnerCID> 
-						<ownerEmail>{{ email }}</ownerEmail> 
-						<fDefault>true</fDefault> 
-						<joinedNamespace>false</joinedNamespace> 
-						<IsBot>false</IsBot> 
-						<IsParentManaged>false</IsParentManaged> 
-						<SubscribeExternalPartner>false</SubscribeExternalPartner> 
-						<NotifyExternalPartner>false</NotifyExternalPartner> 
-						<AddressBookType>Individual</AddressBookType> 
-					</abInfo> 
-					<lastChange>{{ now }}</lastChange> 
-					<DynamicItemLastChanged>0001-01-01T00:00:00</DynamicItemLastChanged> 
-					<createDate>{{ created }}</createDate> 
-					<propertiesChanged /> 
-				</ab> 
-			</ABFindAllResult> 
-		</ABFindAllResponse> 
-	</soap:Body> 
+                </contacts>
+                <ab>
+                    <abId>00000000-0000-0000-0000-000000000000</abId>
+                    <abInfo>
+                        <ownerPuid>0</ownerPuid>
+                        <OwnerCID>{{ cid }}</OwnerCID>
+                        <ownerEmail>{{ email }}</ownerEmail>
+                        <fDefault>true</fDefault>
+                        <joinedNamespace>false</joinedNamespace>
+                    </abInfo>
+                    <lastChange>{{ now }}</lastChange>
+                    <DynamicItemLastChanged>0001-01-01T00:00:00</DynamicItemLastChanged>
+                    <createDate>{{ created }}</createDate>
+                    <propertiesChanged />
+                </ab>
+            </ABFindAllResult>
+        </ABFindAllResponse>
+    </soap:Body>
 </soap:Envelope>
