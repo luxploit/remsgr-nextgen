@@ -1,8 +1,4 @@
-<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"> 
-	<soap:Body> 
-		<GetClientConfigResponse xmlns="http://www.msn.com/webservices/Messenger/Client"> 
-			<GetClientConfigResult>
-				<![CDATA[<MsgrConfig>
+<MsgrConfig>
     <Simple>
         <Config>
             <ExpiresInDays>0</ExpiresInDays>
@@ -138,8 +134,4 @@
             <TermsOfUseURL>https://escargot.chat/legal/terms/</TermsOfUseURL>
         </TermsOfUse>
     </LocalizedConfig>
-</MsgrConfig>]]>
-			</GetClientConfigResult> 
-		</GetClientConfigResponse> 
-	</soap:Body> 
-</soap:Envelope>
+</MsgrConfig>

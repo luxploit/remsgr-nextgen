@@ -54,12 +54,22 @@ app.post('/createUniqueCode', createUniqueCode);
 app.post('/RST.srf', parseBodyMiddleware, rst);
 
 // Config
-// app.post("/Config/MsgrConfig.asmx", (req, res) => {
-// 	const template = fs.readFileSync('./templates/MsgrConfig.asmx', 'utf8');
-// 	const modified = template.replace(/{{ host }}/g, config.server.host).replace(/{{ config_host }}/g, config.server.host);
-// 	res.set('Content-Type', 'text/xml');
-// 	res.send(modified);
-// });
+app.post("/Config/MsgrConfig.asmx", (req, res) => {
+	const template = fs.readFileSync('./templates/MsgrConfig.asmx', 'utf8');
+	const modified = template.replace(/{{ host }}/g, config.server.host).replace(/{{ config_host }}/g, config.server.host);
+
+	const final = fs.readFileSync('./templates/MsgrConfig_Template.asmx', 'utf8');
+	const finalModified = final.replace(/{{ config }}/g, modified);
+	res.set('Content-Type', 'text/xml');
+	res.send(finalModified);
+});
+
+app.get("/Config/MsgrConfig.asmx", (req, res) => {
+	const template = fs.readFileSync('./templates/MsgrConfig.asmx', 'utf8');
+	const modified = template.replace(/{{ host }}/g, config.server.host).replace(/{{ config_host }}/g, config.server.host);
+	res.set('Content-Type', 'text/xml');
+	res.send(modified);
+});
 
 app.get("/games/list", (req, res) => {
 	res.send("Games are not currently supported.");
@@ -163,7 +173,7 @@ app.post("/abservice/abservice.asmx", parseBodyMiddleware, (req, res) => {
 		const soapAction = req.headers.soapaction;
 		const action = soapAction.split('/').pop().replace(/"/g, '');
 		const handlerPath = `./services/soap/abservice/${action}.js`;
-	
+
 		if (fs.existsSync(handlerPath)) {
 			const handler = require(handlerPath);
 			handler(req, res);
@@ -182,7 +192,7 @@ app.post("/abservice/SharingService.asmx", parseBodyMiddleware, (req, res) => {
 		const soapAction = req.headers.soapaction;
 		const action = soapAction.split('/').pop().replace(/"/g, '');
 		const handlerPath = `./services/soap/sharingservice/${action}.js`;
-	
+
 		if (fs.existsSync(handlerPath)) {
 			const handler = require(handlerPath);
 			handler(req, res);
@@ -229,91 +239,91 @@ const payloadCommands = ['QRY', 'PAG', 'PGD', 'SDC', 'UUN', 'MSG', 'UUX', 'ADL',
 
 // the parser for notification is pretty bad so we might need to rework this a bit
 const notification = net.createServer((socket) => {
-    console.log(`${chalk.magenta.bold('[MSN NOTIFICATION]')} New connection: ${socket.remoteAddress}:${socket.remotePort}`);
-    sockets.push(socket);
+	console.log(`${chalk.magenta.bold('[MSN NOTIFICATION]')} New connection: ${socket.remoteAddress}:${socket.remotePort}`);
+	sockets.push(socket);
 
-    let buffer = '';
+	let buffer = '';
 
-    socket.on('data', (data) => {
-        buffer += data.toString();
+	socket.on('data', (data) => {
+		buffer += data.toString();
 
-        let parsedCommands = [];
-        let tempBuffer = '';
+		let parsedCommands = [];
+		let tempBuffer = '';
 
-        while (buffer.length > 0) {
-            const commandEndIndex = buffer.indexOf('\r\n');
-            if (commandEndIndex === -1) break;
+		while (buffer.length > 0) {
+			const commandEndIndex = buffer.indexOf('\r\n');
+			if (commandEndIndex === -1) break;
 
-            const command = buffer.slice(0, commandEndIndex);
-            buffer = buffer.slice(commandEndIndex + 2);
+			const command = buffer.slice(0, commandEndIndex);
+			buffer = buffer.slice(commandEndIndex + 2);
 
-            const commandParts = command.split(' ');
-            const commandName = commandParts[0];
+			const commandParts = command.split(' ');
+			const commandName = commandParts[0];
 
-            if (payloadCommands.includes(commandName)) {
-                const transactionId = parseInt(commandParts[1], 10);
-                const nextCommandRegex = new RegExp(`\\b[A-Z]{3} ${transactionId + 1}\\b`);
-                const match = nextCommandRegex.exec(buffer);
+			if (payloadCommands.includes(commandName)) {
+				const transactionId = parseInt(commandParts[1], 10);
+				const nextCommandRegex = new RegExp(`\\b[A-Z]{3} ${transactionId + 1}\\b`);
+				const match = nextCommandRegex.exec(buffer);
 
-                if (match) {
-                    const nextCommandIndex = match.index;
-                    const payload = buffer.slice(0, nextCommandIndex);
-                    buffer = buffer.slice(nextCommandIndex);
+				if (match) {
+					const nextCommandIndex = match.index;
+					const payload = buffer.slice(0, nextCommandIndex);
+					buffer = buffer.slice(nextCommandIndex);
 
-                    parsedCommands.push(`${command}\r\n${payload}`);
-                } else {
-                    tempBuffer = command;
-                    break;
-                }
-            } else {
-                parsedCommands.push(command);
-            }
-        }
+					parsedCommands.push(`${command}\r\n${payload}`);
+				} else {
+					tempBuffer = command;
+					break;
+				}
+			} else {
+				parsedCommands.push(command);
+			}
+		}
 
-        if (tempBuffer) {
-            buffer = `${tempBuffer}\r\n${buffer}`;
-        }
+		if (tempBuffer) {
+			buffer = `${tempBuffer}\r\n${buffer}`;
+		}
 
-        for (const command of parsedCommands) {
-            const commandParts = command.toString().trim().split(' ');
+		for (const command of parsedCommands) {
+			const commandParts = command.toString().trim().split(' ');
 
-            const commandName = commandParts[0];
-            if (process.env.DEBUG === 'true') {
-                console.log(`${chalk.red.bold('[MSN NOTIFICATION]')} Received command: ${command}`);
-            }
+			const commandName = commandParts[0];
+			if (process.env.DEBUG === 'true') {
+				console.log(`${chalk.red.bold('[MSN NOTIFICATION]')} Received command: ${command}`);
+			}
 
-            const handlerPath = `./handlers/${commandName}.js`;
+			const handlerPath = `./handlers/${commandName}.js`;
 
-            if (fs.existsSync(handlerPath)) {
-                const handler = require(handlerPath);
-                try {
-                    handler(socket, commandParts.slice(1), command);
-                } catch (err) {
-                    console.log(command);
-                    console.error(err);
-                }
-            } else {
-                console.log(`${chalk.red.bold('[MSN NOTIFICATION]')} No handler found for command: ${commandName}`);
-                if (process.env.DEBUG === 'true') {
-                    console.log(`${chalk.red.bold('[MSN NOTIFICATION]')} Full command: ${command}`);
-                }
-                socket.write(`200 ${commandParts[1]}\r\n`);
-            }
-        }
-    });
+			if (fs.existsSync(handlerPath)) {
+				const handler = require(handlerPath);
+				try {
+					handler(socket, commandParts.slice(1), command);
+				} catch (err) {
+					console.log(command);
+					console.error(err);
+				}
+			} else {
+				console.log(`${chalk.red.bold('[MSN NOTIFICATION]')} No handler found for command: ${commandName}`);
+				if (process.env.DEBUG === 'true') {
+					console.log(`${chalk.red.bold('[MSN NOTIFICATION]')} Full command: ${command}`);
+				}
+				socket.write(`200 ${commandParts[1]}\r\n`);
+			}
+		}
+	});
 
-    socket.on('close', () => {
-        logOut(socket);
-        const index = sockets.indexOf(socket);
-        if (index > -1) {
-            sockets.splice(index, 1);
-        }
-        console.log(`${chalk.magenta.bold('[MSN NOTIFICATION]')} Connection closed: ${socket.remoteAddress}:${socket.remotePort}`);
-    });
+	socket.on('close', () => {
+		logOut(socket);
+		const index = sockets.indexOf(socket);
+		if (index > -1) {
+			sockets.splice(index, 1);
+		}
+		console.log(`${chalk.magenta.bold('[MSN NOTIFICATION]')} Connection closed: ${socket.remoteAddress}:${socket.remotePort}`);
+	});
 
-    socket.on('error', (err) => {
-        console.error(err);
-    });
+	socket.on('error', (err) => {
+		console.error(err);
+	});
 });
 
 const switchboard = net.createServer((socket) => {
