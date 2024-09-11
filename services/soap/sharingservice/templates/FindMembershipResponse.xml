@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
     <soap:Header>
         <ServiceHeader xmlns="http://www.msn.com/webservices/AddressBook">
-            <Version>15.01.1408.0000</Version>
+            <Version>11.01.0922.0000</Version>
             <CacheKey>12r1:{{ key }}</CacheKey>
             <CacheKeyChanged>true</CacheKeyChanged>
             <PreferredHostName>{{ domain }}</PreferredHostName>
@@ -38,15 +40,28 @@
                             </Membership>
                             <Membership>
                                 <MemberRole>Pending</MemberRole>
-                                <Members/>
+                                <Members>
+                                </Members>
                                 <MembershipIsComplete>true</MembershipIsComplete>
                             </Membership>
                         </Memberships>
                     </Service>
                 </Services>
-                <PartnerScenario>Initial</PartnerScenario>
-                <CacheKey>12r1:{{ key }}</CacheKey>
-                <LastChanged>{{ now }}</LastChanged>
+                <OwnerNamespace>
+                    <Info>
+                        <Handle>
+                            <Id>00000000-0000-0000-0000-000000000000</Id>
+                            <IsPassportNameHidden>false</IsPassportNameHidden>
+                            <CID>0</CID>
+                        </Handle>
+                        <CreatorPuid>0</CreatorPuid>
+                        <CreatorCID>{{ cid }}</CreatorCID>
+                        <CreatorPassportName>{{ email }}</CreatorPassportName>
+                    </Info>
+                    <Changes />
+                    <CreateDate>{{ now }}</CreateDate>
+                    <LastChange>{{ now }}</LastChange>
+                </OwnerNamespace>
             </FindMembershipResult>
         </FindMembershipResponse>
     </soap:Body>

@@ -2,7 +2,7 @@
 <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
     <soap:Header>
         <ServiceHeader xmlns="http://www.msn.com/webservices/AddressBook">
-            <Version>15.01.1408.0000</Version>
+            <Version>11.01.0922.0000</Version>
             <CacheKey>12r1:{{ key }}</CacheKey>
             <CacheKeyChanged>true</CacheKeyChanged>
             <PreferredHostName>{{ domain }}</PreferredHostName>
@@ -28,7 +28,7 @@
                         <joinedNamespace>false</joinedNamespace>
                     </abInfo>
                     <lastChange>{{ now }}</lastChange>
-                    <DynamicItemLastChanged>0001-01-01T00:00:00</DynamicItemLastChanged>
+                    <DynamicItemLastChanged>0001-01-01T00:00:00.0000000</DynamicItemLastChanged>
                     <createDate>{{ created }}</createDate>
                     <propertiesChanged />
                 </ab>

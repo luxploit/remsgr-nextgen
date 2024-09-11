@@ -72,7 +72,7 @@ module.exports = async (req, res) => {
 
         allowMembers["Member"].push({
             "_attributes": {"xsi:type": "PassportMember"},
-            "MembershipId": "Allow/" + contact.uuid,
+            "MembershipId": "AL-" + contact.uuid,
             "Type": "Passport",
             "State": "Accepted",
             "Deleted": "false",
@@ -94,7 +94,7 @@ module.exports = async (req, res) => {
 
         blockMembers["Member"].push({
             "_attributes": {"xsi:type": "PassportMember"},
-            "MembershipId": "Block/" + contact.uuid,
+            "MembershipId": "BL-" + contact.uuid,
             "Type": "Passport",
             "State": "Accepted",
             "Deleted": "false",
@@ -116,7 +116,7 @@ module.exports = async (req, res) => {
 
         reverseMembers["Member"].push({
             "_attributes": {"xsi:type": "PassportMember"},
-            "MembershipId": "Reverse/" + contact.uuid,
+            "MembershipId": "RL-" + contact.uuid,
             "Type": "Passport",
             "State": "Accepted",
             "Deleted": "false",
