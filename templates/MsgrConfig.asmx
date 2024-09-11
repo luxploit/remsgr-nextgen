@@ -64,7 +64,7 @@
                 <type>page</type>
                 <contenturl>https://mbasic.facebook.com/</contenturl>
                 <hiturl>https://mbasic.facebook.com/</hiturl>
-                <image>http://192.168.1.62/static/shortcuts/fb.png</image>
+                <image>{{ host }}static/shortcuts/fb.png</image>
                 <name>Facebook</name>
                 <tooltip>Facebook</tooltip>
                 <siteid>0</siteid>
@@ -88,16 +88,8 @@
             <premium>
                 <winks2 visibleto="7.0.729 and greater">
                     <providersiteid>60971</providersiteid>
-                    <providerurl>http://apps.escargot.chat/content/winks/</providerurl>
+                    <providerurl></providerurl>
                     <slots>
-                        <URL id="1">http://apps.escargot.chat/content/winks/?id=screen-punch</URL>
-                        <URL id="2">http://apps.escargot.chat/content/winks/?id=sup-dawg</URL>
-                        <URL id="3">http://apps.escargot.chat/content/winks/?id=flower-fart</URL>
-                        <URL id="4">http://apps.escargot.chat/content/winks/?id=sup-dawg</URL>
-                        <URL id="5">http://apps.escargot.chat/content/winks/?id=pc-explosion</URL>
-                        <URL id="6">http://apps.escargot.chat/content/winks/?id=smiley-faces</URL>
-                        <URL id="7">http://apps.escargot.chat/content/winks/?id=break-dancer</URL>
-                        <URL id="8">http://apps.escargot.chat/content/winks/?id=bugs-bunny</URL>
                     </slots>
                 </winks2>
             </premium>
@@ -109,8 +101,8 @@
         </AdMainConfig>
         <AppDirConfig>
             <AppDirPageURL>{{ host }}games/list?charli=xcx</AppDirPageURL>
-            <AppDirSeviceURL>http://apps.escargot.chat/activities/service/</AppDirSeviceURL>
-            <AppDirVersionURL>http://apps.escargot.chat/activities/version/</AppDirVersionURL>
+            <AppDirSeviceURL>{{ host }}games/service/</AppDirSeviceURL>
+            <AppDirVersionURL>{{ host }}games/version/</AppDirVersionURL>
         </AppDirConfig>
         <MSNSearch>
             <DesktopInstallURL>https://www.google.com/search?q=$QUERY$&amp;source=hp</DesktopInstallURL>
@@ -131,7 +123,7 @@
         </RL>
         <TermsOfUse>
             <TermsOfUseSID>956</TermsOfUseSID>
-            <TermsOfUseURL>https://escargot.chat/legal/terms/</TermsOfUseURL>
+            <TermsOfUseURL>https://remsgr.net</TermsOfUseURL>
         </TermsOfUse>
     </LocalizedConfig>
 </MsgrConfig>
