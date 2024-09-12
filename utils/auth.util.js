@@ -162,14 +162,14 @@ class TWNAuth {
   <Entry hr="0x82000020" action="3" />  <Entry hr="0x8007274A" action="3" /> </Feature></Policy></Policy>
 	<Policy type="P2P" checksum="815D4F1FF8E39A85F1F97C4B16C45177"><ObjStr SndDly="1" /></Policy>
 </Policies>`;
-            
+
                 const encodedShields = Buffer.from(shields, 'utf-8');
                 const encodedShieldsFinal = encodedShields.toString().replace(/\n/g, '\r\n');
                 const encodedShieldsLength = encodedShieldsFinal.length;
 
                 socket.write(`GCF 0 ${encodedShieldsLength}\r\n${encodedShieldsFinal}`);
             }
-        
+
         } else if (state === 'S') {
             token = token.split('=')[1];
             token = token.split('&')[0];

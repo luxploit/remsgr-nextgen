@@ -13,6 +13,7 @@
             <domain name="192.168.1.62"/>
             <domain name="remsgr.net"/>
             <domain name="messenger.remsgr.net"/>
+            <domain name="testing.remsgr.net"/>
             <domain name="config.remsgr.net"/>
         </TrustedDomains>
         <ErrorResponseTable>
@@ -64,7 +65,7 @@
                 <type>page</type>
                 <contenturl>https://mbasic.facebook.com/</contenturl>
                 <hiturl>https://mbasic.facebook.com/</hiturl>
-                <image>{{ host }}static/shortcuts/fb.png</image>
+                <image>https://{{ host }}/static/shortcuts/fb.png</image>
                 <name>Facebook</name>
                 <tooltip>Facebook</tooltip>
                 <siteid>0</siteid>
@@ -78,7 +79,7 @@
     </TabConfig>
     <AbchCfg>
         <abchconfig>
-            <url>{{ host }}abservice/abservice.asmx</url>
+            <url>https://{{ host }}/abservice/abservice.asmx</url>
         </abchconfig>
     </AbchCfg>
     <SpacesDownload>http://spaces.live.com/downloadA</SpacesDownload>
@@ -96,13 +97,13 @@
         </DynamicContent>
         <AdMainConfig>
             <TextAdRefresh>1</TextAdRefresh>
-            <TextAdServer>{{ config_host }}msn/textads</TextAdServer>
-            <AdBanner20URL Refresh="60">{{ config_host }}msn/bannersads</AdBanner20URL>
+            <TextAdServer>https://{{ config_host }}/msn/textads</TextAdServer>
+            <AdBanner20URL Refresh="60">https://{{ config_host }}/msn/bannersads</AdBanner20URL>
         </AdMainConfig>
         <AppDirConfig>
-            <AppDirPageURL>{{ host }}games/list?charli=xcx</AppDirPageURL>
-            <AppDirSeviceURL>{{ host }}games/service/</AppDirSeviceURL>
-            <AppDirVersionURL>{{ host }}games/version/</AppDirVersionURL>
+            <AppDirPageURL>https://{{ host }}/games/list?charli=xcx</AppDirPageURL>
+            <AppDirSeviceURL>https://{{ host }}/games/service/</AppDirSeviceURL>
+            <AppDirVersionURL>https://{{ host }}/games/version/</AppDirVersionURL>
         </AppDirConfig>
         <MSNSearch>
             <DesktopInstallURL>https://www.google.com/search?q=$QUERY$&amp;source=hp</DesktopInstallURL>

@@ -84,7 +84,7 @@ exports.rst = async (req, res) => {
 
     let tokenResponses = [];
 
-    let index = 0;
+    let index = 1;
 
     try {
         requestedTokens.forEach((tokenRequest) => {

@@ -11,8 +11,8 @@ const UniqueCode = require('../../models/UniqueCode');
 
 exports.pprdr = async (req, res) => {
     res.set({
-        'Passporturls': `DALogin=${config.server.host}tweener/auth`,
-        'PassportURLs': `DALogin=${config.server.host}tweener/auth`,
+        'Passporturls': `DALogin=https://${config.server.host}/tweener/auth`,
+        'PassportURLs': `DALogin=https://${config.server.host}/tweener/auth`,
         'Server': 'Charli XCX'
     });
     res.status(200).send('OK');

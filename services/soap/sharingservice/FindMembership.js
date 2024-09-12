@@ -6,6 +6,7 @@ const Handlebars = require('handlebars');
 const moment = require('moment');
 const xmlFormat = require('xml-formatter');
 const crypto = require('crypto');
+const config = require("../../../config");
 
 const { verifyJWT } = require("../../../utils/auth.util");
 const { v4: uuidv4, v4 } = require('uuid');
@@ -143,7 +144,7 @@ module.exports = async (req, res) => {
 
     const formattedTemplate = compiledTemplate({
         sessionid: v4(),
-        domain: "192.168.1.62",
+        domain: config.server.host,
         key: tokenUrlSafe(172),
         now: moment().utc().format('YYYY-MM-DDTHH:mm:ss[Z]'),
         cid: formatDecimalCID(user._id.toString()),
