@@ -12,9 +12,9 @@
 			<psf:serverInfo Path="Live1" RollingUpgradeState="ExclusiveNew" LocVersion="0" ServerTime="{{ DATE_Z }}">RVNETREMSGR 2024.08.10.16.54.12</psf:serverInfo>
 			<psf:cookies/>
 			<psf:browserCookies>
-				<psf:browserCookie Name="MH" URL="http://www.msn.com">MSFT; path=/; domain=.msn.com; expires=Sun, 31-Aug-2025 13:19:07 GMT</psf:browserCookie>
+				<psf:browserCookie Name="MH" URL="http://www.msn.com">MSFT; path=/; domain=.msn.com; expires=Wed, 30-Dec-2037 16:00:00 GMT</psf:browserCookie>
 				<psf:browserCookie Name="MHW" URL="http://www.msn.com">; path=/; domain=.msn.com; expires=Thu, 30-Oct-1980 16:00:00 GMT</psf:browserCookie>
-				<psf:browserCookie Name="MH" URL="http://www.live.com">MSFT; path=/; domain=.live.com; expires=Sun, 31-Aug-2025 13:19:07 GMT</psf:browserCookie>
+				<psf:browserCookie Name="MH" URL="http://www.live.com">MSFT; path=/; domain=.live.com; expires=Wed, 30-Dec-2037 16:00:00 GMT</psf:browserCookie>
 				<psf:browserCookie Name="MHW" URL="http://www.live.com">; path=/; domain=.live.com; expires=Thu, 30-Oct-1980 16:00:00 GMT</psf:browserCookie>
 			</psf:browserCookies>
 			<psf:credProperties>
@@ -24,19 +24,19 @@
 				<psf:credProperty Name="CID">{{ cid }}</psf:credProperty>
 				<psf:credProperty Name="AuthMembername">{{ email }}</psf:credProperty>
 				<psf:credProperty Name="Country">US</psf:credProperty>
-				<psf:credProperty Name="Language">1031</psf:credProperty>
+				<psf:credProperty Name="Language">1033</psf:credProperty>
 				<psf:credProperty Name="FirstName">Example</psf:credProperty>
 				<psf:credProperty Name="LastName">Name</psf:credProperty>
 				<psf:credProperty Name="ChildFlags">00000001</psf:credProperty>
-				<psf:credProperty Name="Flags">40000641</psf:credProperty>
+				<psf:credProperty Name="Flags">40100643</psf:credProperty>
 				<psf:credProperty Name="FlagsV2">00000000</psf:credProperty>
 				<psf:credProperty Name="IP">{{ ip }}</psf:credProperty>
 				<psf:credProperty Name="FamilyID">0000000000000000</psf:credProperty>
 				<psf:credProperty Name="AssociatedForStrongAuth">0</psf:credProperty>
 			</psf:credProperties>
 			<psf:extProperties>
-				<psf:extProperty Name="ANON" Expiry="Sat, 22-Feb-2025 21:19:07 GMT" Domains="bing.com;atdmt.com" IgnoreRememberMe="false">A=9C8D7E3DF75FE3DA31B43B07FFFFFFFF&amp;E=1e17&amp;W=1</psf:extProperty>
-				<psf:extProperty Name="NAP" Expiry="Thu, 14-Nov-2024 21:19:07 GMT" Domains="bing.com;atdmt.com" IgnoreRememberMe="false">V=1.9&amp;E=1dbd&amp;C=PkzVa9leLptrBoQ52sclKfm23qUkgPKrvb5KaVhuhZnRjOInD0RXeA&amp;W=1</psf:extProperty>
+				<psf:extProperty Name="ANON" Expiry="Wed, 30-Dec-2037 16:00:00 GMT" Domains="bing.com;atdmt.com" IgnoreRememberMe="false">A=2AD1B6380CC38C61A2E95994FFFFFFFF&amp;E=1456&amp;W=1</psf:extProperty>
+				<psf:extProperty Name="NAP" Expiry="Wed, 30-Dec-2037 16:00:00 GMT" Domains="bing.com;atdmt.com" IgnoreRememberMe="false">V=1.9&amp;E=13fc&amp;C=tq1sGI5NyECr4nbob0bsqOGQx85gOAzYs8FuhJP5L22WfJl-67MNNQ&amp;W=1</psf:extProperty>
 				<psf:extProperty Name="LastUsedCredType">1</psf:extProperty>
 				<psf:extProperty Name="WebCredType">1</psf:extProperty>
 				<psf:extProperty Name="CID">{{ cid }}</psf:extProperty>

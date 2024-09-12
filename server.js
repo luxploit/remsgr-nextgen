@@ -71,6 +71,10 @@ app.get("/Config/MsgrConfig.asmx", (req, res) => {
 	res.send(modified);
 });
 
+app.post("/storageservice/SchematizedStore.asmx", (req, res) => {
+	res.status(404).send();
+});
+
 app.get("/games/list", (req, res) => {
 	res.send("Games are not currently supported.");
 });
