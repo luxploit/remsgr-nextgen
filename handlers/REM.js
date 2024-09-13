@@ -22,6 +22,11 @@ module.exports = async (socket, args, command) => {
         return;
     }
 
+    if (socket.version >= 13) {
+        socket.destroy();
+        return;
+    }
+
     const decoded = await verifyJWT(socket.token);
 
     if (!decoded) {

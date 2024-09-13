@@ -13,6 +13,11 @@ module.exports = async (socket, args) => {
         return;
     }
 
+    if (socket.version >= 13) {
+        socket.destroy();
+        return;
+    }
+
     const decoded = await verifyJWT(socket.token);
     if (!decoded) {
         console.log(`${chalk.red.bold('[SYN]')} ${socket.remoteAddress} has an invalid token.`);
@@ -20,7 +25,7 @@ module.exports = async (socket, args) => {
         return;
     }
 
-    console.log(`${chalk.magentaBright.bold('[SYN]')} ${socket.passport} sister wants CONTACT LIST 💜`);
+    console.log(`${chalk.magentaBright.bold('[SYN]')} ${socket.passport} asked for contact list.`);
 
     let user, contacts, reverseContacts;
     if (socket.version >= 10) {
