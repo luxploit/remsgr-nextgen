@@ -52,6 +52,22 @@ module.exports = async (req, res) => {
         return;
     }
 
+    if (req.body["soap:Envelope"]["soap:Body"]["FindMembership"]["deltasOnly"] && req.body["soap:Envelope"]["soap:Body"]["FindMembership"]["deltasOnly"] === true) {
+        const template = fs.readFileSync('./services/soap/templates/Delta.Disabled.xml', 'utf8');
+
+        const compiledTemplate = Handlebars.compile(template);
+
+        const formattedTemplate = compiledTemplate({
+            soap_action: req.get('SOAPAction')
+        });
+
+        const formattedXML = xmlFormat.minify(formattedTemplate, { collapseContent: true });
+
+        res.set('Content-Type', 'text/xml; charset=utf-8');
+        res.send(formattedXML);
+        return;
+    }
+
     const allowContacts = await Contact.find({ userID: user._id, list: "AL" }).exec();
     const blockContacts = await Contact.find({ userID: user._id, list: "BL" }).exec();
     const reverseContacts = await Contact.find({ contactID: user._id, list: "FL" }).exec();

@@ -53,6 +53,22 @@ module.exports = async (req, res) => {
         return;
     }
 
+    if (req.body["soap:Envelope"]["soap:Body"]["ABFindAll"]["deltasOnly"] && req.body["soap:Envelope"]["soap:Body"]["ABFindAll"]["deltasOnly"] === true) {
+        const template = fs.readFileSync('./services/soap/templates/Delta.Disabled.xml', 'utf8');
+
+        const compiledTemplate = Handlebars.compile(template);
+
+        const formattedTemplate = compiledTemplate({
+            soap_action: req.get('SOAPAction')
+        });
+
+        const formattedXML = xmlFormat.minify(formattedTemplate, { collapseContent: true });
+
+        res.set('Content-Type', 'text/xml; charset=utf-8');
+        res.send(formattedXML);
+        return;
+    }
+
     const contacts = await Contact.find({ userID: user._id, list: "FL" }).exec();
 
     const jsonGroups = {

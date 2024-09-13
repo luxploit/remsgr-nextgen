@@ -237,97 +237,59 @@ const { sockets, switchboard_sockets } = require('./utils/socket.util');
 const { switchboard_chats, SB_logOut } = require('./utils/sb.util');
 const { logOut } = require('./utils/auth.util');
 
-const isCommand = (line) => line.match(/^[A-Z]{3}/);
+const { decodeMSNP } = require('./utils/parsers.util');
 
-const payloadCommands = ['QRY', 'PAG', 'PGD', 'SDC', 'UUN', 'MSG', 'UUX', 'ADL', 'RML'];
-
-// the parser for notification is pretty bad so we might need to rework this a bit
 const notification = net.createServer((socket) => {
-	console.log(`${chalk.magenta.bold('[MSN NOTIFICATION]')} New connection: ${socket.remoteAddress}:${socket.remotePort}`);
-	sockets.push(socket);
+    console.log(`${chalk.magenta.bold('[MSN NOTIFICATION]')} New connection: ${socket.remoteAddress}:${socket.remotePort}`);
+    sockets.push(socket);
 
-	let buffer = '';
+    let buffer = Buffer.alloc(0);
 
-	socket.on('data', (data) => {
-		buffer += data.toString();
+    socket.on('data', (data) => {
+        buffer = Buffer.concat([buffer, data]);
 
-		let parsedCommands = [];
-		let tempBuffer = '';
+        while (true) {
+            const result = decodeMSNP(buffer);
+            if (!result) break;
 
-		while (buffer.length > 0) {
-			const commandEndIndex = buffer.indexOf('\r\n');
-			if (commandEndIndex === -1) break;
+            const [commandParts, body, newBuffer] = result;
+            buffer = newBuffer;
 
-			const command = buffer.slice(0, commandEndIndex);
-			buffer = buffer.slice(commandEndIndex + 2);
+            const command = commandParts.join(' ');
+            if (process.env.DEBUG === 'true') {
+                console.log(`${chalk.red.bold('[MSN NOTIFICATION]')} Received command: ${command}`);
+            }
 
-			const commandParts = command.split(' ');
-			const commandName = commandParts[0];
+            const commandName = commandParts[0];
+            const handlerPath = `./handlers/${commandName}.js`;
 
-			if (payloadCommands.includes(commandName)) {
-				const transactionId = parseInt(commandParts[1], 10);
-				const nextCommandRegex = new RegExp(`\\b[A-Z]{3} ${transactionId + 1}\\b`);
-				const match = nextCommandRegex.exec(buffer);
+            if (fs.existsSync(handlerPath)) {
+                const handler = require(handlerPath);
+                try {
+                    handler(socket, commandParts.slice(1), body ? `${command}\r\n${body}` : command);
+                } catch (err) {
+                    console.error(`Error handling command: ${command}`);
+                    console.error(err);
+                }
+            } else {
+                console.log(`${chalk.red.bold('[MSN NOTIFICATION]')} No handler found for command: ${commandName}`);
+                socket.write(`200 ${commandParts[1]}\r\n`);
+            }
+        }
+    });
 
-				if (match) {
-					const nextCommandIndex = match.index;
-					const payload = buffer.slice(0, nextCommandIndex);
-					buffer = buffer.slice(nextCommandIndex);
+    socket.on('close', () => {
+        logOut(socket);
+        const index = sockets.indexOf(socket);
+        if (index > -1) {
+            sockets.splice(index, 1);
+        }
+        console.log(`${chalk.magenta.bold('[MSN NOTIFICATION]')} Connection closed: ${socket.remoteAddress}:${socket.remotePort}`);
+    });
 
-					parsedCommands.push(`${command}\r\n${payload}`);
-				} else {
-					tempBuffer = command;
-					break;
-				}
-			} else {
-				parsedCommands.push(command);
-			}
-		}
-
-		if (tempBuffer) {
-			buffer = `${tempBuffer}\r\n${buffer}`;
-		}
-
-		for (const command of parsedCommands) {
-			const commandParts = command.toString().trim().split(' ');
-
-			const commandName = commandParts[0];
-			if (process.env.DEBUG === 'true') {
-				console.log(`${chalk.red.bold('[MSN NOTIFICATION]')} Received command: ${command}`);
-			}
-
-			const handlerPath = `./handlers/${commandName}.js`;
-
-			if (fs.existsSync(handlerPath)) {
-				const handler = require(handlerPath);
-				try {
-					handler(socket, commandParts.slice(1), command);
-				} catch (err) {
-					console.log(command);
-					console.error(err);
-				}
-			} else {
-				console.log(`${chalk.red.bold('[MSN NOTIFICATION]')} No handler found for command: ${commandName}`);
-				if (process.env.DEBUG === 'true') {
-					console.log(`${chalk.red.bold('[MSN NOTIFICATION]')} Full command: ${command}`);
-				}
-				socket.write(`200 ${commandParts[1]}\r\n`);
-			}
-		}
-	});
-
-	socket.on('close', () => {
-		logOut(socket);
-		const index = sockets.indexOf(socket);
-		if (index > -1) {
-			sockets.splice(index, 1);
-		}
-		console.log(`${chalk.magenta.bold('[MSN NOTIFICATION]')} Connection closed: ${socket.remoteAddress}:${socket.remotePort}`);
-	});
-
-	socket.on('error', (err) => {
-		console.error(err);
-	});
+    socket.on('error', (err) => {
+        console.error(err);
+    });
 });
 
 const switchboard = net.createServer((socket) => {
