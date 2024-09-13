@@ -28,7 +28,6 @@ mongoose
 
 // Express
 const app = express();
-const parser = new XMLParser();
 
 app.set("etag", false);
 
@@ -160,13 +159,14 @@ app.get("/onlineusers", (req, res) => {
 		const passport = socket.passport;
 		const friendly_name = socket.friendly_name;
 		const status = socket.status;
-		return { passport, friendly_name, status };
+		const customStatus = socket.customStatus;
+		return { passport, friendly_name, status, customStatus };
 	});
 
 	const decodedUsers = users.map(user => {
 		const friendly_name = decodeURIComponent(user.friendly_name);
 		const status = user.status === 'NLN' ? 'Online' : user.status === 'BSY' ? 'Busy' : user.status === 'IDL' ? 'Idle' : user.status === 'BRB' ? 'Be Right Back' : user.status === 'AWY' ? 'Away' : user.status === 'PHN' ? 'On the Phone' : user.status === 'LUN' ? 'Out to Lunch' : user.status === 'HDN' ? 'Hidden' : user.status;
-		return { passport: user.passport, friendly_name, status };
+		return { passport: user.passport, friendly_name, status, customStatus: user.customStatus };
 	});
 
 	res.json(decodedUsers);
@@ -288,7 +288,9 @@ const notification = net.createServer((socket) => {
     });
 
     socket.on('error', (err) => {
-        console.error(err);
+        if (err.code !== 'ECONNRESET') {
+            console.error(err);
+        }
     });
 });
 
@@ -363,9 +365,11 @@ const switchboard = net.createServer((socket) => {
 		console.log(`${chalk.magenta.bold('[MSN SWITCHBOARD]')} Connection closed: ${socket.remoteAddress}:${socket.remotePort}`);
 	});
 
-	socket.on('error', (err) => {
-		console.error(err);
-	});
+    socket.on('error', (err) => {
+        if (err.code !== 'ECONNRESET') {
+            console.error(err);
+        }
+    });
 });
 
 
