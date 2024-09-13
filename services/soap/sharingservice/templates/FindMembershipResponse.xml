@@ -14,39 +14,7 @@
     <soap:Body>
         <FindMembershipResponse xmlns="http://www.msn.com/webservices/AddressBook">
             <FindMembershipResult>
-                <Services>
-                    <Service>
-                        <Memberships>
-                            <Membership>
-                                <MemberRole>Allow</MemberRole>
-                                <Members>
-                                    {{{ allowMembers }}}
-                                </Members>
-                                <MembershipIsComplete>true</MembershipIsComplete>
-                            </Membership>
-                            <Membership>
-                                <MemberRole>Block</MemberRole>
-                                <Members>
-                                    {{{ blockMembers }}}
-                                </Members>
-                                <MembershipIsComplete>true</MembershipIsComplete>
-                            </Membership>
-                            <Membership>
-                                <MemberRole>Reverse</MemberRole>
-                                <Members>
-                                    {{{ reverseMembers }}}
-                                </Members>
-                                <MembershipIsComplete>true</MembershipIsComplete>
-                            </Membership>
-                            <Membership>
-                                <MemberRole>Pending</MemberRole>
-                                <Members>
-                                </Members>
-                                <MembershipIsComplete>true</MembershipIsComplete>
-                            </Membership>
-                        </Memberships>
-                    </Service>
-                </Services>
+                {{{ memberships }}}
                 <OwnerNamespace>
                     <Info>
                         <Handle>

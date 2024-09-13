@@ -90,7 +90,7 @@ module.exports = async (req, res) => {
                     }
                 },
                 "groupType": "c8529ce2-6ead-434d-881f-341e17db3ff8",
-                "name": group.name,
+                "name": decodeURI(group.name),
                 "IsNotMobileVisible": "false",
                 "IsPrivate": "false",
                 "IsFavorite": "true"
@@ -103,8 +103,9 @@ module.exports = async (req, res) => {
 
     for (const contact of contacts) {
         const contactUser = await User.findById(contact.contactID).exec();
-
-        jsonContacts["Contact"].push({
+        const contactGroups = contact.groups || [];
+    
+        const contactObject = {
             "contactId": contactUser.uuid,
             "contactInfo": {
                 "contactType": "Regular",
@@ -113,6 +114,9 @@ module.exports = async (req, res) => {
                 "IsPassportNameHidden": "false",
                 "displayName": decodeURI(contactUser.friendly_name),
                 "puid": "0",
+                ...(contactGroups.length > 0 ? {
+                    "groupIds": contactGroups.map(group => ({ "guid": group }))
+                } : {}),
                 "CID": formatDecimalCID(contactUser._id.toString()),
                 "IsNotMobileVisible": "false",
                 "isMobileIMEnabled": "false",
@@ -127,13 +131,15 @@ module.exports = async (req, res) => {
                 "PrimaryPhone": "ContactPhonePersonal",
                 "IsPrivate": "false",
                 "Gender": "Unspecified",
-                "TimeZone": "None"
+                "TimeZone": "None",
             },
             "propertiesChanged": "",
             "fDeleted": "false",
             "lastChange": moment().utc().format('YYYY-MM-DDTHH:mm:ss[Z]')
-        });
-    }
+        };
+    
+        jsonContacts["Contact"].push(contactObject);
+    }    
 
     jsonContacts["Contact"].push({
         "contactId": user.uuid,

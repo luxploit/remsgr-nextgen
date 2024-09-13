@@ -1,5 +1,3 @@
-// http://www.msn.com/webservices/AddressBook/FindMembership
-
 const chalk = require('chalk');
 const fs = require('fs');
 const Handlebars = require('handlebars');
@@ -7,12 +5,10 @@ const moment = require('moment');
 const xmlFormat = require('xml-formatter');
 const crypto = require('crypto');
 const config = require("../../../config");
-
 const { verifyJWT } = require("../../../utils/auth.util");
 const { v4: uuidv4, v4 } = require('uuid');
 const { formatDecimalCID } = require('../../../utils/auth.util');
 const { json2xml } = require('xml-js');
-
 const User = require('../../../models/User');
 const Contact = require('../../../models/Contact');
 
@@ -24,8 +20,8 @@ function tokenUrlSafe(size) {
 }
 
 module.exports = async (req, res) => {
-    let token
-    
+    let token;
+
     if (req.body["soap:Envelope"]["soap:Header"]["ABAuthHeader"]["TicketToken"]) {
         token = req.body["soap:Envelope"]["soap:Header"]["ABAuthHeader"]["TicketToken"];
     } else if (req.cookies.MSPAuth) {
@@ -54,13 +50,10 @@ module.exports = async (req, res) => {
 
     if (req.body["soap:Envelope"]["soap:Body"]["FindMembership"]["deltasOnly"] && req.body["soap:Envelope"]["soap:Body"]["FindMembership"]["deltasOnly"] === true) {
         const template = fs.readFileSync('./services/soap/templates/Delta.Disabled.xml', 'utf8');
-
         const compiledTemplate = Handlebars.compile(template);
-
         const formattedTemplate = compiledTemplate({
             soap_action: req.get('SOAPAction')
         });
-
         const formattedXML = xmlFormat.minify(formattedTemplate, { collapseContent: true });
 
         res.set('Content-Type', 'text/xml; charset=utf-8');
@@ -72,23 +65,14 @@ module.exports = async (req, res) => {
     const blockContacts = await Contact.find({ userID: user._id, list: "BL" }).exec();
     const reverseContacts = await Contact.find({ contactID: user._id, list: "FL" }).exec();
 
-    const allowMembers = {
-        "Member": []
-    };
-
-    const blockMembers = {
-        "Member": []
-    };
-
-    const reverseMembers = {
-        "Member": []
-    };
+    const allowMembers = { "Member": [] };
+    const blockMembers = { "Member": [] };
+    const reverseMembers = { "Member": [] };
 
     for (const member of allowContacts) {
         const contact = await User.findById(member.contactID).exec();
-
         allowMembers["Member"].push({
-            "_attributes": {"xsi:type": "PassportMember"},
+            "_attributes": { "xsi:type": "PassportMember" },
             "MembershipId": "AL-" + contact.uuid,
             "Type": "Passport",
             "State": "Accepted",
@@ -102,15 +86,14 @@ module.exports = async (req, res) => {
             "PassportId": "0",
             "CID": formatDecimalCID(contact._id.toString()),
             "PassportChanges": "",
-            "LookedupByCID": "false",
+            "LookedupByCID": "false"
         });
     }
 
     for (const member of blockContacts) {
         const contact = await User.findById(member.contactID).exec();
-
         blockMembers["Member"].push({
-            "_attributes": {"xsi:type": "PassportMember"},
+            "_attributes": { "xsi:type": "PassportMember" },
             "MembershipId": "BL-" + contact.uuid,
             "Type": "Passport",
             "State": "Accepted",
@@ -124,15 +107,14 @@ module.exports = async (req, res) => {
             "PassportId": "0",
             "CID": formatDecimalCID(contact._id.toString()),
             "PassportChanges": "",
-            "LookedupByCID": "false",
+            "LookedupByCID": "false"
         });
     }
 
     for (const member of reverseContacts) {
         const contact = await User.findById(member.userID).exec();
-
         reverseMembers["Member"].push({
-            "_attributes": {"xsi:type": "PassportMember"},
+            "_attributes": { "xsi:type": "PassportMember" },
             "MembershipId": "RL-" + contact.uuid,
             "Type": "Passport",
             "State": "Accepted",
@@ -146,16 +128,47 @@ module.exports = async (req, res) => {
             "PassportId": "0",
             "CID": formatDecimalCID(contact._id.toString()),
             "PassportChanges": "",
-            "LookedupByCID": "false",
+            "LookedupByCID": "false"
         });
     }
 
-    const xmlAllow = json2xml(allowMembers, { compact: true, ignoreComment: true, spaces: 4 });
-    const xmlBlock = json2xml(blockMembers, { compact: true, ignoreComment: true, spaces: 4 });
-    const xmlReverse = json2xml(reverseMembers, { compact: true, ignoreComment: true, spaces: 4 });
+    const memberships = {
+        "Services": {
+            "Service": {
+                "Memberships": {
+                    "Membership": []
+                }
+            }
+        }
+    };
+    
+    if (allowMembers.Member.length > 0) {
+        memberships.Services.Service.Memberships.Membership.push({
+            "MemberRole": "Allow",
+            "Members": allowMembers,
+            "MembershipIsComplete": true
+        });
+    }
+    
+    if (blockMembers.Member.length > 0) {
+        memberships.Services.Service.Memberships.Membership.push({
+            "MemberRole": "Block",
+            "Members": blockMembers,
+            "MembershipIsComplete": true
+        });
+    }
+    
+    if (reverseMembers.Member.length > 0) {
+        memberships.Services.Service.Memberships.Membership.push({
+            "MemberRole": "Reverse",
+            "Members": reverseMembers,
+            "MembershipIsComplete": true
+        });
+    }    
+
+    const xmlMemberships = json2xml(memberships, { compact: true, ignoreComment: true, spaces: 4 });
 
     const template = fs.readFileSync('./services/soap/sharingservice/templates/FindMembershipResponse.xml', 'utf8');
-
     const compiledTemplate = Handlebars.compile(template);
 
     const formattedTemplate = compiledTemplate({
@@ -165,13 +178,11 @@ module.exports = async (req, res) => {
         now: moment().utc().format('YYYY-MM-DDTHH:mm:ss[Z]'),
         cid: formatDecimalCID(user._id.toString()),
         email: user.username + "@remsgr.net",
-        allowMembers: xmlAllow,
-        blockMembers: xmlBlock,
-        reverseMembers: xmlReverse
+        memberships: xmlMemberships
     });
 
     const formattedXML = xmlFormat.minify(formattedTemplate, { collapseContent: true });
 
     res.set('Content-Type', 'text/xml; charset=utf-8');
     res.send(formattedXML);
-}
+};

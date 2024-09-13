@@ -51,6 +51,9 @@ app.post('/createUniqueCode', createUniqueCode);
 
 // RST Auth
 app.post('/RST.srf', parseBodyMiddleware, rst);
+app.get('/RST.srf', (req, res) => {
+	res.status(405).send("Method Not Allowed");
+});
 
 // Config
 app.post("/Config/MsgrConfig.asmx", (req, res) => {
