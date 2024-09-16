@@ -80,6 +80,6 @@ module.exports = async (socket, args) => {
     chat.pending.push(email);
 
     socket.write(`CAL ${transactionID} RINGING ${socket.chat}\r\n`);
-    regularSocket.write(`RNG ${socket.chat} ${config.server.ip}:${config.server.switchboard_port} CKI ${sb_token} ${socket.passport} ${socket.friendly_name}${regularSocket.version >= 13 ? " U " + config.server.host : ""}\r\n`);
+    regularSocket.write(`RNG ${socket.chat} ${config.server.ip}:${config.server.switchboard_port} CKI ${sb_token} ${socket.passport} ${socket.friendly_name}${regularSocket.version >= 13 ? " U " + config.server.host : ""}${regularSocket.version >= 14 ? " 1" : ""}\r\n`);
     console.log(`${chalk.yellow.bold('[SB: CAL]')} ${socket.remoteAddress} has successfully called ${email}.`);
 }

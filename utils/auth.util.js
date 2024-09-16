@@ -244,6 +244,110 @@ class TWNAuth {
     }
 }
 
+class SSOAuth {
+    async login(socket, version, state, transactionID, passport, token) {
+        if (state === 'I') {
+            console.log(`${chalk.yellow.bold('[USR SSO INITIAL]')} ${passport} is trying to log in.`);
+
+            const random = crypto.randomBytes(48).toString('hex');
+            socket.write(`USR ${transactionID} SSO S MBI_KEY_OLD ${random.toString("base64")}\r\n`);
+
+            if (socket.version >= 13) {
+                const shields = `<Policies>
+	<Policy type="SHIELDS" checksum="D9705A71BA841CB38955822E048970C3"><config> <shield>\
+<cli maj="7" min="0" minbld="0" maxbld="9999" deny=" " /></shield> <block></block></config></Policy>
+	<Policy type="ABCH" checksum="03DC55910A9CB79133F1576221A80346"><policy><set id="push" service="ABCH" priority="200">\
+      <r id="pushstorage" threshold="180000" />    </set><set id="delaysup" service="ABCH" priority="150">\
+  <r id="whatsnew" threshold="1800000" />  <r id="whatsnew_storage_ABCH_delay" timer="1800000" />\
+  <r id="whatsnewt_link" threshold="900000" trigger="QueryActivities" /></set>  <c id="PROFILE_Rampup">100</c></policy></Policy>
+	<Policy type="ERRORRESPONSETABLE" checksum="6127EEDCE860F45C1692896F5248AF6F"><Policy> <Feature type="3" name="P2P">\
+  <Entry hr="0x81000398" action="3"/>  <Entry hr="0x82000020" action="3"/> </Feature> <Feature type="4">\
+  <Entry hr="0x81000440" /> </Feature> <Feature type="6" name="TURN">  <Entry hr="0x8007274C" action="3" />\
+  <Entry hr="0x82000020" action="3" />  <Entry hr="0x8007274A" action="3" /> </Feature></Policy></Policy>
+	<Policy type="P2P" checksum="815D4F1FF8E39A85F1F97C4B16C45177"><ObjStr SndDly="1" /></Policy>
+</Policies>`;
+
+                const encodedShields = Buffer.from(shields, 'utf-8');
+                const encodedShieldsFinal = encodedShields.toString().replace(/\n/g, '\r\n');
+                const encodedShieldsLength = encodedShieldsFinal.length;
+
+                socket.write(`GCF 0 ${encodedShieldsLength}\r\n${encodedShieldsFinal}`);
+            }
+
+        } else if (state === 'S') {
+            token = token.split('=')[1];
+            token = token.split('&')[0];
+            const decoded = await verifyJWT(token);
+
+            if (!decoded) {
+                console.log(`${chalk.yellow.bold('[USR TWN SUBSEQUENT]')} ${passport} has an invalid token.`);
+                socket.write(`911 ${transactionID}\r\n`);
+                socket.destroy();
+                return;
+            }
+
+            const email = passport.split('@');
+
+            if (email[1] !== 'remsgr.net' && email[1] !== 'hotmail.com') {
+                console.log(`${chalk.yellow.bold('[USR MD5 INITIAL]')} ${passport} has an invalid email domain.`);
+                socket.write(`911 ${transactionID}\r\n`);
+                socket.destroy();
+                return;
+            }
+
+            const user = await User.findOne({ username: email[0] });
+
+            if (!user) {
+                console.log(`${chalk.yellow.bold('[USR TWN SUBSEQUENT]')} ${passport} does not exist in the database.`);
+                socket.write(`911 ${transactionID}\r\n`);
+                socket.destroy();
+                return;
+            }
+
+            const existingSockets = getMultipleSocketsByPassport(passport);
+
+            existingSockets.forEach(existingSocketObj => {
+                if (existingSocketObj !== socket) {
+                    console.log(`${chalk.yellow.bold('[USR TWN SUBSEQUENT]')} ${passport} is already logged in, logging out old session.`);
+                    existingSocketObj.write('OUT\r\n');
+                    existingSocketObj.destroy();
+                }
+            });
+
+            socket.token = token;
+            socket.userID = user._id.toString();
+            socket.friendly_name = user.friendly_name;
+
+            user.last_login = new Date();
+            await user.save();
+
+            console.log(`${chalk.yellow.bold('[USR SSO SUBSEQUENT]')} ${passport} has successfully logged in.`);
+            if (version >= 10) {
+                socket.write(`USR ${transactionID} OK ${passport} 1 0\r\n`);
+
+                const [high, low] = uuidToHighLow(user.uuid);
+                const messageTemplate = `MIME-Version: 1.0\r\nContent-Type: text/x-msmsgsprofile; charset=UTF-8\r\nLoginTime: ${Math.floor(Date.now() / 1000)}\r\nEmailEnabled: 0\r\nMemberIdHigh: ${high}\r\nMemberIdLow: ${low}\r\nlang_preference: 0\r\npreferredEmail: \r\ncountry: \r\nPostalCode: \r\nGender: \r\nKid: 0\r\nAge: \r\nBDayPre: \r\nBirthday: \r\nWallet: \r\nFlags: 536872513\r\nsid: 507\r\nMSPAuth: ${token}\r\nClientIP: ${socket.remoteAddress.replace('::ffff:', '')}\r\nClientPort: ${socket.remotePort}\r\nABCHMigrated: 1\r\nMPOPEnabled: 0\r\nBetaInvites: 1\r\n\r\n`;
+                const messageLength = Buffer.byteLength(messageTemplate, 'utf8');
+                const finalMessage = `MSG Hotmail Hotmail ${messageLength}\r\n` + messageTemplate;
+
+                if (socket.version >= 11) {
+                    socket.write(`SBS 0 null\r\n`);
+                }
+                socket.write(finalMessage);
+            } else {
+                socket.write(`USR ${transactionID} OK ${passport} ${socket.friendly_name} 1 0\r\n`);
+
+                const [high, low] = uuidToHighLow(user.uuid);
+                const messageTemplate = `MIME-Version: 1.0\r\nContent-Type: text/x-msmsgsprofile; charset=UTF-8\r\nLoginTime: ${Math.floor(Date.now() / 1000)}\r\nEmailEnabled: 0\r\nMemberIdHigh: ${high}\r\nMemberIdLow: ${low}\r\nlang_preference: 0\r\npreferredEmail: \r\ncountry: \r\nPostalCode: \r\nGender: \r\nKid: 0\r\nAge: \r\nBDayPre: \r\nBirthday: \r\nWallet: \r\nFlags: 536872513\r\nsid: 507\r\nMSPAuth: ${token}\r\nClientIP: ${socket.remoteAddress.replace('::ffff:', '')}\r\nClientPort: ${socket.remotePort}\r\nABCHMigrated: 1\r\nMPOPEnabled: 0\r\n\r\n`;
+                const messageLength = Buffer.byteLength(messageTemplate, 'utf8');
+                const finalMessage = `MSG Hotmail Hotmail ${messageLength}\r\n` + messageTemplate;
+
+                socket.write(finalMessage);
+            }
+        }
+    }
+}
+
 function uuidToHighLow(uuid) {
     const parsedUuid = uuidParse(uuid);
     const high = (parsedUuid[0] << 24) | (parsedUuid[1] << 16) | (parsedUuid[2] << 8) | parsedUuid[3];
@@ -323,6 +427,7 @@ async function logOut(socket) {
 module.exports = {
     MD5Auth: new MD5Auth(),
     TWNAuth: new TWNAuth(),
+    SSOAuth: new SSOAuth(),
     uuidToHighLow,
     formatPUID,
     formatDecimalCID,

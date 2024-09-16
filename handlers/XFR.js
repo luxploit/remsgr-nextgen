@@ -31,5 +31,5 @@ module.exports = (socket, args) => {
         sb_token = socket.sb_token;
     }
 
-    socket.write(`XFR ${transactionID} SB ${config.server.ip}:${config.server.switchboard_port} CKI ${sb_token}${socket.version >= 13 ? " U " + config.server.host : ""}\r\n`);
+    socket.write(`XFR ${transactionID} SB ${config.server.ip}:${config.server.switchboard_port} CKI ${sb_token}${socket.version >= 13 ? " U " + config.server.host : ""}${socket.version >= 14 ? " 1" : ""}\r\n`);
 }

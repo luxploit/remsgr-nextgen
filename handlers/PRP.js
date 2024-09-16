@@ -61,7 +61,7 @@ module.exports = async (socket, args) => {
             }
 
             if (contactSocket.version >= 8) {
-                contactSocket.write(`NLN ${socket.status} ${socket.passport} ${socket.friendly_name} ${socket.capabilities}${socket.version >= 9 ? " " + socket.msnobjectpfp : ""}\r\n`);
+                contactSocket.write(`NLN ${socket.status} ${socket.passport} ${contactSocket.version >= 14 ? "1 " : ""}${socket.friendly_name} ${socket.capabilities}${contactSocket.version >= 9 ? " " + socket.msnobjectpfp : ""}\r\n`);
             } else {
                 contactSocket.write(`NLN ${socket.status} ${socket.passport} ${socket.friendly_name}\r\n`);
             }

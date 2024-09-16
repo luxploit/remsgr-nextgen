@@ -66,7 +66,7 @@ module.exports = async (socket, args, command) => {
             contactSocket.write(`FLN ${user.username + "@remsgr.net"}\r\n`);
         } else {
             if (contactSocket.version >= 8) {
-                contactSocket.write(`NLN ${status} ${user.username + "@remsgr.net"} ${user.friendly_name} ${capabilities}${socket.version >= 9 ? " " + msnobjectpfp : ""}\r\n`);
+                contactSocket.write(`NLN ${status} ${user.username + "@remsgr.net"} ${contactSocket.version >= 14 ? "1 " : ""}${user.friendly_name} ${capabilities}${contactSocket.version >= 9 ? " " + msnobjectpfp : ""}\r\n`);
             } else {
                 contactSocket.write(`NLN ${status} ${user.username + "@remsgr.net"} ${user.friendly_name}\r\n`);
             }
@@ -99,7 +99,7 @@ module.exports = async (socket, args, command) => {
             }
 
             if (socket.version >= 8) {
-                socket.write(`ILN ${transactionID} ${contactSocket.status} ${contactSocket.passport} ${contactSocket.friendly_name} ${contactSocket.capabilities}${socket.version >= 9 ? " " + contactSocket.msnobjectpfp : ""}\r\n`);
+                socket.write(`ILN ${transactionID} ${contactSocket.status} ${contactSocket.passport} ${socket.version >= 14 ? "1 " : ""}${contactSocket.friendly_name} ${contactSocket.capabilities}${socket.version >= 9 ? " " + contactSocket.msnobjectpfp : ""}\r\n`);
                 if (socket.version >= 11) {
                     if (contactSocket.customStatus) {
                         const payload = contactSocket.customStatus;

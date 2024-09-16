@@ -1,5 +1,5 @@
 const chalk = require('chalk');
-const listsInt = require('../data/lists');
+const { lists : listsInt } = require('../data/lists');
 const { verifyJWT } = require('../utils/auth.util');
 const Contact = require('../models/Contact');
 const User = require('../models/User');
