@@ -123,7 +123,7 @@ module.exports = async (socket, args, command) => {
                 return;
             }
 
-            contactSocket.write(`FLN ${socket.passport}\r\n`);
+            contactSocket.write(`FLN ${socket.passport}${contactSocket.version >= 14 ? " 1" : ""}\r\n`);
         }
     } else {
         console.log(`${chalk.red.bold('[REM]')} ${socket.passport} attempted to remove a contact from an invalid list. (${list})`);

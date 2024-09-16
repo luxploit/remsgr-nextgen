@@ -185,7 +185,7 @@ class TWNAuth {
             const email = passport.split('@');
 
             if (email[1] !== 'remsgr.net' && email[1] !== 'hotmail.com') {
-                console.log(`${chalk.yellow.bold('[USR MD5 INITIAL]')} ${passport} has an invalid email domain.`);
+                console.log(`${chalk.yellow.bold('[USR TWN INITIAL]')} ${passport} has an invalid email domain.`);
                 socket.write(`911 ${transactionID}\r\n`);
                 socket.destroy();
                 return;
@@ -280,7 +280,7 @@ class SSOAuth {
             const decoded = await verifyJWT(token);
 
             if (!decoded) {
-                console.log(`${chalk.yellow.bold('[USR TWN SUBSEQUENT]')} ${passport} has an invalid token.`);
+                console.log(`${chalk.yellow.bold('[USR SSO SUBSEQUENT]')} ${passport} has an invalid token.`);
                 socket.write(`911 ${transactionID}\r\n`);
                 socket.destroy();
                 return;
@@ -289,7 +289,7 @@ class SSOAuth {
             const email = passport.split('@');
 
             if (email[1] !== 'remsgr.net' && email[1] !== 'hotmail.com') {
-                console.log(`${chalk.yellow.bold('[USR MD5 INITIAL]')} ${passport} has an invalid email domain.`);
+                console.log(`${chalk.yellow.bold('[USR SSO INITIAL]')} ${passport} has an invalid email domain.`);
                 socket.write(`911 ${transactionID}\r\n`);
                 socket.destroy();
                 return;
@@ -298,7 +298,7 @@ class SSOAuth {
             const user = await User.findOne({ username: email[0] });
 
             if (!user) {
-                console.log(`${chalk.yellow.bold('[USR TWN SUBSEQUENT]')} ${passport} does not exist in the database.`);
+                console.log(`${chalk.yellow.bold('[USR SSO SUBSEQUENT]')} ${passport} does not exist in the database.`);
                 socket.write(`911 ${transactionID}\r\n`);
                 socket.destroy();
                 return;
@@ -308,7 +308,7 @@ class SSOAuth {
 
             existingSockets.forEach(existingSocketObj => {
                 if (existingSocketObj !== socket) {
-                    console.log(`${chalk.yellow.bold('[USR TWN SUBSEQUENT]')} ${passport} is already logged in, logging out old session.`);
+                    console.log(`${chalk.yellow.bold('[USR SSO SUBSEQUENT]')} ${passport} is already logged in, logging out old session.`);
                     existingSocketObj.write('OUT\r\n');
                     existingSocketObj.destroy();
                 }
@@ -414,7 +414,7 @@ async function logOut(socket) {
             const contactContacts = await Contact.find({ userID: contact.contactID, contactID: socket.userID, list: 'FL' });
 
             if (contactContacts.length > 0) {
-                contactSocket.write(`FLN ${socket.passport}\r\n`);
+                contactSocket.write(`FLN ${socket.passport}${contactSocket.version >= 14 ? " 1" : ""}\r\n`);
             }
         }
     } catch (err) {

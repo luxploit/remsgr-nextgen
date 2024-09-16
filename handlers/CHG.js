@@ -63,7 +63,7 @@ module.exports = async (socket, args, command) => {
         }
 
         if (status === 'HDN') {
-            contactSocket.write(`FLN ${user.username + "@remsgr.net"}\r\n`);
+            contactSocket.write(`FLN ${user.username + "@remsgr.net"}${contactSocket.version >= 14 ? " 1" : ""}\r\n`);
         } else {
             if (contactSocket.version >= 8) {
                 contactSocket.write(`NLN ${status} ${user.username + "@remsgr.net"} ${contactSocket.version >= 14 ? "1 " : ""}${user.friendly_name} ${capabilities}${contactSocket.version >= 9 ? " " + msnobjectpfp : ""}\r\n`);
