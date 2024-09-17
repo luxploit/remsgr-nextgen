@@ -1,4 +1,5 @@
 const supportedVersions = [
+    'MSNP18',
     'MSNP15',
     'MSNP14',
     'MSNP13',

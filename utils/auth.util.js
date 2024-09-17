@@ -334,6 +334,10 @@ class SSOAuth {
                     socket.write(`SBS 0 null\r\n`);
                 }
                 socket.write(finalMessage);
+                
+                if (version >= 16) {
+                    socket.write(`UBX 1:${passport} 0\r\n`);
+                }
             } else {
                 socket.write(`USR ${transactionID} OK ${passport} ${socket.friendly_name} 1 0\r\n`);
 

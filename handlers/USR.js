@@ -32,9 +32,9 @@ module.exports = async (socket, args) => {
         }
     }
 
-    // else if (scheme === 'SHA') {
-    //     socket.write(`USR ${transactionID} OK ${socket.passport} 0 0\r\n`);
-    // }
+    else if (scheme === 'SHA') {
+        socket.write(`USR ${transactionID} OK ${socket.passport} 1 0\r\n`);
+    }
 
     else if (scheme === 'MD5') {
         if (state === 'I') {

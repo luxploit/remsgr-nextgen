@@ -40,6 +40,7 @@ app.use("/static", express.static('public'));
 
 const { pprdr, twnAuth, createAccount, createAccountPage, createUniqueCode } = require('./services/authentication/tweener');
 const { parseBodyMiddleware, rst } = require('./services/authentication/rst');
+const { rst2 } = require('./services/authentication/rst2');
 
 // Tweener Auth
 app.get('/rdr/pprdr.asp', pprdr);
@@ -51,6 +52,7 @@ app.post('/createUniqueCode', createUniqueCode);
 
 // RST Auth
 app.post('/RST.srf', parseBodyMiddleware, rst);
+app.post('/RST2.srf', parseBodyMiddleware, rst2);
 app.get('/RST.srf', (req, res) => {
 	res.status(405).send("Method Not Allowed");
 });
