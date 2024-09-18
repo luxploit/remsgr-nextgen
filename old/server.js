@@ -99,9 +99,9 @@ app.get('/RST.srf', (req, res) => {
 // 	res.status(404).send()
 // })
 
-app.get('/games/list', (req, res) => {
-	res.send('Games are not currently supported.')
-})
+// app.get('/games/list', (req, res) => {
+// 	res.send('Games are not currently supported.')
+// })
 
 app.get('/msn/bannersads', (req, res) => {
 	if (config.ads.enabled) {
