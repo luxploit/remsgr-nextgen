@@ -11,6 +11,8 @@ import { Get } from '../azureflare/core/endpoint'
 import { FlareRequest, FlareResponse } from '../azureflare/extension/types'
 import { ConfigRouter } from './routes/config/+router'
 import { StorageServiceRouter } from './routes/storageservice/+router'
+import { GamesRouter } from './routes/games/+router'
+import { MsnRouter } from './routes/msn/+router'
 
 class TestHbs extends Controller {
 	@Get('/test')
@@ -40,6 +42,8 @@ export const webServer = () => {
 	app.useRouters([
 		{ path: '/Config', router: ConfigRouter },
 		{ path: '/storageservice', router: StorageServiceRouter },
+		{ path: '/games', router: GamesRouter },
+		{ path: '/msn', router: MsnRouter },
 	])
 
 	app.build().listen(4200, () => logging.info('web server successfully initialized'))

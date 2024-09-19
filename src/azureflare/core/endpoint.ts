@@ -2,7 +2,7 @@ import 'reflect-metadata'
 
 const endpointKey = Symbol('endpoint')
 
-type EndpointVerb = 'get' | 'post' | 'put' | 'delete'
+type EndpointVerb = 'get' | 'post' | 'put' | 'delete' | 'patch'
 
 interface EndpointMetadata {
 	url: string
@@ -32,6 +32,10 @@ export const Put = (url: string): MethodDecorator => {
 
 export const Delete = (url: string): MethodDecorator => {
 	return defineEndpointDecorator(url, 'delete')
+}
+
+export const Patch = (url: string): MethodDecorator => {
+	return defineEndpointDecorator(url, 'patch')
 }
 
 export const getRoutes = (instance: any): Array<EndpointMetadata> => {

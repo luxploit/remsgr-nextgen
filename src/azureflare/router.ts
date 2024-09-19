@@ -8,14 +8,13 @@ import { FlareExpressApp, FlareExpressRouter } from './extension/types'
 export class FlareRouter {
 	private readonly router: FlareExpressRouter
 	private middlewares: RequestHandler[] = []
-	private auth?: AuthorizationProvider
 
 	constructor(private readonly app: FlareExpressApp) {
 		this.router = Router()
 	}
 
 	useAuthorization(auth: AuthorizationProvider): this {
-		this.auth = auth
+		this.router.auth = auth
 		return this
 	}
 

@@ -103,16 +103,16 @@ app.get('/RST.srf', (req, res) => {
 // 	res.send('Games are not currently supported.')
 // })
 
-app.get('/msn/bannersads', (req, res) => {
-	if (config.ads.enabled) {
-		const ad = config.ads.ad_list[Math.floor(Math.random() * config.ads.ad_list.length)]
-		const template = fs.readFileSync('./templates/ads/MSNAd.html', 'utf8')
-		const modified = template.replace(/{{ ad_url }}/g, ad.url).replace(/{{ ad_img }}/g, ad.image)
-		res.send(modified)
-	} else {
-		res.send('')
-	}
-})
+// app.get('/msn/bannersads', (req, res) => {
+// 	if (config.ads.enabled) {
+// 		const ad = config.ads.ad_list[Math.floor(Math.random() * config.ads.ad_list.length)]
+// 		const template = fs.readFileSync('./templates/ads/MSNAd.html', 'utf8')
+// 		const modified = template.replace(/{{ ad_url }}/g, ad.url).replace(/{{ ad_img }}/g, ad.image)
+// 		res.send(modified)
+// 	} else {
+// 		res.send('')
+// 	}
+// })
 
 if (process.env.DEBUG === 'true') {
 	// THIS SHOULD NOT BE MADE PUBLIC IN A PRODUCTION ENVIRONMENT, IT IS FOR DEBUGGING PURPOSES ONLY AND CAN CONTAINS SENSITIVE INFORMATION ABOUT USERS

@@ -47,13 +47,14 @@ export class FlareApp {
 		return this
 	}
 
-	useRouter(path: string, router: Router): this {
-		this.app.use(path, router)
+	useRouter(path: string, router: (app: FlareExpressApp) => Router): this {
+		console.log('registering httpRouter', path)
+		this.app.use(path, router(this.app))
 		return this
 	}
 
 	useRouters(routers: { path: string; router: (app: FlareExpressApp) => Router }[]): this {
-		routers.forEach((router) => this.app.use(router.path, router.router(this.app)))
+		routers.forEach((router) => this.useRouter(router.path, router.router))
 		return this
 	}
 

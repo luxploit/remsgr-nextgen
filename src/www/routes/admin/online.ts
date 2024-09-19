@@ -2,9 +2,7 @@ import { Controller } from '../../../azureflare/core/controller'
 import { Get } from '../../../azureflare/core/endpoint'
 import { FlareRequest, FlareResponse } from '../../../azureflare/extension/types'
 
-export class GamesListController extends Controller {
-	@Get('/list')
-	gamesList(req: FlareRequest, res: FlareResponse) {
-		res.send('Games are not currently supported.')
-	}
+export class OnlineController extends Controller {
+	@Get('/online')
+	schemaStore(req: FlareRequest, res: FlareResponse) {}
 }

@@ -38,6 +38,8 @@ export abstract class Controller {
 						;(this as any)[route.methodName](request, response)
 					}
 				)
+
+				console.log('registering router route', route.verb, route.url, route.methodName)
 			} else {
 				app[route.verb](
 					route.url,
@@ -46,6 +48,8 @@ export abstract class Controller {
 						;(this as any)[route.methodName](request, response)
 					}
 				)
+
+				console.log('registering global route', route.verb, route.url, route.methodName)
 			}
 		})
 	}
