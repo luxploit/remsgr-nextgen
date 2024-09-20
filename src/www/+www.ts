@@ -1,23 +1,20 @@
 import cookieParser from 'cookie-parser'
 import cors from 'cors'
 
-import { FlareApp } from '../azureflare/app'
+import { FlareApp, FlareController, FlareRequest, FlareResponse, Get } from '@lxpt/azureflare'
 import { json, urlencoded } from 'express'
 import { engine } from 'express-handlebars'
 import { logging } from './extensions/logging'
 
-import { Controller } from '../azureflare/core/controller'
-import { Get } from '../azureflare/core/endpoint'
-import { FlareRequest, FlareResponse } from '../azureflare/extension/types'
 import { ConfigRouter } from './routes/config/+router'
 import { StorageServiceRouter } from './routes/storageservice/+router'
 import { GamesRouter } from './routes/games/+router'
 import { MsnRouter } from './routes/msn/+router'
 
-class TestHbs extends Controller {
+class TestHbs extends FlareController {
 	@Get('/test')
 	GetTestHbs(_: FlareRequest, response: FlareResponse) {
-		response.render('test.hbs', { world: 'STINKY!' })
+		response.render('test.hbs', { world: 'sSTINKY!' })
 	}
 }
 

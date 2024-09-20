@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@lxpt/azureflare':
+        specifier: ^0.1.6
+        version: 0.1.6
       '@types/cookie-parser':
         specifier: ^1.4.7
         version: 1.4.7
@@ -236,6 +239,9 @@ packages:
   '@isaacs/cliui@8.0.2':
     resolution: {integrity: sha512-O8jcjabXaleOG9DQ0+ARXWZBTfnP4WNAqzuiJK7ll44AmxGKv/J2M4TPjxjY3znBCfvBXFzucm1twdyFybFqEA==}
     engines: {node: '>=12'}
+
+  '@lxpt/azureflare@0.1.6':
+    resolution: {integrity: sha512-IICk5sitalB3GSVD9ksJnuO26Wyz2BAyuTE2ocQvMStaYEyaUK6sXXNRGld/25hzdp46Zax1R+KNUVz7SMJySA==}
 
   '@mapbox/node-pre-gyp@1.0.11':
     resolution: {integrity: sha512-Yhlar6v9WQgUp/He7BdgzOz8lqMQ8sU+jkCq7Wx8Myc5YFJLbEe7lgui/V7G1qB1DJykHSGwreceSaD60Y0PUQ==}
@@ -1274,6 +1280,14 @@ snapshots:
       strip-ansi-cjs: strip-ansi@6.0.1
       wrap-ansi: 8.1.0
       wrap-ansi-cjs: wrap-ansi@7.0.0
+
+  '@lxpt/azureflare@0.1.6':
+    dependencies:
+      express: 4.21.0
+      reflect-metadata: 0.2.2
+      typescript: 5.6.2
+    transitivePeerDependencies:
+      - supports-color
 
   '@mapbox/node-pre-gyp@1.0.11':
     dependencies:

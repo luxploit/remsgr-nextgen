@@ -1,8 +1,6 @@
-import { Controller } from '../../../azureflare/core/controller'
-import { Post } from '../../../azureflare/core/endpoint'
-import { FlareRequest, FlareResponse } from '../../../azureflare/extension/types'
+import { FlareController, FlareRequest, FlareResponse, Post } from '@lxpt/azureflare'
 
-export class SchematizedStoreController extends Controller {
+export class SchematizedStoreController extends FlareController {
 	@Post('/SchematizedStore.asmx')
 	schemaStore(req: FlareRequest, res: FlareResponse) {
 		res.status(404).send()

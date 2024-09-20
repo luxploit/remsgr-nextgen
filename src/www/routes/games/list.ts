@@ -1,8 +1,6 @@
-import { Controller } from '../../../azureflare/core/controller'
-import { Get } from '../../../azureflare/core/endpoint'
-import { FlareRequest, FlareResponse } from '../../../azureflare/extension/types'
+import { FlareController, FlareRequest, FlareResponse, Get } from '@lxpt/azureflare'
 
-export class GamesListController extends Controller {
+export class GamesListController extends FlareController {
 	@Get('/list')
 	gamesList(req: FlareRequest, res: FlareResponse) {
 		res.send('Games are not currently supported.')

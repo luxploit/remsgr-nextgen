@@ -1,5 +1,4 @@
-import { FlareExpressApp } from '../../../azureflare/extension/types'
-import { createFlareRouter } from '../../../azureflare/router'
+import { FlareExpressApp, createFlareRouter } from '@lxpt/azureflare'
 import { SchematizedStoreController } from './schematized_store'
 
 export const StorageServiceRouter = createFlareRouter((router) => {

@@ -1,5 +1,4 @@
-import { FlareExpressApp } from '../../../azureflare/extension/types'
-import { createFlareRouter } from '../../../azureflare/router'
+import { createFlareRouter } from '@lxpt/azureflare'
 import { MsgrConfigController } from './msgr_config'
 
 export const ConfigRouter = createFlareRouter((router) => {

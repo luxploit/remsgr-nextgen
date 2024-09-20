@@ -1,10 +1,7 @@
-import { Controller } from '../../../azureflare/core/controller'
-import { Get } from '../../../azureflare/core/endpoint'
-import { FlareRequest, FlareResponse } from '../../../azureflare/extension/types'
+import { FlareController, FlareRequest, FlareResponse, Get } from '@lxpt/azureflare'
+import { jsonConfig } from '../../../utils/config'
 
-import jsonConfig from '../../../../config.json'
-
-export class BannerAdsController extends Controller {
+export class BannerAdsController extends FlareController {
 	@Get('/bannersads')
 	bannerAd(req: FlareRequest, res: FlareResponse) {
 		if (!jsonConfig.ads.enabled) {

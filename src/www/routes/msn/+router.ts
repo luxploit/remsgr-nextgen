@@ -1,5 +1,4 @@
-import { FlareExpressApp } from '../../../azureflare/extension/types'
-import { createFlareRouter } from '../../../azureflare/router'
+import { createFlareRouter } from '@lxpt/azureflare'
 import { BannerAdsController } from './banner_ads'
 
 export const MsnRouter = createFlareRouter((router) => {

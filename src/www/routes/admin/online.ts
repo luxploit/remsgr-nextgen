@@ -1,8 +1,6 @@
-import { Controller } from '../../../azureflare/core/controller'
-import { Get } from '../../../azureflare/core/endpoint'
-import { FlareRequest, FlareResponse } from '../../../azureflare/extension/types'
+import { FlareController, FlareRequest, FlareResponse, Get } from '@lxpt/azureflare'
 
-export class OnlineController extends Controller {
+export class OnlineController extends FlareController {
 	@Get('/online')
 	schemaStore(req: FlareRequest, res: FlareResponse) {}
 }

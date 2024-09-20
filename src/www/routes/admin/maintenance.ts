@@ -1,8 +1,6 @@
-import { Controller } from '../../../azureflare/core/controller'
-import { Patch } from '../../../azureflare/core/endpoint'
-import { FlareRequest, FlareResponse } from '../../../azureflare/extension/types'
+import { FlareController, FlareRequest, FlareResponse, Patch } from '@lxpt/azureflare'
 
-export class MaintenanceController extends Controller {
+export class MaintenanceController extends FlareController {
 	@Patch('/maintenance')
 	schemaStore(req: FlareRequest, res: FlareResponse) {
 		res.status(404).send()
