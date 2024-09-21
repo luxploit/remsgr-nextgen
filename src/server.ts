@@ -8,6 +8,7 @@ import { config } from 'dotenv'
 
 const main = () => {
 	config()
+
 	const gitInfo = parseGitInfo(getGitinfo())
 
 	console.log(chalk.magenta(`remsgr server | ${gitInfo}`))

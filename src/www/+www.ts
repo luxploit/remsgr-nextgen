@@ -10,6 +10,7 @@ import { ConfigRouter } from './routes/config/+router'
 import { StorageServiceRouter } from './routes/storageservice/+router'
 import { GamesRouter } from './routes/games/+router'
 import { MsnRouter } from './routes/msn/+router'
+import { webPath } from '../utils/config'
 
 class TestHbs extends FlareController {
 	@Get('/test')
@@ -21,18 +22,20 @@ class TestHbs extends FlareController {
 export const webServer = () => {
 	const app = new FlareApp()
 
+	//console.log(__dirname, webPath)
+
 	app.useSettings('etag').set(false)
 	app.useMiddlewares([cookieParser(), cors(), json(), urlencoded({ extended: false })])
-	app.usePublic('/static', './src/www/public')
+	app.usePublic('/static', `${webPath}/public`)
 
 	app.useViewEngine(
 		'hbs',
 		engine({
 			extname: '.hbs',
 			defaultLayout: false,
-			partialsDir: './src/www/templates',
+			partialsDir: `${webPath}/templates`,
 		}),
-		'./src/www/templates'
+		`${webPath}/templates`
 	)
 
 	app.useController(new TestHbs())
