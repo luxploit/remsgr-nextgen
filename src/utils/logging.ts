@@ -1,7 +1,7 @@
-import chalk, { ChalkInstance } from 'chalk'
+import chalk, { Chalk } from 'chalk'
 
 export class Logger {
-	log(color: ChalkInstance, prefix: string, msg: string, ...optionals: any[]) {
+	log(color: Chalk, prefix: string, msg: string, ...optionals: any[]) {
 		console.log(color(`[${new Date().toLocaleTimeString()}]`, `[${prefix}]`, msg, optionals))
 	}
 

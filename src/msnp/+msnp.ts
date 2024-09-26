@@ -1,5 +1,5 @@
-import { logging } from './extensions/logging'
+import { notificationServer } from './handlers/notification/+notification'
 
 export const msnpServer = () => {
-	logging.info('msnp server successfully initialized')
+	notificationServer()
 }

@@ -11,6 +11,8 @@ import { StorageServiceRouter } from './routes/storageservice/+router'
 import { GamesRouter } from './routes/games/+router'
 import { MsnRouter } from './routes/msn/+router'
 import { webPath } from '../utils/config'
+import { AdminRouter } from './routes/admin/+router'
+import { DebugRouter } from './routes/debug/+router'
 
 class TestHbs extends FlareController {
 	@Get('/test')
@@ -40,7 +42,9 @@ export const webServer = () => {
 
 	app.useController(new TestHbs())
 	app.useRouters([
-		{ path: '/Config', router: ConfigRouter },
+		{ path: '/admin', router: AdminRouter },
+		{ path: '/config', router: ConfigRouter },
+		{ path: '/debug', router: DebugRouter },
 		{ path: '/storageservice', router: StorageServiceRouter },
 		{ path: '/games', router: GamesRouter },
 		{ path: '/msn', router: MsnRouter },

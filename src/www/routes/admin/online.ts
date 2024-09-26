@@ -2,5 +2,5 @@ import { FlareController, FlareRequest, FlareResponse, Get } from '@lxpt/azurefl
 
 export class OnlineController extends FlareController {
 	@Get('/online')
-	schemaStore(req: FlareRequest, res: FlareResponse) {}
+	onlineUsers(req: FlareRequest, res: FlareResponse) {}
 }

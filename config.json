@@ -2,8 +2,8 @@
 	"server": {
 		"secret": "defaultsecret_CHANGETHISASAP",
 		"environment": "alpha",
-		"host": "192.168.1.62",
-		"ip": "192.168.1.62",
+		"host": "localhost:4200",
+		"ip": "127.0.0.1",
 		"notification_port": 1863,
 		"switchboard_port": 1864,
 		"http_port": 80,
@@ -15,11 +15,11 @@
 		"ad_list": [
 			{
 				"url": "https://remsgr.net",
-				"image": "https://192.168.1.62/static/ad_images/xirk.png"
+				"image": "xirk.png"
 			},
 			{
 				"url": "https://remsgr.net",
-				"image": "https://192.168.1.62/static/ad_images/brat.png"
+				"image": "brat.png"
 			}
 		]
 	}

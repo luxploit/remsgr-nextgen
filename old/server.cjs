@@ -124,15 +124,15 @@ if (process.env.DEBUG === 'true') {
 		res.json(switchboard_chats)
 	})
 
-	app.get('/send', (req, res) => {
-		const template = `MIME-Version: 1.0\r\nContent-Type: application/x-msmsgssystemmessage\r\n\r\nType: 1\r\nArg1: 10\r\n`
-		const templateLength = Buffer.byteLength(template, 'utf8')
-		for (const socket of sockets) {
-			socket.write(`MSG Hotmail Hotmail ${templateLength}\r\n${template}`)
-		}
+	// app.get('/send', (req, res) => {
+	// 	const template = `MIME-Version: 1.0\r\nContent-Type: application/x-msmsgssystemmessage\r\n\r\nType: 1\r\nArg1: 10\r\n`
+	// 	const templateLength = Buffer.byteLength(template, 'utf8')
+	// 	for (const socket of sockets) {
+	// 		socket.write(`MSG Hotmail Hotmail ${templateLength}\r\n${template}`)
+	// 	}
 
-		res.json({ success: true })
-	})
+	// 	res.json({ success: true })
+	// })
 }
 
 app.get('/online', (req, res) => {

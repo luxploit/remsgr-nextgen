@@ -2,7 +2,7 @@ import { FlareController, FlareRequest, FlareResponse, Patch } from '@lxpt/azure
 
 export class MaintenanceController extends FlareController {
 	@Patch('/maintenance')
-	schemaStore(req: FlareRequest, res: FlareResponse) {
-		res.status(404).send()
+	sendMaintenance(req: FlareRequest, res: FlareResponse) {
+		const time = parseInt(req.query['t'] as string, 10)
 	}
 }

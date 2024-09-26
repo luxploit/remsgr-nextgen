@@ -10,6 +10,10 @@ export class BannerAdsController extends FlareController {
 
 		const ad = jsonConfig.ads.ad_list[Math.floor(Math.random() * jsonConfig.ads.ad_list.length)]
 
-		res.renderXml!('msn/bannerad.hbs', { ad_url: ad.url, ad_img: ad.image })
+		res.render('msn/bannerad.hbs', {
+			host: jsonConfig.server.host,
+			ad_url: ad.url,
+			ad_img: ad.image,
+		})
 	}
 }

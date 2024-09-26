@@ -1,7 +1,6 @@
 {
-	"name": "msn-server",
-	"version": "1.0.0",
-	"description": "",
+	"name": "@remessenger/livepulse",
+	"version": "2.0.0",
 	"main": "server/server.js",
 	"source": "src/server.ts",
 	"targets": {
@@ -24,8 +23,7 @@
 		"preprod": "pnpm install",
 		"prod": "node ./server.js"
 	},
-	"keywords": [],
-	"author": "",
+	"author": "The ReMessenger Project",
 	"license": "MIT",
 	"dependencies": {
 		"@lxpt/azureflare": "^0.1.10",
