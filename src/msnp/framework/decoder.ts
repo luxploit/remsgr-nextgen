@@ -74,20 +74,10 @@ export const getCommand = (data: Buffer, prevResults?: MSNPCommand[]): MSNPComma
 	}
 
 	const result: MSNPCommand = { Command: command, TrId: trId, Args: args, Payload: payload }
+	const prev = prevResults ? [...prevResults, result] : [result]
 	if (payload.length === 0 && data.subarray(endIndex + 2).length > 0) {
-		let prev: MSNPCommand[] = []
-		if (prevResults) {
-			prev = [...prevResults, result]
-		} else {
-			prev = [result]
-		}
-
 		return getCommand(data.subarray(endIndex + 2), prev)
 	}
 
-	if (prevResults) {
-		return [...prevResults, result]
-	}
-
-	return [result]
+	return prev
 }

@@ -1,6 +1,7 @@
 import chalk from 'chalk'
 import { Logger } from '../../utils/logging'
 import { PulseClient } from './client'
+import { cliArgs } from '../../utils/config'
 
 export class PulseUser extends Logger {
 	constructor(private client: PulseClient) {
@@ -8,36 +9,40 @@ export class PulseUser extends Logger {
 	}
 
 	info(msg: string, ...optionals: any[]) {
-		super.info(`[HOST: ${this.client.Session.Notification?.remoteAddress}]`, msg, optionals)
+		super.info(`[HOST ${this.client.Session.Notification?.remoteAddress}]`, msg, ...optionals)
 	}
 
 	warn(msg: string, ...optionals: any[]) {
-		super.warn(`[HOST: ${this.client.Session.Notification?.remoteAddress}]`, msg, optionals)
+		super.warn(`[HOST ${this.client.Session.Notification?.remoteAddress}]`, msg, ...optionals)
 	}
 
 	error(msg: string, ...optionals: any[]) {
-		super.error(`[HOST: ${this.client.Session.Notification?.remoteAddress}]`, msg, optionals)
+		super.error(`[HOST ${this.client.Session.Notification?.remoteAddress}]`, msg, ...optionals)
 	}
 
 	nsDebug(handler: string, msg: string, ...optionals: any[]) {
+		if (!cliArgs.dev) return
+
 		this.log(
 			chalk.hex('#371F76') /* Meteorite Purple */,
 			'nsDebug',
-			`[HOST: ${this.client.Session.Notification?.remoteAddress}]`,
+			`[HOST ${this.client.Session.Notification?.remoteAddress}]`,
 			`[${handler}]`,
 			msg,
-			optionals
+			...optionals
 		)
 	}
 
 	sbDebug(handler: string, msg: string, ...optionals: any[]) {
+		if (!cliArgs.dev) return
+
 		this.log(
 			chalk.hex('#007fff') /* Azure Blue */,
 			'sbDebug',
 			`[HOST: ${this.client.Session.Notification?.remoteAddress}]`,
 			`[${handler}]`,
 			msg,
-			optionals
+			...optionals
 		)
 	}
 }

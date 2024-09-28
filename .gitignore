@@ -135,3 +135,4 @@ dist
 .pnp.*
 
 server/
+src/config/config.*.ts

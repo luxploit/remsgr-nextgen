@@ -10,7 +10,6 @@ import { ConfigRouter } from './routes/config/+router'
 import { StorageServiceRouter } from './routes/storageservice/+router'
 import { GamesRouter } from './routes/games/+router'
 import { MsnRouter } from './routes/msn/+router'
-import { webPath } from '../utils/config'
 import { AdminRouter } from './routes/admin/+router'
 import { DebugRouter } from './routes/debug/+router'
 
@@ -23,8 +22,7 @@ class TestHbs extends FlareController {
 
 export const webServer = () => {
 	const app = new FlareApp()
-
-	//console.log(__dirname, webPath)
+	const webPath = './src/www'
 
 	app.useSettings('etag').set(false)
 	app.useMiddlewares([cookieParser(), cors(), json(), urlencoded({ extended: false })])

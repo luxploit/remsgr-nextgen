@@ -9,6 +9,6 @@ export class MsgrConfigController extends FlareController {
 
 	@Get('/MsgrConfig.asmx')
 	xmlConfig(req: FlareRequest, res: FlareResponse) {
-		res.renderXml!('config/partials/config.hbs', { host: jsonConfig.server.host })
+		res.renderXml!('config/msgr_config.hbs', { host: jsonConfig.server.host })
 	}
 }

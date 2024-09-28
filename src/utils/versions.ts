@@ -1,5 +1,7 @@
 import { execSync } from 'node:child_process'
-import { isDebug } from './config'
+import { cliArgs } from './config'
+
+const versionNumber = '2.0.0'
 
 export interface GitInfo {
 	commitHash: string | null
@@ -36,5 +38,5 @@ const parseGitInfo = () => {
 }
 
 export const versionInfo = () => {
-	return isDebug ? parseGitInfo() : '2.0.0'
+	return cliArgs.dev ? parseGitInfo() : versionNumber
 }

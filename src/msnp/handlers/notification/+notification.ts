@@ -3,8 +3,11 @@ import { logging } from '../../../utils/logging'
 import { MSNPCommand } from '../../framework/decoder'
 import { PulseServer } from '../../framework/server'
 import { PulseUser } from '../../framework/user'
+import { handleVER } from './sign_on'
 
-const nsCommandHandlers = new Map<string, (user: PulseUser, data: MSNPCommand) => void>([])
+const nsCommandHandlers = new Map<string, (user: PulseUser, data: MSNPCommand) => void>([
+	['VER', handleVER],
+])
 
 export const notificationServer = () => {
 	const server = new PulseServer()

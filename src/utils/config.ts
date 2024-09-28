@@ -1,36 +1,26 @@
 import path from 'node:path'
-import fs from 'node:fs'
 
-export const isDebug = process.env['DEBUG'] === 'true'
-export const webPath = isDebug ? './src/www' : './server'
+import { Configuration } from '../config/+config'
+import { program } from 'commander'
 
-export interface Configuration {
-	server: {
-		secret: string
-		environment: string
-		host: string
-		ip: string
-		notification_port: number
-		switchboard_port: number
-		http_port: number
-		https_port: number
-	}
-	msn: {}
-	ads: {
-		enabled: boolean
-		ad_list: {
-			url: string
-			image: string
-		}[]
-	}
+export interface CliArgs {
+	dev?: boolean
+}
+
+const loadArgv = () => {
+	program.option('-d, --dev', 'run in development mode')
+	program.parse()
+
+	return program.opts<CliArgs>()
 }
 
 const loadConfig = () => {
-	const cfgPath = isDebug ? './' : './server'
-	const configFilePath = path.join(cfgPath, 'config.json')
+	const cfgPath = process.cwd() + '/src/config'
+	const configFilePath = path.join(cfgPath, `config.${cliArgs.dev ? 'dev' : 'prod'}.ts`)
 
-	const configFile = fs.readFileSync(configFilePath, 'utf-8')
-	const config = JSON.parse(configFile)
-	return config as Configuration
+	const configTs = require(configFilePath).configuration
+	return configTs as Configuration
 }
+
+export const cliArgs = loadArgv()
 export const jsonConfig = loadConfig()
