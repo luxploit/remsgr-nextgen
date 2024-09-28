@@ -1,19 +1,28 @@
 import { Configuration } from './+config'
 
-const configuration: Configuration = {
+export const configuration: Configuration = {
 	server: {
-		secret: '',
-		environment: '',
-		host: '',
-		ip: '',
-		notification_port: 0,
-		switchboard_port: 0,
-		http_port: 0,
-		https_port: 0,
+		secret: 'defaultsecret_CHANGETHISASAP',
+		environment: 'alpha',
+		host: 'localhost:4200',
+		ip: '127.0.0.1',
+		notification_port: 1863,
+		switchboard_port: 1864,
+		http_port: 80,
+		https_port: 443,
 	},
 	msn: {},
 	ads: {
-		enabled: false,
-		ad_list: [],
+		enabled: true,
+		ad_list: [
+			{
+				url: 'https://remsgr.net',
+				image: 'xirk.png',
+			},
+			{
+				url: 'https://remsgr.net',
+				image: 'brat.png',
+			},
+		],
 	},
 }
