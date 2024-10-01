@@ -1,4 +1,9 @@
 export interface Configuration {
+	mongodb: {
+		uri: string
+		username: string
+		password: string
+	}
 	server: {
 		secret: string
 		environment: string

@@ -1,41 +1,59 @@
-import { Socket } from 'node:net'
 import { logging } from '../../../utils/logging'
-import { MSNPCommand } from '../../framework/decoder'
-import { PulseServer } from '../../framework/server'
+import { getCommand, PulseCommand } from '../../framework/decoder'
+import { PulseInteractable } from '../../framework/interactable'
 import { PulseUser } from '../../framework/user'
-import { handleVER } from './sign_on'
+import { handleINF, handleUSR, handleVER } from './session'
+import net from 'node:net'
 
-const nsCommandHandlers = new Map<string, (user: PulseUser, data: MSNPCommand) => void>([
+/**
+ * TODO: Look into rewriting with class-based reflection (see AzureFlare for examples)
+ *       v2 refactor mby? for now use "dumb" array list for handler registration
+ */
+
+const nsCommandHandlers = new Map<string, (user: PulseUser, cmd: PulseCommand) => Promise<void>>([
 	['VER', handleVER],
+	['INF', handleINF],
+	['USR', handleUSR],
 ])
 
 export const notificationServer = () => {
-	const server = new PulseServer()
+	return net.createServer(async (socket) => {
+		logging.info(`New connection: ${socket.remoteAddress}:${socket.remotePort}`)
 
-	server.onData((socket, data) => {
-		for (let command of data) {
-			const handler = nsCommandHandlers.get(command.Command)
-			if (!handler) {
-				logging.warn(`no handler available for command`, command.Command)
+		const user = new PulseUser({
+			notification: new PulseInteractable(socket),
+			switchboard: new PulseInteractable(null),
+			infoContext: {
+				authenticationMethod: 'None',
+				buildString: 'None',
+				protocolVersion: 'None',
+			},
+		})
+
+		socket.on('data', async (data) => {
+			logging.debug('netDebug', 'Incoming traffic:', data.toString().trim())
+
+			const result = getCommand(data)
+			if (!result) {
+				logging.error('Invalid command found! Closing')
+				socket.destroy()
 				return
 			}
 
-			const user = new PulseUser({
-				Session: {
-					Notification: socket,
-					Switchboard: null,
-				},
-			})
+			for (let command of result) {
+				const handler = nsCommandHandlers.get(command.Command)
+				if (!handler) {
+					logging.warn('No NS handler available for command', command.Command)
+					return
+				}
 
-			user.nsDebug('command handler', 'processing command', command.Command)
+				user.nsDebug('Command handler', 'Processing NS command', command.Command)
+				await handler(user, command)
+			}
+		})
 
-			handler(user, command)
-		}
+		socket.on('close', () => {})
+
+		socket.on('error', (err) => {})
 	})
-
-	server.onExit((socket) => {})
-
-	server.onFailure((socket, err) => {})
-
-	server.build().listen(1863, () => logging.info('msnp ns server successfully initialized'))
 }

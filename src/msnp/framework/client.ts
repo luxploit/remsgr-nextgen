@@ -1,17 +1,16 @@
 import { Socket } from 'node:net'
+import { PulseInteractable } from './interactable'
+
+export type PulseAuthenticationMethods = 'CTP' | 'MD5' | 'SHA' | 'TWN' | 'SSO' | 'None'
 
 export interface PulseClient {
-	Session: PulseClientSession
-	Context?: PulseClientInfoContext
-}
-
-export interface PulseClientSession {
-	Notification: Socket | null
-	Switchboard: Socket | null
+	notification: PulseInteractable
+	switchboard: PulseInteractable
+	infoContext: PulseClientInfoContext
 }
 
 export interface PulseClientInfoContext {
-	AuthenticationMethod: 'CTP' | 'MD5' | 'TWN' | 'SSO'
-	ProtocolVersion: number
-	BuildString: string
+	authenticationMethod: PulseAuthenticationMethods
+	protocolVersion: string
+	buildString: string
 }

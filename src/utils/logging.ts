@@ -16,6 +16,10 @@ export class Logger {
 	error(msg: string, ...optionals: any[]) {
 		this.log(chalk.red, 'error', msg, ...optionals)
 	}
+
+	debug(handler: string, msg: string, ...optionals: any[]) {
+		this.log(chalk.magenta, handler, msg, ...optionals)
+	}
 }
 
 export const logging = new Logger()
