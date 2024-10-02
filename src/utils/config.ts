@@ -5,10 +5,12 @@ import { program } from 'commander'
 
 export interface CliArgs {
 	dev?: boolean
+	migrate?: boolean
 }
 
 const loadArgv = () => {
 	program.option('-d, --dev', 'run in development mode')
+	program.option('-m, --migrate', 'add pg schemas via drizzle')
 	program.parse()
 
 	return program.opts<CliArgs>()

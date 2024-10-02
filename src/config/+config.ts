@@ -1,6 +1,8 @@
 export interface Configuration {
-	mongodb: {
-		uri: string
+	postgres: {
+		host: string
+		port: number
+		database: string
 		username: string
 		password: string
 	}
@@ -8,13 +10,14 @@ export interface Configuration {
 		secret: string
 		environment: string
 		host: string
-		ip: string
-		notification_port: number
-		switchboard_port: number
 		http_port: number
 		https_port: number
 	}
-	msn: {}
+	msn: {
+		ip: string
+		notification_port: number
+		switchboard_port: number
+	}
 	ads: {
 		enabled: boolean
 		ad_list: {

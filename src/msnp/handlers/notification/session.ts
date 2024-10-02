@@ -1,4 +1,4 @@
-import { UserModel } from '../../../database/models/user'
+//import { UserModel } from '../../../database/models/user'
 import { PulseAuthenticationMethods } from '../../framework/client'
 import { PulseCommand } from '../../framework/decoder'
 import { PulseUser } from '../../framework/user'
@@ -80,5 +80,5 @@ export const handleUSR = async (user: PulseUser, cmd: PulseCommand) => {
 	}
 
 	const emailAddress = cmd.Args[2]
-	const userObj = await UserModel.findOne({ username: emailAddress })
+	//const userObj = await UserModel.findOne({ username: emailAddress })
 }

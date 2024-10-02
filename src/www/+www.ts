@@ -20,7 +20,7 @@ class TestHbs extends FlareController {
 	}
 }
 
-export const webServer = () => {
+export const webServer = async () => {
 	const app = new FlareApp()
 	const webPath = './src/www'
 
