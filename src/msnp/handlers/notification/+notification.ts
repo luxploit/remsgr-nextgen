@@ -1,4 +1,5 @@
 import { logging } from '../../../utils/logging'
+import { PulseClient } from '../../framework/client'
 import { getCommand, PulseCommand } from '../../framework/decoder'
 import { PulseInteractable } from '../../framework/interactable'
 import { PulseUser } from '../../framework/user'
@@ -20,15 +21,8 @@ export const notificationServer = () => {
 	return net.createServer(async (socket) => {
 		logging.info(`New connection: ${socket.remoteAddress}:${socket.remotePort}`)
 
-		const user = new PulseUser({
-			notification: new PulseInteractable(socket),
-			switchboard: new PulseInteractable(null),
-			infoContext: {
-				authenticationMethod: 'None',
-				buildString: 'None',
-				protocolVersion: 'None',
-			},
-		})
+		const user = new PulseUser()
+		user.client.notification = new PulseInteractable(socket)
 
 		socket.on('data', async (data) => {
 			logging.debug('netDebug', 'Incoming traffic:', data.toString().trim())

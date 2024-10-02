@@ -4,7 +4,9 @@ import { PulseClient } from './client'
 import { cliArgs } from '../../utils/config'
 
 export class PulseUser extends Logger {
-	constructor(public client: PulseClient) {
+	client: PulseClient = new PulseClient()
+
+	constructor() {
 		super()
 	}
 

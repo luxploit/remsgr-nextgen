@@ -10,15 +10,8 @@ export const switchboardServer = () => {
 	return net.createServer((socket) => {
 		logging.info(`New connection: ${socket.remoteAddress}:${socket.remotePort}`)
 
-		const user = new PulseUser({
-			notification: new PulseInteractable(null),
-			switchboard: new PulseInteractable(socket),
-			infoContext: {
-				authenticationMethod: 'None',
-				buildString: 'None',
-				protocolVersion: 'None',
-			},
-		})
+		const user = new PulseUser()
+		user.client.switchboard = new PulseInteractable(socket)
 
 		socket.on('data', (data) => {
 			logging.debug('netDebug', 'Incoming traffic:', data.toString().trim())

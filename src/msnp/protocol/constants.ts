@@ -12,7 +12,6 @@ export const Errors = {
 	InternalServerError: 500,
 	ServerIsBusy: 911,
 	NotAllowedWhenHidden: 913,
-	AuthenticationFailed: 917,
 }
 
 export const AuthStages = {
