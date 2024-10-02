@@ -1,6 +1,12 @@
-import { pgTable, serial, varchar } from 'drizzle-orm/pg-core'
+import { pgTable, serial, timestamp, varchar } from 'drizzle-orm/pg-core'
 
 export const Accounts = pgTable('accounts', {
-	uid: serial('uid').primaryKey(),
-	screenname: varchar('screenname', { length: 24 }).unique().notNull(),
+	UID: serial('uid').primaryKey(),
+	ScreenName: varchar('screen_name', { length: 32 }).unique().notNull(),
+	Email: varchar('email', { length: 128 }).unique().notNull(),
+	PasswordMD5: varchar('password_md5', { length: 32 }).notNull(),
+	PasswordSHA: varchar('password_sha224', { length: 64 }).notNull(),
+	LastModified: timestamp('last_modified')
+		.notNull()
+		.$onUpdate(() => new Date()),
 })

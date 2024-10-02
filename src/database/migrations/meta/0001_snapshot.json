@@ -1,6 +1,6 @@
 {
-  "id": "b7c1fe52-cda2-49ba-885c-df7a4ed60c97",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "d9c33153-6b08-454a-af74-de745a2e7ec5",
+  "prevId": "b7c1fe52-cda2-49ba-885c-df7a4ed60c97",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -216,24 +216,6 @@
         "groups": {
           "name": "groups",
           "type": "varchar[]",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "allow_list": {
-          "name": "allow_list",
-          "type": "integer[]",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "block_list": {
-          "name": "block_list",
-          "type": "integer[]",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "forward_list": {
-          "name": "forward_list",
-          "type": "integer[]",
           "primaryKey": false,
           "notNull": false
         },
