@@ -28,3 +28,5 @@ export const Lists = pgTable(
 		}
 	}
 )
+
+export type ListsT = typeof Lists.$inferSelect

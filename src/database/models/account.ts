@@ -1,4 +1,4 @@
-import { boolean, pgTable, serial, timestamp, uuid, varchar } from 'drizzle-orm/pg-core'
+import { boolean, PgTable, pgTable, serial, timestamp, uuid, varchar } from 'drizzle-orm/pg-core'
 
 export const Accounts = pgTable('accounts', {
 	UID: serial('uid').primaryKey(),
@@ -12,3 +12,5 @@ export const Accounts = pgTable('accounts', {
 		.notNull()
 		.$onUpdate(() => new Date()),
 })
+
+export type AccountsT = typeof Accounts.$inferSelect

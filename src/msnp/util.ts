@@ -9,3 +9,5 @@ export const generateMD5Password = (password: string, salt: string) => {
 	md5.update(password + salt)
 	return md5.digest('hex')
 }
+
+export const getSNfromMail = (email: string) => email.split('@')[0]

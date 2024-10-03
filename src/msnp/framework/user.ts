@@ -2,9 +2,14 @@ import chalk from 'chalk'
 import { Logger } from '../../utils/logging'
 import { PulseClient } from './client'
 import { cliArgs } from '../../utils/config'
+import { AccountsT } from '../../database/models/account'
+import { UsersT } from '../../database/models/user'
+import { DetailsT } from '../../database/models/detail'
+import { ListsT } from '../../database/models/list'
 
 export class PulseUser extends Logger {
 	client: PulseClient = new PulseClient()
+	data: PulseData = new PulseData()
 
 	constructor() {
 		super()
@@ -51,4 +56,11 @@ export class PulseUser extends Logger {
 			...optionals
 		)
 	}
+}
+
+export class PulseData {
+	account!: AccountsT
+	user!: UsersT
+	details!: DetailsT
+	list!: ListsT[]
 }

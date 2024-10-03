@@ -1,12 +1,13 @@
 //import { UserModel } from '../../../database/models/user'
 import { getDB } from '../../../database/+database'
 import { Accounts } from '../../../database/models/account'
-import { getAccountByScreenName } from '../../../database/queries/account'
+import { getAccountBySN } from '../../../database/queries/account'
+import { populatePulseDataBySN } from '../../../database/queries/populate'
 import { PulseAuthenticationMethods, PulseClientInfoContext } from '../../framework/client'
 import { PulseCommand } from '../../framework/decoder'
 import { PulseUser } from '../../framework/user'
 import { AuthStages, Errors } from '../../protocol/constants'
-import { deletePulseUserByUID, generateMD5Password, getPulseUserByUID } from '../../util'
+import { deletePulseUserByUID, generateMD5Password, getPulseUserByUID, getSNfromMail } from '../../util'
 
 /* <> VER [trId] [MSNP(N)] CVR0 */
 export const handleVER = async (user: PulseUser, cmd: PulseCommand) => {
@@ -71,7 +72,7 @@ export const handleINF = async (user: PulseUser, cmd: PulseCommand) => {
  * <- USR [trId] [Stage=OK] [Mail] [ScreenName]
  */
 export const handleUSR = async (user: PulseUser, cmd: PulseCommand) => {
-	const handlers = new Map<string, (user: PulseUser, cmd: PulseCommand) => Promise<void>>([
+	const handlers = new Map<string, (user: PulseUser, cmd: PulseCommand) => Promise<boolean>>([
 		['CTP', handleUSR_CTP],
 		['MD5', handleUSR_MD5],
 		['TWN', handleUSR_TWN],
@@ -99,39 +100,78 @@ export const handleUSR = async (user: PulseUser, cmd: PulseCommand) => {
 		return user.client.notification.fatal(cmd, Errors.ServerIsBusy)
 	}
 
-	await handler(user, cmd)
+	const loggedIn = await handler(user, cmd)
+
+	if (!loggedIn) return user.client.notification.fatal(cmd, Errors.ServerIsBusy)
+
+	user.client.notification.send(cmd, ['OK', 1, 0])
 }
 
+/* -> USR [trId] [Method=CTP] [Stage=I] [Mail] [Password] */
 export const handleUSR_CTP = async (user: PulseUser, cmd: PulseCommand) => {
 	const stage = cmd.Args[1]
 	if (stage !== AuthStages.Input) {
-		return user.client.notification.fatal(cmd, Errors.ServerIsBusy)
+		user.error('Client provided unsupported auth stage for CTP')
+		return false
 	}
 
-	let screenname = cmd.Args[2].split('@')[0]
+	const screenname = getSNfromMail(cmd.Args[2])
+	const data = await populatePulseDataBySN(screenname)
+	if (!data) {
+		user.error('Client provided an invalid e-mail address!')
+		return false
+	}
+	user.data = data
+
 	const password = cmd.Args[3]
-
-	const account = await getAccountByScreenName(screenname)
-	if (!account) {
-		user.error('Client provided an invalid e-mail address')
-		return user.client.notification.fatal(cmd, Errors.ServerIsBusy)
-	}
-
-	const hashedPw = generateMD5Password(password, account.GUID)
+	const hashedPw = generateMD5Password(password, user.data.account.GUID)
 	console.log(hashedPw)
 
-	if (hashedPw !== account.PasswordMD5) {
+	if (hashedPw !== user.data.account.PasswordMD5) {
 		user.error('Client has entered invalid credentials!')
-		return user.client.notification.fatal(cmd, Errors.ServerIsBusy)
+		return false
 	}
 
-	user.client.notification.send(cmd, ['OK', Number(account.IsVerified), 0])
+	return true
 }
 
-export const handleUSR_MD5 = async (user: PulseUser, cmd: PulseCommand) => {}
+/* -> USR [trId] [Method=MD5] [Stage=I] [Mail]  */
+/* <- USR [trId] [Method=MD5] [Stage=S] [ChallengeToken]  */
+/* -> USR [trId] [Method=MD5] [Stage=S] [HashedResponse] */
+export const handleUSR_MD5 = async (user: PulseUser, cmd: PulseCommand) => {
+	const stage = cmd.Args[1]
+	if (stage !== AuthStages.Input && stage !== AuthStages.Salt) {
+		user.error('Client provided unsupported auth stage for MD5')
+		return false
+	}
 
-export const handleUSR_TWN = async (user: PulseUser, cmd: PulseCommand) => {}
+	if (stage === AuthStages.Input) {
+		const screenname = getSNfromMail(cmd.Args[2])
+		const data = await populatePulseDataBySN(screenname)
+		if (!data) {
+			user.error('Client provided an invalid e-mail address!')
+			return false
+		}
+		user.data = data
+	}
 
-export const handleUSR_SSO = async (user: PulseUser, cmd: PulseCommand) => {}
+	return true
+}
 
-export const handleUSR_SHA = async (user: PulseUser, cmd: PulseCommand) => {}
+/* -> USR [trId] [Method=TWN] [Stage=I] [Mail] */
+/* <- USR [trId] [Method=TWN] [Stage=S] [TokenParams] */
+/* -> USR [trId] [Method=TWN] [Stage=S] [GeneratedToken] */
+export const handleUSR_TWN = async (user: PulseUser, cmd: PulseCommand) => {
+	return true
+}
+
+/* -> USR [trId] [Method=SSO] [Stage=I] [Mail] */
+/* <- USR [trId] [Method=SSO] [Stage=S] [Policy] [ChallengeToken] */
+export const handleUSR_SSO = async (user: PulseUser, cmd: PulseCommand) => {
+	return true
+}
+
+/* -> USR [trId] [Method=SHA] [Stage=A] [CircleTicket] */
+export const handleUSR_SHA = async (user: PulseUser, cmd: PulseCommand) => {
+	return true
+}
