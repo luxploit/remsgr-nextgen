@@ -6,7 +6,7 @@ export const deletePulseUserByUID = (uid: number) => delete activeUsers[uid]
 
 export const generateMD5Password = (password: string, salt: string) => {
 	const md5 = crypto.createHash('md5')
-	md5.update(password + salt)
+	md5.update(salt + password)
 	return md5.digest('hex')
 }
 

@@ -31,6 +31,10 @@ export class PulseUser extends Logger {
 		super.error(this.getHost(), msg, ...optionals)
 	}
 
+	debug = (handler: string, msg: string, ...optionals: any[]) => {
+		super.debug(handler, this.getHost(), msg, ...optionals)
+	}
+
 	nsDebug = (handler: string, msg: string, ...optionals: any[]) => {
 		if (!cliArgs.dev) return
 

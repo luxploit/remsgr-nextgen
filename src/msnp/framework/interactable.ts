@@ -11,7 +11,12 @@ export class PulseInteractable {
 
 	send = (cmd: PulseCommand, args?: Array<string | number>) => {
 		const output = [cmd.Command, cmd.TrId, ...(args ?? [])]
-		logging.debug('netDebug', 'Outgoing Traffic:', output.join(' '))
+		logging.debug(
+			'netDebug',
+			`[HOST ${this.socket.remoteAddress!}]`,
+			'Outgoing Traffic:',
+			output.join(' ')
+		)
 		this.socket.write(`${output.join(' ')}\r\n`)
 	}
 

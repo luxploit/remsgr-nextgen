@@ -25,7 +25,7 @@ export const notificationServer = () => {
 		user.client.notification = new PulseInteractable(socket)
 
 		socket.on('data', async (data) => {
-			logging.debug('netDebug', 'Incoming traffic:', data.toString().trim())
+			user.debug('netDebug', 'Incoming traffic:', data.toString().trim())
 
 			const result = getCommand(data)
 			if (!result) {

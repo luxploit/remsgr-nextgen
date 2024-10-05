@@ -15,7 +15,11 @@ export const Errors = {
 }
 
 export const AuthStages = {
-	Input: 'I',
-	Salt: 'S',
-	Auth: 'A', // circleTicket auth for MSNP17+
+	Input: 'I' as AuthStagesT,
+	Salt: 'S' as AuthStagesT,
+	Auth: 'A' as AuthStagesT, // circleTicket auth for MSNP17+
+	OK: 'OK' as AuthStagesT,
+	Error: null,
 }
+
+export type AuthStagesT = 'I' | 'S' | 'A' | 'OK' | null

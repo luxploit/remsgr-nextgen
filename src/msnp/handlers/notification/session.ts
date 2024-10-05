@@ -1,13 +1,10 @@
-//import { UserModel } from '../../../database/models/user'
-import { getDB } from '../../../database/+database'
-import { Accounts } from '../../../database/models/account'
-import { getAccountBySN } from '../../../database/queries/account'
+import { timingSafeStringCompare } from '@lxpt/azureflare'
 import { populatePulseDataBySN } from '../../../database/queries/populate'
 import { PulseAuthenticationMethods, PulseClientInfoContext } from '../../framework/client'
 import { PulseCommand } from '../../framework/decoder'
 import { PulseUser } from '../../framework/user'
-import { AuthStages, Errors } from '../../protocol/constants'
-import { deletePulseUserByUID, generateMD5Password, getPulseUserByUID, getSNfromMail } from '../../util'
+import { AuthStages, AuthStagesT, Errors } from '../../protocol/constants'
+import { generateMD5Password, getSNfromMail } from '../../util'
 
 /* <> VER [trId] [MSNP(N)] CVR0 */
 export const handleVER = async (user: PulseUser, cmd: PulseCommand) => {
@@ -29,7 +26,10 @@ export const handleVER = async (user: PulseUser, cmd: PulseCommand) => {
 	}
 
 	if (!validClVrs.length) {
-		user.error('Client did not provide a support protocol version! Request was:', clVersions)
+		user.error(
+			'Client did not provide a support protocol version! Request was:',
+			clVersions.join(', ')
+		)
 		user.client.notification.send(cmd, [0])
 		return user.client.notification.quit()
 	}
@@ -72,7 +72,10 @@ export const handleINF = async (user: PulseUser, cmd: PulseCommand) => {
  * <- USR [trId] [Stage=OK] [Mail] [ScreenName]
  */
 export const handleUSR = async (user: PulseUser, cmd: PulseCommand) => {
-	const handlers = new Map<string, (user: PulseUser, cmd: PulseCommand) => Promise<boolean>>([
+	const handlers = new Map<
+		PulseAuthenticationMethods,
+		(user: PulseUser, cmd: PulseCommand) => Promise<AuthStagesT>
+	>([
 		['CTP', handleUSR_CTP],
 		['MD5', handleUSR_MD5],
 		['TWN', handleUSR_TWN],
@@ -85,7 +88,7 @@ export const handleUSR = async (user: PulseUser, cmd: PulseCommand) => {
 		return user.client.notification.fatal(cmd, Errors.ServerIsBusy)
 	}
 
-	const method = cmd.Args[0]
+	const method = cmd.Args[0] as PulseAuthenticationMethods
 	const stage = cmd.Args[1]
 
 	if (stage !== AuthStages.Input && stage !== AuthStages.Salt && stage !== AuthStages.Auth) {
@@ -101,48 +104,54 @@ export const handleUSR = async (user: PulseUser, cmd: PulseCommand) => {
 	}
 
 	const loggedIn = await handler(user, cmd)
+	if (!loggedIn) {
+		return user.client.notification.fatal(cmd, Errors.ServerIsBusy)
+	}
 
-	if (!loggedIn) return user.client.notification.fatal(cmd, Errors.ServerIsBusy)
+	if (loggedIn === AuthStages.OK) {
+		user.client.infoContext.authenticationMethod = method
+		user.data.user.LastLogin = new Date()
 
-	user.client.notification.send(cmd, ['OK', 1, 0])
+		user.client.notification.send(cmd, ['OK', 1, 0])
+	}
 }
 
 /* -> USR [trId] [Method=CTP] [Stage=I] [Mail] [Password] */
-export const handleUSR_CTP = async (user: PulseUser, cmd: PulseCommand) => {
+export const handleUSR_CTP = async (user: PulseUser, cmd: PulseCommand): Promise<AuthStagesT> => {
 	const stage = cmd.Args[1]
 	if (stage !== AuthStages.Input) {
 		user.error('Client provided unsupported auth stage for CTP')
-		return false
+		return AuthStages.Error
 	}
 
 	const screenname = getSNfromMail(cmd.Args[2])
 	const data = await populatePulseDataBySN(screenname)
 	if (!data) {
 		user.error('Client provided an invalid e-mail address!')
-		return false
+		return AuthStages.Error
 	}
 	user.data = data
 
 	const password = cmd.Args[3]
 	const hashedPw = generateMD5Password(password, user.data.account.GUID)
-	console.log(hashedPw)
 
-	if (hashedPw !== user.data.account.PasswordMD5) {
+	// console.log(hashedPw)
+	if (!timingSafeStringCompare(hashedPw, user.data.account.PasswordMD5)) {
 		user.error('Client has entered invalid credentials!')
-		return false
+		return AuthStages.Error
 	}
 
-	return true
+	return AuthStages.OK
 }
 
 /* -> USR [trId] [Method=MD5] [Stage=I] [Mail]  */
 /* <- USR [trId] [Method=MD5] [Stage=S] [ChallengeToken]  */
 /* -> USR [trId] [Method=MD5] [Stage=S] [HashedResponse] */
-export const handleUSR_MD5 = async (user: PulseUser, cmd: PulseCommand) => {
+export const handleUSR_MD5 = async (user: PulseUser, cmd: PulseCommand): Promise<AuthStagesT> => {
 	const stage = cmd.Args[1]
 	if (stage !== AuthStages.Input && stage !== AuthStages.Salt) {
 		user.error('Client provided unsupported auth stage for MD5')
-		return false
+		return AuthStages.Error
 	}
 
 	if (stage === AuthStages.Input) {
@@ -150,28 +159,40 @@ export const handleUSR_MD5 = async (user: PulseUser, cmd: PulseCommand) => {
 		const data = await populatePulseDataBySN(screenname)
 		if (!data) {
 			user.error('Client provided an invalid e-mail address!')
-			return false
+			return AuthStages.Error
 		}
 		user.data = data
+
+		user.client.notification.send(cmd, ['MD5', 'S', user.data.account.GUID])
+		return AuthStages.Salt
 	}
 
-	return true
+	const hashedPw = cmd.Args[2]
+
+	// console.log(hashedPw)
+	// console.log(user.data.account.PasswordMD5)
+	if (!timingSafeStringCompare(hashedPw, user.data.account.PasswordMD5)) {
+		user.error('Client has sent an invalid hashed response!')
+		return AuthStages.Error
+	}
+
+	return AuthStages.OK
 }
 
 /* -> USR [trId] [Method=TWN] [Stage=I] [Mail] */
 /* <- USR [trId] [Method=TWN] [Stage=S] [TokenParams] */
 /* -> USR [trId] [Method=TWN] [Stage=S] [GeneratedToken] */
-export const handleUSR_TWN = async (user: PulseUser, cmd: PulseCommand) => {
-	return true
+export const handleUSR_TWN = async (user: PulseUser, cmd: PulseCommand): Promise<AuthStagesT> => {
+	return AuthStages.Error
 }
 
 /* -> USR [trId] [Method=SSO] [Stage=I] [Mail] */
 /* <- USR [trId] [Method=SSO] [Stage=S] [Policy] [ChallengeToken] */
-export const handleUSR_SSO = async (user: PulseUser, cmd: PulseCommand) => {
-	return true
+export const handleUSR_SSO = async (user: PulseUser, cmd: PulseCommand): Promise<AuthStagesT> => {
+	return AuthStages.Error
 }
 
 /* -> USR [trId] [Method=SHA] [Stage=A] [CircleTicket] */
-export const handleUSR_SHA = async (user: PulseUser, cmd: PulseCommand) => {
-	return true
+export const handleUSR_SHA = async (user: PulseUser, cmd: PulseCommand): Promise<AuthStagesT> => {
+	return AuthStages.Error
 }
