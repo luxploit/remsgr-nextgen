@@ -3,8 +3,9 @@ import { PulseClient } from '../../framework/client'
 import { getCommand, PulseCommand } from '../../framework/decoder'
 import { PulseInteractable } from '../../framework/interactable'
 import { PulseUser } from '../../framework/user'
-import { handleINF, handleUSR, handleVER } from './session'
+import { handleINF, handleUSR, handleVER } from './logon'
 import net from 'node:net'
+import { handleSYN } from './synchronization'
 
 /**
  * TODO: Look into rewriting with class-based reflection (see AzureFlare for examples)
@@ -15,6 +16,7 @@ const nsCommandHandlers = new Map<string, (user: PulseUser, cmd: PulseCommand) =
 	['VER', handleVER],
 	['INF', handleINF],
 	['USR', handleUSR],
+	['SYN', handleSYN],
 ])
 
 export const notificationServer = () => {
@@ -46,8 +48,12 @@ export const notificationServer = () => {
 			}
 		})
 
-		socket.on('close', () => {})
+		socket.on('close', () => {
+			user.info('Client has closed the connection!')
+		})
 
-		socket.on('error', (err) => {})
+		socket.on('error', (err) => {
+			user.error('Client socket closed with error:', err)
+		})
 	})
 }

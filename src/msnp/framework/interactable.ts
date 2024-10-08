@@ -20,6 +20,8 @@ export class PulseInteractable {
 		this.socket.write(`${output.join(' ')}\r\n`)
 	}
 
+	sendRaw = (command: string, trId: number, args?: Array<string | number>) => {}
+
 	error = (cmd: PulseCommand, error: number) => {
 		this.socket.write(`${error} ${cmd.TrId}\r\n`)
 	}

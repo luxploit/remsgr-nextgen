@@ -1,7 +1,6 @@
 import { Socket } from 'node:net'
 import { PulseInteractable } from './interactable'
-
-export type PulseAuthenticationMethods = 'CTP' | 'MD5' | 'SHA' | 'TWN' | 'SSO' | 'None'
+import { AuthMethodsT } from '../protocol/constants'
 
 export class PulseClient {
 	notification!: PulseInteractable
@@ -10,7 +9,7 @@ export class PulseClient {
 }
 
 export class PulseClientInfoContext {
-	authenticationMethod!: PulseAuthenticationMethods
+	authenticationMethod!: AuthMethodsT
 	protocolVersion!: string
 	buildString!: string
 }
