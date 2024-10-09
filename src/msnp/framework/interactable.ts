@@ -9,7 +9,7 @@ export class PulseInteractable {
 		this.socket.destroy()
 	}
 
-	send = (cmd: PulseCommand, args?: Array<string | number>) => {
+	reply = (cmd: PulseCommand, args?: Array<string | number>) => {
 		const output = [cmd.Command, cmd.TrId, ...(args ?? [])]
 		logging.debug(
 			'netDebug',
@@ -20,7 +20,7 @@ export class PulseInteractable {
 		this.socket.write(`${output.join(' ')}\r\n`)
 	}
 
-	sendRaw = (command: string, trId: number, args?: Array<string | number>) => {}
+	send = (command: string, trId: number, args?: Array<string | number>) => {}
 
 	error = (cmd: PulseCommand, error: number) => {
 		this.socket.write(`${error} ${cmd.TrId}\r\n`)

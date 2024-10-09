@@ -1,4 +1,4 @@
-import { boolean, PgTable, pgTable, serial, timestamp, uuid, varchar } from 'drizzle-orm/pg-core'
+import { boolean, pgTable, serial, timestamp, uuid, varchar } from 'drizzle-orm/pg-core'
 
 export const Accounts = pgTable('accounts', {
 	UID: serial('uid').primaryKey(),
@@ -9,6 +9,7 @@ export const Accounts = pgTable('accounts', {
 	PasswordSHA: varchar('password_sha224', { length: 64 }).notNull(),
 	IsVerified: boolean('is_verified').notNull().default(false),
 	LastModified: timestamp('last_modified')
+		.defaultNow()
 		.notNull()
 		.$onUpdate(() => new Date()),
 })

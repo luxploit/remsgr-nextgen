@@ -3,13 +3,13 @@ import { PulseInteractable } from './interactable'
 import { AuthMethodsT } from '../protocol/constants'
 
 export class PulseClient {
-	notification!: PulseInteractable
-	switchboard!: PulseInteractable
-	infoContext!: PulseClientInfoContext
+	ns!: PulseInteractable
+	sb!: PulseInteractable
 }
 
 export class PulseClientInfoContext {
 	authenticationMethod!: AuthMethodsT
-	protocolVersion!: string
+	protoName!: string
+	protoDialect!: number
 	buildString!: string
 }

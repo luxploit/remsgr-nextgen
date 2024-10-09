@@ -15,6 +15,7 @@ export const Lists = pgTable(
 		ListType: listEnum('list_type').notNull(),
 		Reason: varchar('reason'),
 		FriendedOn: timestamp('friended_on')
+			.defaultNow()
 			.notNull()
 			.$onUpdate(() => new Date()),
 	},

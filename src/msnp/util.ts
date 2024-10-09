@@ -23,12 +23,7 @@ export const getClVersions = (user: PulseUser, cmd: PulseCommand) => {
 	}
 }
 
-export const getProtoNumber = (user: PulseUser) => {
-	const protoVer = user.client.infoContext.protocolVersion
-	if (!protoVer) {
-		return -1
-	}
-
-	const protoNum = parseInt(protoVer.substring(4))
-	return !isNaN(protoNum) ? protoNum : -1
+export const getModernSYNTimestamp = () => {
+	const date = new Date()
+	return date.toISOString().replace('Z', '-00:00')
 }

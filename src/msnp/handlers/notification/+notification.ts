@@ -1,11 +1,11 @@
 import { logging } from '../../../utils/logging'
-import { PulseClient } from '../../framework/client'
 import { getCommand, PulseCommand } from '../../framework/decoder'
 import { PulseInteractable } from '../../framework/interactable'
 import { PulseUser } from '../../framework/user'
 import { handleINF, handleUSR, handleVER } from './logon'
-import net from 'node:net'
 import { handleSYN } from './synchronization'
+import { DispatchCmds, SyncCmds } from '../../protocol/commands'
+import net from 'node:net'
 
 /**
  * TODO: Look into rewriting with class-based reflection (see AzureFlare for examples)
@@ -13,10 +13,13 @@ import { handleSYN } from './synchronization'
  */
 
 const nsCommandHandlers = new Map<string, (user: PulseUser, cmd: PulseCommand) => Promise<void>>([
-	['VER', handleVER],
-	['INF', handleINF],
-	['USR', handleUSR],
-	['SYN', handleSYN],
+	// Dispatch
+	[DispatchCmds.ProtocolVersion, handleVER],
+	[DispatchCmds.GetAuthProviderLegacy, handleINF],
+	[DispatchCmds.Authenticate, handleUSR],
+
+	// Synchronization
+	[SyncCmds.BeginSynchronizationLegacy, handleSYN],
 ])
 
 export const notificationServer = () => {
@@ -24,7 +27,7 @@ export const notificationServer = () => {
 		logging.info(`New connection: ${socket.remoteAddress}:${socket.remotePort}`)
 
 		const user = new PulseUser()
-		user.client.notification = new PulseInteractable(socket)
+		user.client.ns = new PulseInteractable(socket)
 
 		socket.on('data', async (data) => {
 			user.debug('netDebug', 'Incoming traffic:', data.toString().trim())
