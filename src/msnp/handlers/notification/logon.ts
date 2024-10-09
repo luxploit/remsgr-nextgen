@@ -6,6 +6,7 @@ import { AuthMethods, AuthMethodsT, AuthStages, AuthStagesT } from '../../protoc
 import { generateMD5Password, getSNfromMail, makeEmailFromSN } from '../../util'
 import { PulseClientInfoContext } from '../../framework/client'
 import { ErrorCode } from '../../protocol/error_codes'
+import { logging } from '../../../utils/logging'
 
 /* <> VER [trId] [MSNP(N)] CVR0 */
 export const handleVER = async (user: PulseUser, cmd: PulseCommand) => {
@@ -103,7 +104,7 @@ export const handleUSR = async (user: PulseUser, cmd: PulseCommand) => {
 	const method = cmd.Args[0] as AuthMethodsT
 	const stage = cmd.Args[1]
 
-	if (stage !== AuthStages.Input && stage !== AuthStages.Salt && stage !== AuthStages.Auth) {
+	if (stage !== AuthStages.Initial && stage !== AuthStages.Subsequent && stage !== AuthStages.Auth) {
 		user.error('Client provided invalid auth stage')
 		return user.client.ns.fatal(cmd, ErrorCode.ServerIsBusy)
 	}
@@ -129,8 +130,30 @@ export const handleUSR = async (user: PulseUser, cmd: PulseCommand) => {
 		user.context.authenticationMethod = method
 		user.data.user.LastLogin = new Date()
 
-		user.info('Client has successfully logged-in as:', makeEmailFromSN(user.data.account.ScreenName))
-		return user.client.ns.reply(cmd, ['OK', 1, 0])
+		const passport = makeEmailFromSN(user.data.account.ScreenName)
+		user.info('Client has successfully logged-in as:')
+
+		// MSNP11+
+		if (user.context.protoDialect >= 11) {
+			return user.client.ns.reply(cmd, ['OK', passport, user.data.account.IsVerified, 0])
+		}
+
+		// MSNP8 - MSNP10
+		if (user.context.protoDialect >= 8) {
+			return user.client.ns.reply(cmd, [
+				'OK',
+				passport,
+				user.data.user.DisplayName,
+				user.data.account.IsVerified,
+				0,
+			])
+		}
+
+		// MSNP2 - MSNP7
+		{
+			return user.client.ns.reply(cmd, ['OK', passport, user.data.user.DisplayName])
+		}
+		//return user.client.ns.reply(cmd, ['OK', 1, 0])
 	}
 }
 
@@ -151,7 +174,7 @@ const handleUSR_CTP = async (user: PulseUser, cmd: PulseCommand): Promise<AuthSt
 	}
 
 	const stage = cmd.Args[1]
-	if (stage !== AuthStages.Input) {
+	if (stage !== AuthStages.Initial) {
 		user.error('Client provided unsupported auth stage for CTP')
 		return AuthStages.Error
 	}
@@ -198,12 +221,12 @@ const handleUSR_MD5 = async (user: PulseUser, cmd: PulseCommand): Promise<AuthSt
 	}
 
 	const stage = cmd.Args[1]
-	if (stage !== AuthStages.Input && stage !== AuthStages.Salt) {
+	if (stage !== AuthStages.Initial && stage !== AuthStages.Subsequent) {
 		user.error('Client provided unsupported auth stage for MD5')
 		return AuthStages.Error
 	}
 
-	if (stage === AuthStages.Input) {
+	if (stage === AuthStages.Initial) {
 		const screenname = getSNfromMail(cmd.Args[2])
 		const data = await populatePulseDataBySN(screenname)
 		if (!data) {
@@ -215,7 +238,7 @@ const handleUSR_MD5 = async (user: PulseUser, cmd: PulseCommand): Promise<AuthSt
 		user.nsDebug('USR/MD5-I', 'salt as guid', user.data.account.GUID)
 
 		user.client.ns.reply(cmd, ['MD5', 'S', user.data.account.GUID])
-		return AuthStages.Salt
+		return AuthStages.Subsequent
 	}
 
 	const hashedPw = cmd.Args[2]

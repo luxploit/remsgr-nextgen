@@ -222,10 +222,7 @@ const handleSYN_UserProperties = async (user: PulseUser, cmd: PulseCommand) => {
 			user.data.user.DisplayName,
 		])
 
-		user.client.ns.untracked(SyncCmds.UserProperties, [
-			UserProperties.HasBlog,
-			111 === 111 ? '0' : '1',
-		])
+		user.client.ns.untracked(SyncCmds.UserProperties, [UserProperties.HasBlog, !(1 === 1)])
 	}
 }
 

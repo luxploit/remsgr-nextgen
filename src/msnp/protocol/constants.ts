@@ -10,8 +10,8 @@ export const AuthMethods = {
 
 export type AuthStagesT = 'I' | 'S' | 'A' | 'OK' | 'D' | null
 export const AuthStages = {
-	Input: 'I' as AuthStagesT,
-	Salt: 'S' as AuthStagesT,
+	Initial: 'I' as AuthStagesT,
+	Subsequent: 'S' as AuthStagesT,
 	Auth: 'A' as AuthStagesT, // circleTicket sha auth for MSNP17+
 	OK: 'OK' as AuthStagesT,
 	Disabled: 'D' as AuthStagesT,
