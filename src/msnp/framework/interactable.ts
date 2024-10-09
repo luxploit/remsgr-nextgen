@@ -39,7 +39,7 @@ export class PulseInteractable {
 
 	fatal = (cmd: PulseCommand, error: number) => {
 		this.error(cmd, error)
-		this.quit()
+		return this.quit()
 	}
 
 	getHostAddress = () => this.socket.remoteAddress!

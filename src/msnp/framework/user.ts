@@ -21,25 +21,25 @@ export class PulseUser extends Logger {
 	}
 
 	info = (msg: string, ...optionals: any[]) => {
-		super.info(this.getHost(), msg, ...optionals)
+		return super.info(this.getHost(), msg, ...optionals)
 	}
 
 	warn = (msg: string, ...optionals: any[]) => {
-		super.warn(this.getHost(), msg, ...optionals)
+		return super.warn(this.getHost(), msg, ...optionals)
 	}
 
 	error = (msg: string, ...optionals: any[]) => {
-		super.error(this.getHost(), msg, ...optionals)
+		return super.error(this.getHost(), msg, ...optionals)
 	}
 
 	debug = (handler: string, msg: string, ...optionals: any[]) => {
-		super.debug(handler, this.getHost(), msg, ...optionals)
+		return super.debug(handler, this.getHost(), msg, ...optionals)
 	}
 
 	nsDebug = (handler: string, msg: string, ...optionals: any[]) => {
 		if (!cliArgs.dev) return
 
-		this.log(
+		return this.log(
 			chalk.hex('#371F76') /* Meteorite Purple */,
 			'nsDebug',
 			this.getHost(),
@@ -52,7 +52,7 @@ export class PulseUser extends Logger {
 	sbDebug = (handler: string, msg: string, ...optionals: any[]) => {
 		if (!cliArgs.dev) return
 
-		this.log(
+		return this.log(
 			chalk.hex('#007fff') /* Azure Blue */,
 			'sbDebug',
 			this.getHost(),

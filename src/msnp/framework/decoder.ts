@@ -55,6 +55,7 @@ export const getCommand = (data: Buffer, prevResults?: PulseCommand[]): PulseCom
 	// whitelisted payload command
 	// Payloads always supply the last argument as the payload buffer len
 	let payload = Buffer.alloc(0)
+	const skipCrlfIdx = endIndex + 2 /* skip crlf */
 	if (payloadCmds.has(command)) {
 		const payloadLength = parseInt(splits[splits.length - 1], 10)
 		if (payloadLength < 0 || isNaN(payloadLength)) {
@@ -62,7 +63,7 @@ export const getCommand = (data: Buffer, prevResults?: PulseCommand[]): PulseCom
 			return null
 		}
 
-		payload = data.subarray(endIndex + 2 /* skip crlf */, payloadLength)
+		payload = data.subarray(skipCrlfIdx, payloadLength)
 	}
 
 	const args: string[] = []
@@ -75,8 +76,8 @@ export const getCommand = (data: Buffer, prevResults?: PulseCommand[]): PulseCom
 
 	const result: PulseCommand = { Command: command, TrId: trId, Args: args, Payload: payload }
 	const prev = prevResults ? [...prevResults, result] : [result]
-	if (payload.length === 0 && data.subarray(endIndex + 2).length > 0) {
-		return getCommand(data.subarray(endIndex + 2), prev)
+	if (payload.length === 0 && data.subarray(skipCrlfIdx).length > 0) {
+		return getCommand(data.subarray(skipCrlfIdx), prev)
 	}
 
 	return prev
