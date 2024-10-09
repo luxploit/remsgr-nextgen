@@ -27,3 +27,16 @@ export const getModernSYNTimestamp = () => {
 	const date = new Date()
 	return date.toISOString().replace('Z', '-00:00')
 }
+
+export const sendSyncCmd = (
+	user: PulseUser,
+	cmd: string,
+	trId: number,
+	args?: Array<string | number>
+) => {
+	if (user.context.protoDialect >= 11) {
+		user.client.ns.untracked(cmd, args)
+	} else {
+		user.client.ns.send(cmd, trId, [user.data.user.ClVersion, ...(args ?? [])])
+	}
+}

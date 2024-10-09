@@ -3,7 +3,7 @@ import { PulseUser } from '../../framework/user'
 import { SyncCmds } from '../../protocol/commands'
 import { UserProperties } from '../../protocol/constants'
 import { ErrorCode } from '../../protocol/error_codes'
-import { getClVersions, getModernSYNTimestamp } from '../../util'
+import { getClVersions, getModernSYNTimestamp, sendSyncCmd } from '../../util'
 
 /*
  * - SyncId(0 or Mismatch) = Resync Everything -
@@ -103,50 +103,9 @@ export const handleSYN = async (user: PulseUser, cmd: PulseCommand) => {
 
 	user.info('Syncing properties...')
 	await handleSYN_UserProperties(user, cmd)
-	// if (user.context.protoDialect >= 8) {
-
-	// 	// TODO: impl MOB, MBE and WWE correctly
-	// 	const details = user.data.details
-	// 	user.client.ns.send(SyncCmds.UserProperties, cmd.TrId, [
-	// 		UserProperties.PhoneHome,
-	// 		details.PhoneHome ?? '',
-	// 	])
-
-	// 	user.client.ns.send(SyncCmds.UserProperties, cmd.TrId, [
-	// 		UserProperties.PhoneWork,
-	// 		details.PhoneWork ?? '',
-	// 	])
-
-	// 	user.client.ns.send(SyncCmds.UserProperties, cmd.TrId, [
-	// 		UserProperties.PhoneMobile,
-	// 		details.PhoneMobile ?? '',
-	// 	])
-
-	// 	// are other people authorised to contact me on my MSN Mobile device?; can be Y ("yes") or N ("no")
-	// 	user.client.ns.send(SyncCmds.UserProperties, cmd.TrId, [
-	// 		UserProperties.ContactOnMobile,
-	// 		1 === 1 ? 'N' : 'Y',
-	// 	])
-
-	// 	// do I have a mobile device enabled on MSN Mobile; can be Y ("yes") or N ("no")
-	// 	user.client.ns.send(SyncCmds.UserProperties, cmd.TrId, [
-	// 		UserProperties.MobileEnabled,
-	// 		1 === 1 ? 'N' : 'Y',
-	// 	])
-
-	// 	// If set to 2, direct-paging is enabled. 0 otherwise.
-	// 	user.client.ns.send(SyncCmds.UserProperties, cmd.TrId, [
-	// 		UserProperties.DirectPaging,
-	// 		1 === 1 ? '0' : '2',
-	// 	])
-	// }
 
 	user.info('Syncing groups...')
 	await handleSYN_ContactGroups(user, cmd)
-	// if (user.context.protoDialect >= 7) {
-
-	// 	// TODO: Impl group sync
-	// }
 
 	user.info('Syncing contacts...')
 	await handleSYN_ContactsLists(user, cmd)
@@ -191,8 +150,9 @@ const handleSYN_BeginSynchronization = async (user: PulseUser, cmd: PulseCommand
  */
 const handleSYN_PrivacySettings = async (user: PulseUser, cmd: PulseCommand) => {
 	// TODO: Respect privacy settings!
-	user.client.ns.send(SyncCmds.FriendRequestPrivacy, cmd.TrId, [user.data.user.ClVersion, 'A'])
-	user.client.ns.send(SyncCmds.InstantMessagesPrivacy, cmd.TrId, [user.data.user.ClVersion, 'AL'])
+
+	sendSyncCmd(user, SyncCmds.FriendRequestPrivacy, cmd.TrId, [user.data.user.ClVersion, 'A'])
+	sendSyncCmd(user, SyncCmds.InstantMessagesPrivacy, cmd.TrId, [user.data.user.ClVersion, 'AL'])
 }
 
 /*
@@ -214,7 +174,60 @@ const handleSYN_PrivacySettings = async (user: PulseUser, cmd: PulseCommand) => 
  *   <- PRP [property=MFN] [friendlyName]
  *   <- PRP [property=HSB] [hasBlog=0|1]
  */
-const handleSYN_UserProperties = async (user: PulseUser, cmd: PulseCommand) => {}
+const handleSYN_UserProperties = async (user: PulseUser, cmd: PulseCommand) => {
+	if (user.context.protoDialect < 8) {
+		user.info('Ignoring user properties sync... (client is too old)')
+		return
+	}
+
+	// TODO: impl MOB, MBE and WWE correctly
+	const details = user.data.details
+	sendSyncCmd(user, SyncCmds.UserProperties, cmd.TrId, [
+		UserProperties.PhoneHome,
+		details.PhoneHome ?? '',
+	])
+
+	sendSyncCmd(user, SyncCmds.UserProperties, cmd.TrId, [
+		UserProperties.PhoneWork,
+		details.PhoneWork ?? '',
+	])
+
+	sendSyncCmd(user, SyncCmds.UserProperties, cmd.TrId, [
+		UserProperties.PhoneMobile,
+		details.PhoneMobile ?? '',
+	])
+
+	// are other people authorised to contact me on my MSN Mobile device?; can be Y ("yes") or N ("no")
+	sendSyncCmd(user, SyncCmds.UserProperties, cmd.TrId, [
+		UserProperties.ContactOnMobile,
+		1 === 1 ? 'N' : 'Y',
+	])
+
+	// do I have a mobile device enabled on MSN Mobile; can be Y ("yes") or N ("no")
+	sendSyncCmd(user, SyncCmds.UserProperties, cmd.TrId, [
+		UserProperties.MobileEnabled,
+		1 === 1 ? 'N' : 'Y',
+	])
+
+	// If set to 2, direct-paging is enabled. 0 otherwise.
+	sendSyncCmd(user, SyncCmds.UserProperties, cmd.TrId, [
+		UserProperties.DirectPaging,
+		1 === 1 ? '0' : '2',
+	])
+
+	// TODO: impl HSB correctly
+	if (user.context.protoDialect >= 11) {
+		user.client.ns.untracked(SyncCmds.UserProperties, [
+			UserProperties.FriendlyName,
+			user.data.user.DisplayName,
+		])
+
+		user.client.ns.untracked(SyncCmds.UserProperties, [
+			UserProperties.HasBlog,
+			111 === 111 ? '0' : '1',
+		])
+	}
+}
 
 /*
  * MSNP7:

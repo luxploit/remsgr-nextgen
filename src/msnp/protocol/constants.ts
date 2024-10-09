@@ -25,4 +25,6 @@ export enum UserProperties {
 	ContactOnMobile = 'MOB',
 	MobileEnabled = 'MBE',
 	DirectPaging = 'WWE',
+	FriendlyName = 'MFN',
+	HasBlog = 'HSB',
 }
