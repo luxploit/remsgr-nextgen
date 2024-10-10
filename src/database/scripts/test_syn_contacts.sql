@@ -1,2 +1,2 @@
-INSERT INTO "lists" ("uid", "display_name", "contact_groups", "privacy_flags", "cl_version", "fl_version", "bl_version", "al_version", "rl_version", "last_login", "signup_date", "last_modified") VALUES (2, 'RATAOUILLE KURWA', NULL, 0, 1, 1, 0, 1, 1, NULL, '2024-10-09 23:14:10.45074', '2024-10-09 23:14:08');
-INSERT INTO "lists" ("uid", "display_name", "contact_groups", "privacy_flags", "cl_version", "fl_version", "bl_version", "al_version", "rl_version", "last_login", "signup_date", "last_modified") VALUES (3, 'PIWO PIWO PIWO', NULL, 0, 1, 1, 0, 1, 1, NULL, '2024-10-09 23:14:10.45074', '2024-10-09 23:14:08');
+INSERT INTO "lists" ("uid", "contact_id", "list_bits", "groups", "reason", "friended_on") VALUES (3, 2, 11, NULL, NULL, '2024-10-10 22:46:53.529391');
+INSERT INTO "lists" ("uid", "contact_id", "list_bits", "groups", "reason", "friended_on") VALUES (2, 3, 11, NULL, NULL, '2024-10-10 22:46:32');
