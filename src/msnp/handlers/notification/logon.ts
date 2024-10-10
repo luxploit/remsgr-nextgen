@@ -56,8 +56,9 @@ export const handleVER = async (user: PulseUser, cmd: PulseCommand) => {
  *   - Command is Disabled -
  */
 export const handleINF = async (user: PulseUser, cmd: PulseCommand) => {
-	if (user.context.protoDialect <= 8) {
+	if (user.context.protoDialect >= 8) {
 		user.warn('Client tried to use legacy authentication selector')
+		return user.client.ns.fatal(cmd, ErrorCode.DisabledCommand)
 	}
 
 	const authProv = user.context.protoName === 'MSNP2' ? 'CTP' : 'MD5'
