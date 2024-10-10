@@ -76,6 +76,9 @@ import { ListTypesT } from '../../protocol/constants'
  *   MSNP11:
  *    <- LST N=[passport] F=[friendlyName] C=[contactGUID] [listBitFlags] [groupGUIDs[,]]
  *
+ *   MSNP12:
+ *    <- LST N=[passport] F=[friendlyName] C=[contactGUID] [listBitFlags] [contactType] [groupGUIDs[,]]
+ *
  * Contact Properties (MSNP8+):
  *   MSNP8:
  *     <- BRP [trId] [serverSyncId] [passport] [property=PHH] [homePhoneNumber?]
