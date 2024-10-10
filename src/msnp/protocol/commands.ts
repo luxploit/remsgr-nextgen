@@ -10,4 +10,7 @@ export enum SyncCmds {
 	FriendRequestPrivacy = 'GTC',
 	InstantMessagesPrivacy = 'BLP',
 	UserProperties = 'PRP',
+	ContactProperties = 'BRP',
+	ListGroups = 'LSG',
+	ListContacts = 'LST',
 }

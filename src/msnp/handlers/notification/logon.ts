@@ -131,7 +131,7 @@ export const handleUSR = async (user: PulseUser, cmd: PulseCommand) => {
 		user.data.user.LastLogin = new Date()
 
 		const passport = makeEmailFromSN(user.data.account.ScreenName)
-		user.info('Client has successfully logged-in as:')
+		user.info('Client has successfully logged-in as:', user.data.account.ScreenName)
 
 		// MSNP11+
 		if (user.context.protoDialect >= 11) {
@@ -151,7 +151,11 @@ export const handleUSR = async (user: PulseUser, cmd: PulseCommand) => {
 
 		// MSNP2 - MSNP7
 		{
-			return user.client.ns.reply(cmd, ['OK', passport, user.data.user.DisplayName])
+			return user.client.ns.reply(cmd, [
+				'OK',
+				passport,
+				encodeURIComponent(user.data.user.DisplayName),
+			])
 		}
 		//return user.client.ns.reply(cmd, ['OK', 1, 0])
 	}

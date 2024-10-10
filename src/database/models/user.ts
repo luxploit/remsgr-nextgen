@@ -1,8 +1,9 @@
 import { integer, jsonb, pgTable, serial, timestamp, varchar } from 'drizzle-orm/pg-core'
 import { Accounts } from './account'
+import { UUID } from 'node:crypto'
 
-export interface ContactGroup {
-	guid: string
+export interface GenericGroup {
+	guid: UUID
 	name: string
 }
 
@@ -11,14 +12,13 @@ export const Users = pgTable('users', {
 		.primaryKey()
 		.references(() => Accounts.UID),
 	DisplayName: varchar('display_name', { length: 387 }).unique().notNull(),
-	Groups: varchar('groups').array(),
-	ContactGroups: jsonb('contact_groups').$type<ContactGroup>().array(),
+	ContactGroups: jsonb('contact_groups').$type<GenericGroup>().array(),
 	PrivacyFlags: integer('privacy_flags').notNull().default(0),
-	ClVersion: integer('cl_version').notNull().default(0),
-	FlVersion: integer('fl_version').notNull().default(0),
-	BlVersion: integer('bl_version').notNull().default(0),
-	AlVersion: integer('al_version').notNull().default(0),
-	RlVersion: integer('rl_version').notNull().default(0),
+	ClVersion: integer('cl_version').notNull().default(1),
+	FlVersion: integer('fl_version').notNull().default(1),
+	BlVersion: integer('bl_version').notNull().default(1),
+	AlVersion: integer('al_version').notNull().default(1),
+	RlVersion: integer('rl_version').notNull().default(1),
 	LastLogin: timestamp('last_login'),
 	SignupDate: timestamp('signup_date').notNull().defaultNow(),
 	LastModified: timestamp('last_modified')

@@ -18,13 +18,4 @@ export const AuthStages = {
 	Error: null,
 }
 
-export enum UserProperties {
-	PhoneHome = 'PHH',
-	PhoneWork = 'PHW',
-	PhoneMobile = 'PHM',
-	ContactOnMobile = 'MOB',
-	MobileEnabled = 'MBE',
-	DirectPaging = 'WWE',
-	FriendlyName = 'MFN',
-	HasBlog = 'HSB',
-}
+export type ListTypesT = 'FL' | 'AL' | 'BL' | 'RL'

@@ -11,6 +11,7 @@ export enum ErrorCode {
 	BadUserListFormat = 403,
 	InternalServerError = 500,
 	DisabledCommand = 502,
+	DatabaseError = 603,
 	ServerIsBusy = 911,
 	NotAllowedWhenHidden = 913,
 }

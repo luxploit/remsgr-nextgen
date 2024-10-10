@@ -1,7 +1,5 @@
-import { pgEnum, pgTable, serial, timestamp, unique, varchar } from 'drizzle-orm/pg-core'
+import { integer, pgTable, serial, timestamp, unique, uuid, varchar } from 'drizzle-orm/pg-core'
 import { Accounts } from './account'
-
-export const listEnum = pgEnum('list', ['FL', 'RL', 'AL', 'BL', 'PL'])
 
 export const Lists = pgTable(
 	'lists',
@@ -12,7 +10,8 @@ export const Lists = pgTable(
 		ContactID: serial('contact_id')
 			.references(() => Accounts.UID)
 			.notNull(),
-		ListType: listEnum('list_type').notNull(),
+		ListBits: integer('list_bits').notNull().default(0),
+		Groups: uuid('groups').array(),
 		Reason: varchar('reason'),
 		FriendedOn: timestamp('friended_on')
 			.defaultNow()
@@ -21,11 +20,7 @@ export const Lists = pgTable(
 	},
 	(table) => {
 		return {
-			friend_unique_idx: unique('friend_unique_idx').on(
-				table.UID,
-				table.ContactID,
-				table.ListType
-			),
+			friend_unique_idx: unique('friend_unique_idx').on(table.UID, table.ContactID),
 		}
 	}
 )
