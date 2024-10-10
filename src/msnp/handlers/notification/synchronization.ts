@@ -173,8 +173,8 @@ const handleSYN_BeginSynchronization = async (user: PulseUser, cmd: PulseCommand
 const handleSYN_PrivacySettings = async (user: PulseUser, cmd: PulseCommand) => {
 	// TODO: Respect privacy settings!
 
-	sendSyncCmd(user, SyncCmds.FriendRequestPrivacy, cmd.TrId, [user.data.user.ClVersion, 'A'])
-	sendSyncCmd(user, SyncCmds.InstantMessagesPrivacy, cmd.TrId, [user.data.user.ClVersion, 'AL'])
+	sendSyncCmd(user, SyncCmds.FriendRequestPrivacy, cmd.TrId, ['A'])
+	sendSyncCmd(user, SyncCmds.InstantMessagesPrivacy, cmd.TrId, ['AL'])
 }
 
 /*
