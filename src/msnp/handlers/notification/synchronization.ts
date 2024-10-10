@@ -109,9 +109,9 @@ export const handleSYN = async (user: PulseUser, cmd: PulseCommand) => {
 	}
 
 	user.info('Starting legacy synchornization process...')
-	const shouldSync = await handleSYN_BeginSynchronization(user, cmd)
+	const isSyncUpdated = await handleSYN_BeginSynchronization(user, cmd)
 
-	if (!shouldSync) {
+	if (isSyncUpdated) {
 		return user.info('Finished synchronization early (nothing to re-sync)!')
 	}
 
@@ -138,6 +138,8 @@ export const handleSYN = async (user: PulseUser, cmd: PulseCommand) => {
  * MSNP11:
  *   -> SYN [trId] [clTimestamp1] [clTimestamp2]
  *   <- SYN [trId] [srvTimestamp1] [srvTimestamp2] [totalContacts] [totalGroups]
+ *
+ * - false = Should ReSync, true = up to date -
  */
 const handleSYN_BeginSynchronization = async (user: PulseUser, cmd: PulseCommand) => {
 	// MSNP11 & MSNP12
@@ -150,7 +152,7 @@ const handleSYN_BeginSynchronization = async (user: PulseUser, cmd: PulseCommand
 			user.data.list.length,
 			user.data.user.ContactGroups?.length ?? 0,
 		])
-		return true
+		return false
 	}
 
 	if (user.context.protoDialect >= 8) {
@@ -160,14 +162,14 @@ const handleSYN_BeginSynchronization = async (user: PulseUser, cmd: PulseCommand
 			user.data.list.length,
 			user.data.user.ContactGroups?.length ?? 0,
 		])
-		return cl.client !== cl.server
+		return cl.client === cl.server
 	}
 
 	// MSNP2 - MSNP7
 	{
 		const cl = getClVersions(user, cmd)
 		user.client.ns.reply(cmd, [cl.server])
-		return cl.client !== cl.server
+		return cl.client === cl.server
 	}
 }
 
@@ -235,7 +237,7 @@ const handleSYN_Properties = async (
 	cmd: PulseCommand,
 	contactProperties: boolean = false
 ) => {
-	if (user.context.protoDialect < 8) {
+	if (user.context.protoDialect < 7) {
 		return user.info(
 			`Ignoring ${contactProperties ? 'contact' : 'user'} properties sync... (client is too old)`
 		)
@@ -375,6 +377,10 @@ const handleSYN_ContactsLists = async (user: PulseUser, cmd: PulseCommand) => {
 	const syncList = async (lists: ListsT[]) => {
 		// Legacy "syncId" Sync Mode
 
+		if (!user.data.list.length) {
+			user.info('Ignoring contacts sync... (none found)')
+		}
+
 		const legacySync = async (syncList: ListsT[], listType: ListTypesT) => {
 			let userIdx = 0
 
@@ -451,9 +457,9 @@ const handleSYN_ContactsLists = async (user: PulseUser, cmd: PulseCommand) => {
 		return true
 	}
 
-	if (!user.data.list.length) {
-		return user.info('Ignoring contacts sync... (none found)')
-	}
+	// if (!user.data.list.length) {
+	// 	return user.info('Ignoring contacts sync... (none found)')
+	// }
 
 	// TODO: look at PL shit?
 	if (!(await syncList(user.data.list))) {

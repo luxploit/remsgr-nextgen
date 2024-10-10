@@ -6,12 +6,12 @@ import {
 	FlareResponse,
 } from '@lxpt/azureflare'
 import { ListSessionsController } from './sessions'
-import { isDebug } from '../../../utils/config'
 import { ListChatsController } from './chats'
+import { cliArgs } from '../../../utils/config'
 
 export const DebugRouter = createFlareRouter((router) => {
 	router.useMiddleware((req: FlareRequest, res: FlareResponse, next: FlareNext) => {
-		if (!isDebug) {
+		if (!cliArgs.dev) {
 			return FlareHttpError(res, 400, 'Stop snooping around :(')
 
 			//replace with
