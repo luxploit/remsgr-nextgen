@@ -144,7 +144,7 @@ export const handleUSR = async (user: PulseUser, cmd: PulseCommand) => {
 			return user.client.ns.reply(cmd, [
 				'OK',
 				passport,
-				user.data.user.DisplayName,
+				encodeURIComponent(user.data.user.DisplayName),
 				user.data.account.IsVerified,
 				0,
 			])

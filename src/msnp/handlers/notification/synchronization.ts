@@ -153,7 +153,17 @@ const handleSYN_BeginSynchronization = async (user: PulseUser, cmd: PulseCommand
 		return true
 	}
 
-	// MSNP2 - MSNP10
+	if (user.context.protoDialect >= 8) {
+		const cl = getClVersions(user, cmd)
+		user.client.ns.reply(cmd, [
+			cl.server,
+			user.data.list.length,
+			user.data.user.ContactGroups?.length ?? 0,
+		])
+		return cl.client !== cl.server
+	}
+
+	// MSNP2 - MSNP7
 	{
 		const cl = getClVersions(user, cmd)
 		user.client.ns.reply(cmd, [cl.server])
@@ -178,8 +188,8 @@ const handleSYN_PrivacySettings = async (user: PulseUser, cmd: PulseCommand) => 
 }
 
 /*
- * User Properties (MSNP8+)
- *    MSNP8:
+ * User Properties (MSNP7+)
+ *   MSNP7:
  *     <- PRP [trId] [serverSyncId] [property=PHH] [homePhoneNumber?]
  *     <- PRP [trId] [serverSyncId] [property=PHW] [workPhoneNumber?]
  *     <- PRP [trId] [serverSyncId] [property=PHM] [mobilePhoneNumber?]
@@ -187,18 +197,20 @@ const handleSYN_PrivacySettings = async (user: PulseUser, cmd: PulseCommand) => 
  *     <- PRP [trId] [serverSyncId] [property=MBE] [isMobileEnabled=N|Y]
  *     <- PRP [trId] [serverSyncId] [property=WWE] [directPaging=0|2]
  *
- *   MSNP11:
+ *   MSNP8:
  *     <- PRP [property=PHH] [homePhoneNumber?]
  *     <- PRP [property=PHW] [workPhoneNumber?]
  *     <- PRP [property=PHM] [mobilePhoneNumber?]
  *     <- PRP [property=MOB] [contactOnMobile=N|Y]
  *     <- PRP [property=MBE] [isMobileEnabled=N|Y]
  *     <- PRP [property=WWE] [directPaging=0|2]
+ *
+ *   MSNP11:
  *     <- PRP [property=MFN] [friendlyName]
  *     <- PRP [property=HSB] [hasBlog=0|1]
  *
- * Contact Properties (MSNP8+):
- *   MSNP8:
+ * Contact Properties (MSNP7+):
+ *   MSNP7:
  *     <- BRP [trId] [serverSyncId] [passport] [property=PHH] [homePhoneNumber?]
  *     <- BRP [trId] [serverSyncId] [passport] [property=PHW] [workPhoneNumber?]
  *     <- BRP [trId] [serverSyncId] [passport] [property=PHM] [mobilePhoneNumber?]
@@ -206,13 +218,15 @@ const handleSYN_PrivacySettings = async (user: PulseUser, cmd: PulseCommand) => 
  *     <- BRP [trId] [serverSyncId] [passport] [property=MBE] [isMobileEnabled=N|Y]
  *     <- BRP [trId] [serverSyncId] [passport] [property=WWE] [directPaging=0|2]
  *
- *   MSNP11:
+ *   MSNP8:
  *     <- BRP [property=PHH] [homePhoneNumber?]
  *     <- BRP [property=PHW] [workPhoneNumber?]
  *     <- BRP [property=PHM] [mobilePhoneNumber?]
  *     <- BRP [property=MOB] [contactOnMobile=N|Y]
  *     <- BRP [property=MBE] [isMobileEnabled=N|Y]
  *     <- BRP [property=WWE] [directPaging=0|2]
+ *
+ *   MSNP11:
  *     <- BRP [property=MFN] [friendlyName]
  *     <- BRP [property=HSB] [hasBlog=0|1]
  */
