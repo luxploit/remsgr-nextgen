@@ -118,3 +118,11 @@ export const createFakeContactUser = async (user: PulseUser, cid: number) => {
 
 	return contact
 }
+
+export const runSequentially = async (tasks: (() => Promise<boolean>)[]) => {
+	const results = []
+	for (const task of tasks) {
+		results.push(await task())
+	}
+	return results
+}

@@ -13,6 +13,7 @@ import {
 	getListVer,
 	getModernSYNTimestamp,
 	makeEmailFromSN,
+	runSequentially,
 	sendSyncCmd,
 } from '../../util'
 import { PulseInteractableArgs } from '../../framework/interactable'
@@ -43,8 +44,8 @@ import { ListTypesT } from '../../protocol/constants'
  *     <- GTC [setting=A|N]
  *     <- BLP [setting=AL|BL]
  *
- * User Properties (MSNP8+):
- *   MSNP8:
+ * User Properties (MSNP5+):
+ *   MSNP5:
  *     <- PRP [trId] [serverSyncId] [property=PHH] [homePhoneNumber?]
  *     <- PRP [trId] [serverSyncId] [property=PHW] [workPhoneNumber?]
  *     <- PRP [trId] [serverSyncId] [property=PHM] [mobilePhoneNumber?]
@@ -79,8 +80,8 @@ import { ListTypesT } from '../../protocol/constants'
  *   MSNP12:
  *    <- LST N=[passport] F=[friendlyName] C=[contactGUID] [listBitFlags] [contactType] [groupGUIDs[,]]
  *
- * Contact Properties (MSNP8+):
- *   MSNP8:
+ * Contact Properties (MSNP5+):
+ *   MSNP5:
  *     <- BRP [trId] [serverSyncId] [passport] [property=PHH] [homePhoneNumber?]
  *     <- BRP [trId] [serverSyncId] [passport] [property=PHW] [workPhoneNumber?]
  *     <- BRP [trId] [serverSyncId] [passport] [property=PHM] [mobilePhoneNumber?]
@@ -190,8 +191,8 @@ const handleSYN_PrivacySettings = async (user: PulseUser, cmd: PulseCommand) => 
 }
 
 /*
- * User Properties (MSNP7+)
- *   MSNP7:
+ * User Properties (MSNP5+)
+ *   MSNP5:
  *     <- PRP [trId] [serverSyncId] [property=PHH] [homePhoneNumber?]
  *     <- PRP [trId] [serverSyncId] [property=PHW] [workPhoneNumber?]
  *     <- PRP [trId] [serverSyncId] [property=PHM] [mobilePhoneNumber?]
@@ -211,8 +212,8 @@ const handleSYN_PrivacySettings = async (user: PulseUser, cmd: PulseCommand) => 
  *     <- PRP [property=MFN] [friendlyName]
  *     <- PRP [property=HSB] [hasBlog=0|1]
  *
- * Contact Properties (MSNP7+):
- *   MSNP7:
+ * Contact Properties (MSNP5+):
+ *   MSNP5:
  *     <- BRP [trId] [serverSyncId] [passport] [property=PHH] [homePhoneNumber?]
  *     <- BRP [trId] [serverSyncId] [passport] [property=PHW] [workPhoneNumber?]
  *     <- BRP [trId] [serverSyncId] [passport] [property=PHM] [mobilePhoneNumber?]
@@ -237,7 +238,7 @@ const handleSYN_Properties = async (
 	cmd: PulseCommand,
 	contactProperties: boolean = false
 ) => {
-	if (user.context.protoDialect < 7) {
+	if (user.context.protoDialect < 5) {
 		return user.info(
 			`Ignoring ${contactProperties ? 'contact' : 'user'} properties sync... (client is too old)`
 		)
@@ -331,7 +332,7 @@ const handleSYN_ContactsLists = async (user: PulseUser, cmd: PulseCommand) => {
 	) => {
 		let args: PulseInteractableArgs = [
 			`N=${makeEmailFromSN(contact.data.account.ScreenName)}`,
-			`F=${contact.data.user.DisplayName}`,
+			`F=${encodeURIComponent(contact.data.user.DisplayName)}`,
 			`C=${contact.data.account.GUID}`,
 			listBits,
 		]
@@ -358,16 +359,16 @@ const handleSYN_ContactsLists = async (user: PulseUser, cmd: PulseCommand) => {
 		groups: Map<string, number>
 	) => {
 		let args: PulseInteractableArgs = [
-			user.data.user.ClVersion,
 			listType,
+			user.data.user.ClVersion,
 			listVer,
 			userIdx,
 			listLen,
 			makeEmailFromSN(contact.data.account.ScreenName),
-			contact.data.user.DisplayName,
+			encodeURIComponent(contact.data.user.DisplayName),
 		]
 
-		if (listType === ListTypes.Forward) {
+		if (listType === ListTypes.Forward && user.context.protoDialect >= 7) {
 			args = [...args, getLegacyGroupIDs(list, groups).join(',')]
 		}
 
@@ -384,6 +385,18 @@ const handleSYN_ContactsLists = async (user: PulseUser, cmd: PulseCommand) => {
 		const legacySync = async (syncList: ListsT[], listType: ListTypesT) => {
 			let userIdx = 0
 
+			if (!syncList.length) {
+				user.info(`Ignoring ${listType} list sync... (empty)`)
+				user.client.ns.send(SyncCmds.ListContacts, cmd.TrId, [
+					listType,
+					user.data.user.ClVersion,
+					0,
+					0,
+					0,
+				])
+				return true
+			}
+
 			for (const list of syncList) {
 				const contact = await createFakeContactUser(user, list.ContactID)
 				if (!contact) return false
@@ -398,7 +411,7 @@ const handleSYN_ContactsLists = async (user: PulseUser, cmd: PulseCommand) => {
 					listType,
 					user,
 					contact,
-					userIdx++,
+					++userIdx,
 					listVer,
 					listLen,
 					groups
@@ -416,26 +429,31 @@ const handleSYN_ContactsLists = async (user: PulseUser, cmd: PulseCommand) => {
 		}
 
 		if (user.context.protoDialect < 11) {
-			const res = await Promise.all([
-				legacySync(
-					lists.filter((lst) => lst.ListBits & ListBitFlags.Forward),
-					ListTypes.Forward
-				),
-				legacySync(
-					lists.filter((lst) => lst.ListBits & ListBitFlags.Allow),
-					ListTypes.Allow
-				),
-				legacySync(
-					lists.filter((lst) => lst.ListBits & ListBitFlags.Block),
-					ListTypes.Block
-				),
-				legacySync(
-					lists.filter((lst) => lst.ListBits & ListBitFlags.Reverse),
-					ListTypes.Reverse
-				),
-			])
+			const tasks = [
+				() =>
+					legacySync(
+						lists.filter((lst) => lst.ListBits & ListBitFlags.Forward),
+						ListTypes.Forward
+					),
+				() =>
+					legacySync(
+						lists.filter((lst) => lst.ListBits & ListBitFlags.Allow),
+						ListTypes.Allow
+					),
+				() =>
+					legacySync(
+						lists.filter((lst) => lst.ListBits & ListBitFlags.Block),
+						ListTypes.Block
+					),
+				() =>
+					legacySync(
+						lists.filter((lst) => lst.ListBits & ListBitFlags.Reverse),
+						ListTypes.Reverse
+					),
+			]
 
-			return res.some((aRes) => !aRes)
+			const res = await runSequentially(tasks)
+			return !res.some((aRes) => !aRes)
 		}
 
 		// Modern "untracked" Sync Mode
