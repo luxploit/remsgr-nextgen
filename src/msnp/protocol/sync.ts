@@ -1,4 +1,4 @@
-export enum UserProperties {
+export enum Properties {
 	PhoneHome = 'PHH',
 	PhoneWork = 'PHW',
 	PhoneMobile = 'PHM',
@@ -9,12 +9,16 @@ export enum UserProperties {
 	HasBlog = 'HSB',
 }
 
+export type PropertiesT = `${Properties}`
+
 export enum ListTypes {
 	Forward = 'FL',
 	Allow = 'AL',
 	Block = 'BL',
 	Reverse = 'RL',
 }
+
+export type ListTypesT = `${ListTypes}`
 
 export enum ListBitFlags {
 	Forward = 1 << 0,

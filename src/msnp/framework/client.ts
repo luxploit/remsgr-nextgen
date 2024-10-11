@@ -7,14 +7,14 @@ export class PulseClient {
 	sb!: PulseInteractable
 }
 
-export class PulseClientMachineContext {
+export class PulseMachineContext {
 	localeId!: number
 	osType!: string
 	osVersion!: string
 	cpuArch!: string
 }
 
-export class PulseClientMessengerContext {
+export class PulseMessengerContext {
 	authMethod!: AuthMethodsT
 	dialect!: number
 	version!: string
@@ -22,7 +22,12 @@ export class PulseClientMessengerContext {
 	intrCliName!: string
 }
 
-export class PulseClientInfoContext {
-	machine = new PulseClientMachineContext()
-	messenger = new PulseClientMessengerContext()
+export class PulseStateContext {
+	onlineStatus!: string
+}
+
+export class PulseContext {
+	machine = new PulseMachineContext()
+	messenger = new PulseMessengerContext()
+	state = new PulseStateContext()
 }

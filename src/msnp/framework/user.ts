@@ -1,6 +1,6 @@
 import chalk from 'chalk'
 import { Logger } from '../../utils/logging'
-import { PulseClient, PulseClientInfoContext } from './client'
+import { PulseClient, PulseContext } from './client'
 import { cliArgs } from '../../utils/config'
 import { AccountsT } from '../../database/models/account'
 import { UsersT } from '../../database/models/user'
@@ -10,7 +10,7 @@ import { ListsT } from '../../database/models/list'
 export class PulseUser extends Logger {
 	client = new PulseClient()
 	data = new PulseData()
-	context = new PulseClientInfoContext()
+	context = new PulseContext()
 
 	constructor() {
 		super()

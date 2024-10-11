@@ -50,3 +50,14 @@ export const handle_CVQ = async (user: PulseUser, cmd: PulseCommand) => {
 
 	return user.client.ns.reply(cmd, [ver, ver, ver, url, url])
 }
+
+/*
+ * MSNP2 - MSNP8:
+ *   <> CHG [trId] [status]
+ *
+ * MSNP9+:
+ *   <> CHG [trId] [status] [msnc_clientCaps] [msnc_objectDesc]
+ */
+export const handle_CHG = async (user: PulseUser, cmd: PulseCommand) => {
+	return user.client.ns.echo(cmd)
+}

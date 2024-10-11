@@ -4,7 +4,7 @@ import { PulseCommand } from '../../framework/decoder'
 import { PulseUser } from '../../framework/user'
 import { AuthMethods, AuthMethodsT, AuthStages, AuthStagesT } from '../../protocol/constants'
 import { generateMD5Password, getSNfromMail, makeEmailFromSN } from '../../util'
-import { PulseClientInfoContext } from '../../framework/client'
+import { PulseContext } from '../../framework/client'
 import { ErrorCode } from '../../protocol/error_codes'
 import { logging } from '../../../utils/logging'
 
@@ -40,7 +40,7 @@ export const handleVER = async (user: PulseUser, cmd: PulseCommand) => {
 	validClVrs.sort((a, b) => parseInt(b.substring(4), 10) - parseInt(a.substring(4), 10))
 	user.info('Client has reported following supported versions:', validClVrs)
 
-	user.context = new PulseClientInfoContext()
+	user.context = new PulseContext()
 	user.context.messenger.dialect = parseInt(validClVrs[0].substring(4))
 
 	return user.client.ns.reply(cmd, [...validClVrs, 'CVR0'])

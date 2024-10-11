@@ -17,5 +17,3 @@ export const AuthStages = {
 	Disabled: 'D' as AuthStagesT,
 	Error: null,
 }
-
-export type ListTypesT = 'FL' | 'AL' | 'BL' | 'RL'

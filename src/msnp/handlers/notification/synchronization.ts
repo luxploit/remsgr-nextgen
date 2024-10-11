@@ -1,6 +1,5 @@
 import { ListsT } from '../../../database/models/list'
 import { GenericGroup } from '../../../database/models/user'
-import { populatePulseDataByUID } from '../../../database/queries/populate'
 import { PulseCommand } from '../../framework/decoder'
 import { PulseUser } from '../../framework/user'
 import { SyncCmds } from '../../protocol/commands'
@@ -17,8 +16,7 @@ import {
 	sendSyncCmd,
 } from '../../util'
 import { PulseInteractableArgs } from '../../framework/interactable'
-import { ContactType, ListBitFlags, ListTypes, UserProperties } from '../../protocol/sync'
-import { ListTypesT } from '../../protocol/constants'
+import { ContactType, ListBitFlags, ListTypes, ListTypesT, Properties } from '../../protocol/sync'
 
 /*
  * - SyncId(0 or Mismatch) = Resync Everything -
@@ -263,24 +261,24 @@ const handleSYN_Properties = async (
 	const details = user.data.details
 	const prop = contactProperties ? SyncCmds.ContactProperties : SyncCmds.UserProperties
 
-	sendSyncCmd(user, prop, cmd.TrId, [UserProperties.PhoneHome, details.PhoneHome ?? ''])
-	sendSyncCmd(user, prop, cmd.TrId, [UserProperties.PhoneWork, details.PhoneWork ?? ''])
-	sendSyncCmd(user, prop, cmd.TrId, [UserProperties.PhoneMobile, details.PhoneMobile ?? ''])
+	sendSyncCmd(user, prop, cmd.TrId, [Properties.PhoneHome, details.PhoneHome ?? ''])
+	sendSyncCmd(user, prop, cmd.TrId, [Properties.PhoneWork, details.PhoneWork ?? ''])
+	sendSyncCmd(user, prop, cmd.TrId, [Properties.PhoneMobile, details.PhoneMobile ?? ''])
 
 	// are other people authorised to contact me on my MSN Mobile device?; can be Y ("yes") or N ("no")
-	sendSyncCmd(user, prop, cmd.TrId, [UserProperties.ContactOnMobile, 1 === 1 ? 'N' : 'Y'])
+	sendSyncCmd(user, prop, cmd.TrId, [Properties.ContactOnMobile, 1 === 1 ? 'N' : 'Y'])
 
 	// do I have a mobile device enabled on MSN Mobile; can be Y ("yes") or N ("no")
-	sendSyncCmd(user, prop, cmd.TrId, [UserProperties.MobileEnabled, 1 === 1 ? 'N' : 'Y'])
+	sendSyncCmd(user, prop, cmd.TrId, [Properties.MobileEnabled, 1 === 1 ? 'N' : 'Y'])
 
 	// If set to 2, direct-paging is enabled. 0 otherwise.
-	sendSyncCmd(user, prop, cmd.TrId, [UserProperties.DirectPaging, 1 === 1 ? '0' : '2'])
+	sendSyncCmd(user, prop, cmd.TrId, [Properties.DirectPaging, 1 === 1 ? '0' : '2'])
 
 	// TODO: impl HSB correctly
 	if (user.context.messenger.dialect >= 11) {
-		user.client.ns.untracked(prop, [UserProperties.FriendlyName, user.data.user.DisplayName])
+		user.client.ns.untracked(prop, [Properties.FriendlyName, user.data.user.DisplayName])
 
-		user.client.ns.untracked(prop, [UserProperties.HasBlog, !(1 === 1)])
+		user.client.ns.untracked(prop, [Properties.HasBlog, !(1 === 1)])
 	}
 }
 
