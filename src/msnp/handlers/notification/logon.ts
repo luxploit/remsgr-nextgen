@@ -133,12 +133,12 @@ export const handleUSR = async (user: PulseUser, cmd: PulseCommand) => {
 		const passport = makeEmailFromSN(user.data.account.ScreenName)
 		user.info('Client has successfully logged-in as:', user.data.account.ScreenName)
 
-		// MSNP11+
-		if (user.context.messenger.dialect >= 11) {
+		// MSNP10+
+		if (user.context.messenger.dialect >= 10) {
 			return user.client.ns.reply(cmd, ['OK', passport, user.data.account.IsVerified, 0])
 		}
 
-		// MSNP8 - MSNP10
+		// MSNP8 - MSNP9
 		if (user.context.messenger.dialect >= 8) {
 			return user.client.ns.reply(cmd, [
 				'OK',

@@ -6,8 +6,7 @@ import { PulseInteractableArgs } from './framework/interactable'
 import { ListsT } from '../database/models/list'
 import { UsersT } from '../database/models/user'
 import { populatePulseDataByUID } from '../database/queries/populate'
-import { ListTypesT } from './protocol/constants'
-import { ListTypes } from './protocol/sync'
+import { ListTypes, ListTypesT } from './protocol/sync'
 
 export const getPulseUserByUID = (uid: number) => activeUsers[uid]
 export const deletePulseUserByUID = (uid: number) => delete activeUsers[uid]
@@ -40,11 +39,11 @@ export const sendSyncCmd = (
 	trId: number,
 	args?: PulseInteractableArgs
 ) => {
-	if (user.context.messenger.dialect >= 8) {
+	if (user.context.messenger.dialect >= 10) {
 		return user.client.ns.untracked(cmd, args)
-	} else {
-		return user.client.ns.send(cmd, trId, [user.data.user.ClVersion, ...(args ?? [])])
 	}
+
+	return user.client.ns.send(cmd, trId, [user.data.user.ClVersion, ...(args ?? [])])
 }
 
 export const getListVer = (listType: ListTypesT, user: UsersT) => {

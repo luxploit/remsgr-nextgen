@@ -33,7 +33,7 @@ import { ContactType, ListBitFlags, ListTypes, ListTypesT, Properties } from '..
  *     -> SYN [trId] [clientSyncId]
  *     <- SYN [trId] [serverSyncId] [totalContacts?] [totalGroups?]
  *
- *   MSNP11:
+ *   MSNP10:
  *     -> SYN [trId] [clTimestamp1] [clTimestamp2]
  *     <- SYN [trId] [srvTimestamp1] [srvTimestamp2] [totalContacts] [totalGroups]
  *
@@ -42,7 +42,7 @@ import { ContactType, ListBitFlags, ListTypes, ListTypesT, Properties } from '..
  *     <- GTC [trId] [serverSyncId] [setting=A|N]
  *     <- BLP [trId] [serverSyncId] [setting=AL|BL]
  *
- *   MSNP11:
+ *   MSNP10:
  *     <- GTC [setting=A|N]
  *     <- BLP [setting=AL|BL]
  *
@@ -55,7 +55,7 @@ import { ContactType, ListBitFlags, ListTypes, ListTypesT, Properties } from '..
  *     <- PRP [trId] [serverSyncId] [property=MBE] [isMobileEnabled=N|Y]
  *     <- PRP [trId] [serverSyncId] [property=WWE] [directPaging=0|2]
  *
- *   MSNP11:
+ *   MSNP10:
  *     <- PRP [property=PHH] [homePhoneNumber?]
  *     <- PRP [property=PHW] [workPhoneNumber?]
  *     <- PRP [property=PHM] [mobilePhoneNumber?]
@@ -63,20 +63,22 @@ import { ContactType, ListBitFlags, ListTypes, ListTypesT, Properties } from '..
  *     <- PRP [property=MBE] [isMobileEnabled=N|Y]
  *     <- PRP [property=WWE] [directPaging=0|2]
  *     <- PRP [property=MFN] [friendlyName]
+ *
+ *   MSNP11:
  *     <- PRP [property=HSB] [hasBlog=0|1]
  *
  * Groups (MSNP7+):
  *   MSNP7:
  *     <- LSG [trId] [serverSyncId] [groupIdx] [totalGroups] [GroupName] [unk=0]
  *
- *   MSNP11:
+ *   MSNP10:
  *     <- LSG [groupName] [groupGUID]
  *
  * Contact Lists:
  *   MSNP2:
  *     <- LST [trId] [listType=FL|RL|AL|BL] [serverSyncId]  [listVerId] [userIdx] [totalUsers] [passport?] [friendlyName?] [groupIds[,]?]
  *
- *   MSNP11:
+ *   MSNP10:
  *    <- LST N=[passport] F=[friendlyName] C=[contactGUID] [listBitFlags] [groupGUIDs[,]]
  *
  *   MSNP12:
@@ -91,7 +93,7 @@ import { ContactType, ListBitFlags, ListTypes, ListTypesT, Properties } from '..
  *     <- BRP [trId] [serverSyncId] [passport] [property=MBE] [isMobileEnabled=N|Y]
  *     <- BRP [trId] [serverSyncId] [passport] [property=WWE] [directPaging=0|2]
  *
- *   MSNP11:
+ *   MSNP10:
  *     <- BRP [property=PHH] [homePhoneNumber?]
  *     <- BRP [property=PHW] [workPhoneNumber?]
  *     <- BRP [property=PHM] [mobilePhoneNumber?]
@@ -99,6 +101,8 @@ import { ContactType, ListBitFlags, ListTypes, ListTypesT, Properties } from '..
  *     <- BRP [property=MBE] [isMobileEnabled=N|Y]
  *     <- BRP [property=WWE] [directPaging=0|2]
  *     <- BRP [property=MFN] [friendlyName]
+ *
+ *   MSNP11:
  *     <- BRP [property=HSB] [hasBlog=0|1]
  */
 export const handleSYN = async (user: PulseUser, cmd: PulseCommand) => {
@@ -146,7 +150,7 @@ export const handleSYN = async (user: PulseUser, cmd: PulseCommand) => {
  *   -> SYN [trId] [clientSyncId]
  *   <- SYN [trId] [serverSyncId] [totalContacts?] [totalGroups?]
  *
- * MSNP11:
+ * MSNP10:
  *   -> SYN [trId] [clTimestamp1] [clTimestamp2]
  *   <- SYN [trId] [srvTimestamp1] [srvTimestamp2] [totalContacts] [totalGroups]
  *
@@ -154,8 +158,8 @@ export const handleSYN = async (user: PulseUser, cmd: PulseCommand) => {
  */
 const handleSYN_BeginSynchronization = async (user: PulseUser, cmd: PulseCommand) => {
 	// MSNP11 & MSNP12
-	if (user.context.messenger.dialect >= 11) {
-		// i fucking hate MSNP11
+	if (user.context.messenger.dialect >= 10) {
+		// i fucking hate MSNP10
 		const tz = getModernSYNTimestamp()
 		user.client.ns.reply(cmd, [
 			tz,
@@ -169,7 +173,7 @@ const handleSYN_BeginSynchronization = async (user: PulseUser, cmd: PulseCommand
 	const cl = getClVersions(user, cmd)
 	const isSyncUpdated = cl.client === cl.server
 
-	// MSNP7 - MSNP10
+	// MSNP7 - MSNP9
 	if (user.context.messenger.dialect >= 7) {
 		let args = [cl.server]
 		if (!isSyncUpdated) {
@@ -192,7 +196,7 @@ const handleSYN_BeginSynchronization = async (user: PulseUser, cmd: PulseCommand
  *   <- GTC [trId] [serverSyncId] [setting=A|N]
  *   <- BLP [trId] [serverSyncId] [setting=AL|BL]
  *
- * MSNP11:
+ * MSNP10:
  *   <- GTC [setting=A|N]
  *   <- BLP [setting=AL|BL]
  */
@@ -213,16 +217,16 @@ const handleSYN_PrivacySettings = async (user: PulseUser, cmd: PulseCommand) => 
  *     <- PRP [trId] [serverSyncId] [property=MBE] [isMobileEnabled=N|Y]
  *     <- PRP [trId] [serverSyncId] [property=WWE] [directPaging=0|2]
  *
- *   MSNP8:
+ *   MSNP10:
  *     <- PRP [property=PHH] [homePhoneNumber?]
  *     <- PRP [property=PHW] [workPhoneNumber?]
  *     <- PRP [property=PHM] [mobilePhoneNumber?]
  *     <- PRP [property=MOB] [contactOnMobile=N|Y]
  *     <- PRP [property=MBE] [isMobileEnabled=N|Y]
  *     <- PRP [property=WWE] [directPaging=0|2]
+ *     <- PRP [property=MFN] [friendlyName]
  *
  *   MSNP11:
- *     <- PRP [property=MFN] [friendlyName]
  *     <- PRP [property=HSB] [hasBlog=0|1]
  *
  * Contact Properties (MSNP5+):
@@ -242,8 +246,10 @@ const handleSYN_PrivacySettings = async (user: PulseUser, cmd: PulseCommand) => 
  *     <- BRP [property=MBE] [isMobileEnabled=N|Y]
  *     <- BRP [property=WWE] [directPaging=0|2]
  *
- *   MSNP11:
+ *   MSNP10:
  *     <- BRP [property=MFN] [friendlyName]
+ *
+ *   MSNP11:
  *     <- BRP [property=HSB] [hasBlog=0|1]
  */
 const handleSYN_Properties = async (
@@ -274,10 +280,12 @@ const handleSYN_Properties = async (
 	// If set to 2, direct-paging is enabled. 0 otherwise.
 	sendSyncCmd(user, prop, cmd.TrId, [Properties.DirectPaging, 1 === 1 ? '0' : '2'])
 
+	if (user.context.messenger.dialect >= 10) {
+		user.client.ns.untracked(prop, [Properties.FriendlyName, user.data.user.DisplayName])
+	}
+
 	// TODO: impl HSB correctly
 	if (user.context.messenger.dialect >= 11) {
-		user.client.ns.untracked(prop, [Properties.FriendlyName, user.data.user.DisplayName])
-
 		user.client.ns.untracked(prop, [Properties.HasBlog, !(1 === 1)])
 	}
 }
@@ -286,7 +294,7 @@ const handleSYN_Properties = async (
  * MSNP7:
  *   <- LSG [trId] [serverSyncId] [groupIdx] [totalGroups] [GroupName] [unk=0]
  *
- * MSNP11:
+ * MSNP10:
  *   <- LSG [groupName] [groupGUID]
  */
 const handleSYN_ContactGroups = async (user: PulseUser, cmd: PulseCommand) => {
@@ -311,7 +319,7 @@ const handleSYN_ContactGroups = async (user: PulseUser, cmd: PulseCommand) => {
 
 	const dbGroups = user.data.user.ContactGroups as GenericGroup[]
 	for (const dbGroup of dbGroups) {
-		if (user.context.messenger.dialect >= 11) {
+		if (user.context.messenger.dialect >= 10) {
 			user.client.ns.untracked(SyncCmds.ListGroups, [dbGroup.name, dbGroup.guid])
 			continue
 		}
@@ -330,7 +338,7 @@ const handleSYN_ContactGroups = async (user: PulseUser, cmd: PulseCommand) => {
  * MSNP2:
  *   <- LST [trId] [listType=FL|RL|AL|BL] [serverSyncId] [listVerId] [userIdx] [totalUsers] [passport?] [friendlyName?] [groupIds[,]?]
  *
- * MSNP11:
+ * MSNP10:
  *  <- LST N=[passport] F=[friendlyName] C=[contactGUID] [listBitFlags] [groupGUIDs[,]]
  *
  * MSNP12:
@@ -441,7 +449,7 @@ const handleSYN_ContactsLists = async (user: PulseUser, cmd: PulseCommand) => {
 			return true
 		}
 
-		if (user.context.messenger.dialect < 11) {
+		if (user.context.messenger.dialect < 10) {
 			const tasks = [
 				() =>
 					legacySync(
@@ -474,7 +482,7 @@ const handleSYN_ContactsLists = async (user: PulseUser, cmd: PulseCommand) => {
 			const contact = await createFakeContactUser(user, list.ContactID)
 			if (!contact) return false
 
-			// MSNP11+ LST
+			// MSNP10+ LST
 			syncContactUntracked(list.ListBits, user, contact, list.Groups ?? [])
 
 			if (!(list.ListBits & ListBitFlags.Forward)) {
