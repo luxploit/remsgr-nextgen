@@ -72,7 +72,7 @@ import { ListTypesT } from '../../protocol/constants'
  *
  * Contact Lists:
  *   MSNP2:
- *     <- LST [trId] [serverSyncId] [listType=FL|RL|AL|BL] [listVerId] [userIdx] [totalUsers] [passport?] [friendlyName?] [groupIds[,]?]
+ *     <- LST [trId] [listType=FL|RL|AL|BL] [serverSyncId]  [listVerId] [userIdx] [totalUsers] [passport?] [friendlyName?] [groupIds[,]?]
  *
  *   MSNP11:
  *    <- LST N=[passport] F=[friendlyName] C=[contactGUID] [listBitFlags] [groupGUIDs[,]]
@@ -315,7 +315,7 @@ const handleSYN_ContactGroups = async (user: PulseUser, cmd: PulseCommand) => {
 
 /*
  * MSNP2:
- *   <- LST [trId] [serverSyncId] [listType=FL|RL|AL|BL] [listVerId] [userIdx] [totalUsers] [passport?] [friendlyName?] [groupIds[,]?]
+ *   <- LST [trId] [listType=FL|RL|AL|BL] [serverSyncId] [listVerId] [userIdx] [totalUsers] [passport?] [friendlyName?] [groupIds[,]?]
  *
  * MSNP11:
  *  <- LST N=[passport] F=[friendlyName] C=[contactGUID] [listBitFlags] [groupGUIDs[,]]
