@@ -59,5 +59,6 @@ export const handle_CVQ = async (user: PulseUser, cmd: PulseCommand) => {
  *   <> CHG [trId] [status] [msnc_clientCaps] [msnc_objectDesc]
  */
 export const handle_CHG = async (user: PulseUser, cmd: PulseCommand) => {
+	user.context.state.onlineStatus = cmd.Args[0]
 	return user.client.ns.echo(cmd)
 }
