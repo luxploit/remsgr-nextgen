@@ -40,7 +40,7 @@ export const sendSyncCmd = (
 	trId: number,
 	args?: PulseInteractableArgs
 ) => {
-	if (user.context.protoDialect >= 8) {
+	if (user.context.messenger.dialect >= 8) {
 		return user.client.ns.untracked(cmd, args)
 	} else {
 		return user.client.ns.send(cmd, trId, [user.data.user.ClVersion, ...(args ?? [])])

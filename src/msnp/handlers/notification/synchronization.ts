@@ -31,6 +31,10 @@ import { ListTypesT } from '../../protocol/constants'
  *     -> SYN [trId] [clientSyncId]
  *     <- SYN [trId] [serverSyncId]
  *
+ *   MSNP8:
+ *     -> SYN [trId] [clientSyncId]
+ *     <- SYN [trId] [serverSyncId] [totalContacts?] [totalGroups?]
+ *
  *   MSNP11:
  *     -> SYN [trId] [clTimestamp1] [clTimestamp2]
  *     <- SYN [trId] [srvTimestamp1] [srvTimestamp2] [totalContacts] [totalGroups]
@@ -101,11 +105,15 @@ import { ListTypesT } from '../../protocol/constants'
  */
 export const handleSYN = async (user: PulseUser, cmd: PulseCommand) => {
 	if (cmd.Args.length <= 0 || cmd.Args.length >= 3) {
+		user.error('Client provided invalid number of arguments')
 		return user.client.sb.fatal(cmd, ErrorCode.ServerIsBusy)
 	}
 
-	if (user.context.protoDialect >= 13) {
-		user.error('Client tried to call SYN with unsupported protocol version:', user.context.protoName)
+	if (user.context.messenger.dialect >= 13) {
+		user.error(
+			'Client tried to call SYN with unsupported protocol version:',
+			user.context.messenger.dialect
+		)
 		return user.client.ns.fatal(cmd, ErrorCode.DisabledCommand)
 	}
 
@@ -136,6 +144,10 @@ export const handleSYN = async (user: PulseUser, cmd: PulseCommand) => {
  *   -> SYN [trId] [clientSyncId]
  *   <- SYN [trId] [serverSyncId]
  *
+ * MSNP8:
+ *   -> SYN [trId] [clientSyncId]
+ *   <- SYN [trId] [serverSyncId] [totalContacts?] [totalGroups?]
+ *
  * MSNP11:
  *   -> SYN [trId] [clTimestamp1] [clTimestamp2]
  *   <- SYN [trId] [srvTimestamp1] [srvTimestamp2] [totalContacts] [totalGroups]
@@ -144,7 +156,7 @@ export const handleSYN = async (user: PulseUser, cmd: PulseCommand) => {
  */
 const handleSYN_BeginSynchronization = async (user: PulseUser, cmd: PulseCommand) => {
 	// MSNP11 & MSNP12
-	if (user.context.protoDialect >= 11) {
+	if (user.context.messenger.dialect >= 11) {
 		// i fucking hate MSNP11
 		const tz = getModernSYNTimestamp()
 		user.client.ns.reply(cmd, [
@@ -156,21 +168,24 @@ const handleSYN_BeginSynchronization = async (user: PulseUser, cmd: PulseCommand
 		return false
 	}
 
-	if (user.context.protoDialect >= 8) {
-		const cl = getClVersions(user, cmd)
-		user.client.ns.reply(cmd, [
-			cl.server,
-			user.data.list.length,
-			user.data.user.ContactGroups?.length ?? 0,
-		])
-		return cl.client === cl.server
+	const cl = getClVersions(user, cmd)
+	const isSyncUpdated = cl.client === cl.server
+
+	// MSNP7 - MSNP10
+	if (user.context.messenger.dialect >= 7) {
+		let args = [cl.server]
+		if (!isSyncUpdated) {
+			args = [...args, user.data.list.length, user.data.user.ContactGroups?.length ?? 0]
+		}
+
+		user.client.ns.reply(cmd, args)
+		return isSyncUpdated
 	}
 
-	// MSNP2 - MSNP7
+	// MSNP2 - MSNP6
 	{
-		const cl = getClVersions(user, cmd)
 		user.client.ns.reply(cmd, [cl.server])
-		return cl.client === cl.server
+		return isSyncUpdated
 	}
 }
 
@@ -238,7 +253,7 @@ const handleSYN_Properties = async (
 	cmd: PulseCommand,
 	contactProperties: boolean = false
 ) => {
-	if (user.context.protoDialect < 5) {
+	if (user.context.messenger.dialect < 5) {
 		return user.info(
 			`Ignoring ${contactProperties ? 'contact' : 'user'} properties sync... (client is too old)`
 		)
@@ -262,7 +277,7 @@ const handleSYN_Properties = async (
 	sendSyncCmd(user, prop, cmd.TrId, [UserProperties.DirectPaging, 1 === 1 ? '0' : '2'])
 
 	// TODO: impl HSB correctly
-	if (user.context.protoDialect >= 11) {
+	if (user.context.messenger.dialect >= 11) {
 		user.client.ns.untracked(prop, [UserProperties.FriendlyName, user.data.user.DisplayName])
 
 		user.client.ns.untracked(prop, [UserProperties.HasBlog, !(1 === 1)])
@@ -277,12 +292,12 @@ const handleSYN_Properties = async (
  *   <- LSG [groupName] [groupGUID]
  */
 const handleSYN_ContactGroups = async (user: PulseUser, cmd: PulseCommand) => {
-	if (user.context.protoDialect < 7) {
+	if (user.context.messenger.dialect < 7) {
 		return user.info('Ignoring groups sync... (client is too old)')
 	}
 
 	let groupIdx = 0
-	if (user.context.protoDialect <= 10) {
+	if (user.context.messenger.dialect <= 10) {
 		user.client.ns.send(SyncCmds.ListGroups, cmd.TrId, [
 			user.data.user.ClVersion,
 			groupIdx++,
@@ -298,7 +313,7 @@ const handleSYN_ContactGroups = async (user: PulseUser, cmd: PulseCommand) => {
 
 	const dbGroups = user.data.user.ContactGroups as GenericGroup[]
 	for (const dbGroup of dbGroups) {
-		if (user.context.protoDialect >= 11) {
+		if (user.context.messenger.dialect >= 11) {
 			user.client.ns.untracked(SyncCmds.ListGroups, [dbGroup.name, dbGroup.guid])
 			continue
 		}
@@ -337,7 +352,7 @@ const handleSYN_ContactsLists = async (user: PulseUser, cmd: PulseCommand) => {
 			listBits,
 		]
 
-		if (user.context.protoDialect === 12) {
+		if (user.context.messenger.dialect === 12) {
 			args = [...args, ContactType.MSN]
 		}
 
@@ -368,7 +383,7 @@ const handleSYN_ContactsLists = async (user: PulseUser, cmd: PulseCommand) => {
 			encodeURIComponent(contact.data.user.DisplayName),
 		]
 
-		if (listType === ListTypes.Forward && user.context.protoDialect >= 7) {
+		if (listType === ListTypes.Forward && user.context.messenger.dialect >= 7) {
 			args = [...args, getLegacyGroupIDs(list, groups).join(',')]
 		}
 
@@ -428,7 +443,7 @@ const handleSYN_ContactsLists = async (user: PulseUser, cmd: PulseCommand) => {
 			return true
 		}
 
-		if (user.context.protoDialect < 11) {
+		if (user.context.messenger.dialect < 11) {
 			const tasks = [
 				() =>
 					legacySync(

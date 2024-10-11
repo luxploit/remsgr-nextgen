@@ -7,9 +7,22 @@ export class PulseClient {
 	sb!: PulseInteractable
 }
 
+export class PulseClientMachineContext {
+	localeId!: number
+	osType!: string
+	osVersion!: string
+	cpuArch!: string
+}
+
+export class PulseClientMessengerContext {
+	authMethod!: AuthMethodsT
+	dialect!: number
+	version!: string
+	intrLibName!: string
+	intrCliName!: string
+}
+
 export class PulseClientInfoContext {
-	authenticationMethod!: AuthMethodsT
-	protoName!: string
-	protoDialect!: number
-	buildString!: string
+	machine = new PulseClientMachineContext()
+	messenger = new PulseClientMessengerContext()
 }

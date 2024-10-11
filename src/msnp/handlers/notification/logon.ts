@@ -41,8 +41,7 @@ export const handleVER = async (user: PulseUser, cmd: PulseCommand) => {
 	user.info('Client has reported following supported versions:', validClVrs)
 
 	user.context = new PulseClientInfoContext()
-	user.context.protoName = validClVrs[0]
-	user.context.protoDialect = parseInt(user.context.protoName.substring(4))
+	user.context.messenger.dialect = parseInt(validClVrs[0].substring(4))
 
 	return user.client.ns.reply(cmd, [...validClVrs, 'CVR0'])
 }
@@ -56,12 +55,12 @@ export const handleVER = async (user: PulseUser, cmd: PulseCommand) => {
  *   - Command is Disabled -
  */
 export const handleINF = async (user: PulseUser, cmd: PulseCommand) => {
-	if (user.context.protoDialect >= 8) {
+	if (user.context.messenger.dialect >= 8) {
 		user.warn('Client tried to use legacy authentication selector')
 		return user.client.ns.fatal(cmd, ErrorCode.DisabledCommand)
 	}
 
-	const authProv = user.context.protoName === 'MSNP2' ? 'CTP' : 'MD5'
+	const authProv = user.context.messenger.dialect === 2 ? 'CTP' : 'MD5'
 
 	user.info('Client authentication method was chosen to be:', authProv)
 	return user.client.ns.reply(cmd, [authProv])
@@ -128,19 +127,19 @@ export const handleUSR = async (user: PulseUser, cmd: PulseCommand) => {
 	}
 
 	if (loggedIn === AuthStages.OK) {
-		user.context.authenticationMethod = method
+		user.context.messenger.authMethod = method
 		user.data.user.LastLogin = new Date()
 
 		const passport = makeEmailFromSN(user.data.account.ScreenName)
 		user.info('Client has successfully logged-in as:', user.data.account.ScreenName)
 
 		// MSNP11+
-		if (user.context.protoDialect >= 11) {
+		if (user.context.messenger.dialect >= 11) {
 			return user.client.ns.reply(cmd, ['OK', passport, user.data.account.IsVerified, 0])
 		}
 
 		// MSNP8 - MSNP10
-		if (user.context.protoDialect >= 8) {
+		if (user.context.messenger.dialect >= 8) {
 			return user.client.ns.reply(cmd, [
 				'OK',
 				passport,
@@ -170,10 +169,10 @@ export const handleUSR = async (user: PulseUser, cmd: PulseCommand) => {
  *   - Command is Disabled-
  */
 const handleUSR_CTP = async (user: PulseUser, cmd: PulseCommand): Promise<AuthStagesT> => {
-	if (user.context.protoDialect > 2) {
+	if (user.context.messenger.dialect > 2) {
 		user.warn(
 			'Client attempted to login via CTP auth using unsupported dialect',
-			user.context.protoDialect
+			user.context.messenger.dialect
 		)
 		return AuthStages.Disabled
 	}
@@ -217,10 +216,10 @@ const handleUSR_CTP = async (user: PulseUser, cmd: PulseCommand): Promise<AuthSt
  *   - Command is Disabled -
  */
 const handleUSR_MD5 = async (user: PulseUser, cmd: PulseCommand): Promise<AuthStagesT> => {
-	if (user.context.protoDialect >= 8 && user.context.protoDialect <= 2) {
+	if (user.context.messenger.dialect >= 8 && user.context.messenger.dialect <= 2) {
 		user.warn(
 			'Client attempted to login via MD5 auth using unsupported dialect',
-			user.context.protoDialect
+			user.context.messenger.dialect
 		)
 		return AuthStages.Disabled
 	}
@@ -269,10 +268,10 @@ const handleUSR_MD5 = async (user: PulseUser, cmd: PulseCommand): Promise<AuthSt
  *   - Command is Disabled -
  */
 const handleUSR_TWN = async (user: PulseUser, cmd: PulseCommand): Promise<AuthStagesT> => {
-	if (user.context.protoDialect <= 7 && user.context.protoDialect > 14) {
+	if (user.context.messenger.dialect <= 7 && user.context.messenger.dialect > 14) {
 		user.warn(
 			'Client attempted to login via TWN auth using unsupported dialect',
-			user.context.protoDialect
+			user.context.messenger.dialect
 		)
 		return AuthStages.Disabled
 	}
@@ -289,10 +288,10 @@ const handleUSR_TWN = async (user: PulseUser, cmd: PulseCommand): Promise<AuthSt
  *   - Command is Disabled -
  */
 const handleUSR_SSO = async (user: PulseUser, cmd: PulseCommand): Promise<AuthStagesT> => {
-	if (user.context.protoDialect <= 14 && user.context.protoDialect > 21) {
+	if (user.context.messenger.dialect <= 14 && user.context.messenger.dialect > 21) {
 		user.warn(
 			'Client attempted to login via SSO auth using unsupported dialect',
-			user.context.protoDialect
+			user.context.messenger.dialect
 		)
 		return AuthStages.Disabled
 	}
@@ -308,10 +307,10 @@ const handleUSR_SSO = async (user: PulseUser, cmd: PulseCommand): Promise<AuthSt
  *   - Command is Disabled -
  */
 const handleUSR_SHA = async (user: PulseUser, cmd: PulseCommand): Promise<AuthStagesT> => {
-	if (user.context.protoDialect <= 16) {
+	if (user.context.messenger.dialect <= 16) {
 		user.warn(
 			'Client attempted to login via SHA auth using unsupported dialect',
-			user.context.protoDialect
+			user.context.messenger.dialect
 		)
 		return AuthStages.Disabled
 	}

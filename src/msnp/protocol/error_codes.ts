@@ -12,6 +12,8 @@ export enum ErrorCode {
 	InternalServerError = 500,
 	DisabledCommand = 502,
 	DatabaseError = 603,
+	BadCVRParameters = 710,
+	BadCVRFormatting = 731,
 	ServerIsBusy = 911,
 	NotAllowedWhenHidden = 913,
 }
