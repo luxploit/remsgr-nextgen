@@ -46,10 +46,11 @@ export const getCommand = (data: Buffer, prevResults?: PulseCommand[]): PulseCom
 		return null
 	}
 
-	const trId = parseInt(splits[1], 10)
+	let trId = parseInt(splits[1], 10)
 	if (trId < 0 || isNaN(trId)) {
-		logging.error('TrId is invalid! was < 0 or is NaN!')
-		return null
+		trId = -1
+		// logging.error('TrId is invalid! was < 0 or is NaN!')
+		// return null
 	}
 
 	// whitelisted payload command

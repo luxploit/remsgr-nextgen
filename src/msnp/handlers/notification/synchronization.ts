@@ -106,6 +106,11 @@ import { ContactType, ListBitFlags, ListTypes, ListTypesT, Properties } from '..
  *     <- BRP [property=HSB] [hasBlog=0|1]
  */
 export const handleSYN = async (user: PulseUser, cmd: PulseCommand) => {
+	if (cmd.TrId === -1) {
+		user.error('Client not provided a CVR0 to command')
+		return user.client.ns.quit()
+	}
+
 	if (cmd.Args.length <= 0 || cmd.Args.length >= 3) {
 		user.error('Client provided invalid number of arguments')
 		return user.client.sb.fatal(cmd, ErrorCode.ServerIsBusy)

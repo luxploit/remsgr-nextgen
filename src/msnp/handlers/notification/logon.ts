@@ -10,6 +10,11 @@ import { logging } from '../../../utils/logging'
 
 /* <> VER [trId] [MSNP(N)] CVR0 */
 export const handleVER = async (user: PulseUser, cmd: PulseCommand) => {
+	if (cmd.TrId === -1) {
+		user.error('Client not provided a CVR0 to command')
+		return user.client.ns.quit()
+	}
+
 	// toUpperCase is just excessive insurance, never assume!
 	const cvr0Index = cmd.Args.findIndex((arg) => arg.toUpperCase() === 'CVR0')
 	if (cvr0Index === -1) {
@@ -55,6 +60,11 @@ export const handleVER = async (user: PulseUser, cmd: PulseCommand) => {
  *   - Command is Disabled -
  */
 export const handleINF = async (user: PulseUser, cmd: PulseCommand) => {
+	if (cmd.TrId === -1) {
+		user.error('Client not provided a CVR0 to command')
+		return user.client.ns.quit()
+	}
+
 	if (user.context.messenger.dialect >= 8) {
 		user.warn('Client tried to use legacy authentication selector')
 		return user.client.ns.fatal(cmd, ErrorCode.DisabledCommand)
@@ -95,6 +105,11 @@ export const handleUSR = async (user: PulseUser, cmd: PulseCommand) => {
 			[AuthMethods.CircleTicket, handleUSR_SHA],
 		]
 	)
+
+	if (cmd.TrId === -1) {
+		user.error('Client not provided a CVR0 to command')
+		return user.client.ns.quit()
+	}
 
 	if (!cmd.Args.length || cmd.Args.length < 2) {
 		user.error('Client not provide enough/any arguments')
@@ -315,4 +330,8 @@ const handleUSR_SHA = async (user: PulseUser, cmd: PulseCommand): Promise<AuthSt
 	}
 
 	return AuthStages.Error
+}
+
+export const handleOUT = async (user: PulseUser, cmd: PulseCommand) => {
+	return user.client.ns.echo(cmd)
 }

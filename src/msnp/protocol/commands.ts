@@ -3,6 +3,7 @@ export enum DispatchCmds {
 	GetAuthProviderLegacy = 'INF',
 	Authenticate = 'USR',
 	ServerRedirect = 'XFR',
+	SignOut = 'OUT',
 }
 
 export enum SyncCmds {

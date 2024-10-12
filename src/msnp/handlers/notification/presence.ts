@@ -12,6 +12,11 @@ import { ErrorCode } from '../../protocol/error_codes'
  * <- CVR [trId] [recVer] [recVer2=recVer] [minVer] [downloadUrl] [infoUrl]
  */
 export const handleCVR = async (user: PulseUser, cmd: PulseCommand) => {
+	if (cmd.TrId === -1) {
+		user.error('Client not provided a CVR0 to command')
+		return user.client.ns.quit()
+	}
+
 	if (cmd.Args.length <= 0 || cmd.Args.length > 8) {
 		user.error('Client provided invalid number of arguments')
 		return user.client.sb.fatal(cmd, ErrorCode.BadCVRFormatting)
@@ -48,6 +53,11 @@ export const handleCVR = async (user: PulseUser, cmd: PulseCommand) => {
  *   -> CVQ [trId] [localeId] [osType] [osVersion] [cpuArch] [libName] [clientVer] [clientName] [passport]
  */
 export const handleCVQ = async (user: PulseUser, cmd: PulseCommand) => {
+	if (cmd.TrId === -1) {
+		user.error('Client not provided a CVR0 to command')
+		return user.client.ns.quit()
+	}
+
 	const ver = cmd.Args[5]
 	const url = 'https://remsgr.net'
 
@@ -62,6 +72,11 @@ export const handleCVQ = async (user: PulseUser, cmd: PulseCommand) => {
  *   <> CHG [trId] [status] [msnc_clientCaps] [msnc_objectDesc]
  */
 export const handleCHG = async (user: PulseUser, cmd: PulseCommand) => {
+	if (cmd.TrId === -1) {
+		user.error('Client not provided a CVR0 to command')
+		return user.client.ns.quit()
+	}
+
 	user.context.state.onlineStatus = cmd.Args[0]
 	return user.client.ns.echo(cmd)
 }

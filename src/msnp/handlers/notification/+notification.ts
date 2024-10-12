@@ -2,7 +2,7 @@ import { logging } from '../../../utils/logging'
 import { getCommand, PulseCommand } from '../../framework/decoder'
 import { PulseInteractable } from '../../framework/interactable'
 import { PulseUser } from '../../framework/user'
-import { handleINF, handleUSR, handleVER } from './logon'
+import { handleINF, handleOUT, handleUSR, handleVER } from './logon'
 import { handleSYN } from './synchronization'
 import { DispatchCmds, PresenceCmds, SyncCmds } from '../../protocol/commands'
 import { handleCHG, handleCVQ, handleCVR } from './presence'
@@ -18,6 +18,7 @@ const nsCommandHandlers = new Map<string, (user: PulseUser, cmd: PulseCommand) =
 	[DispatchCmds.ProtocolVersion, handleVER],
 	[DispatchCmds.GetAuthProviderLegacy, handleINF],
 	[DispatchCmds.Authenticate, handleUSR],
+	[DispatchCmds.SignOut, handleOUT],
 
 	// Synchronization
 	[SyncCmds.BeginSynchronizationLegacy, handleSYN],
