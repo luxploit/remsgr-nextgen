@@ -7,7 +7,9 @@ export type PulseInteractableArgs = Array<string | number | boolean>
 export class PulseInteractable {
 	constructor(private readonly socket: Socket) {}
 
-	quit = () => this.socket.destroy()
+	quit = () => {
+		this.socket.destroy()
+	}
 
 	private socketWrite = (output: PulseInteractableArgs) => {
 		logging.debug(

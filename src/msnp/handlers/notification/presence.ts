@@ -11,7 +11,7 @@ import { ErrorCode } from '../../protocol/error_codes'
  *
  * <- CVR [trId] [recVer] [recVer2=recVer] [minVer] [downloadUrl] [infoUrl]
  */
-export const handle_CVR = async (user: PulseUser, cmd: PulseCommand) => {
+export const handleCVR = async (user: PulseUser, cmd: PulseCommand) => {
 	if (cmd.Args.length <= 0 || cmd.Args.length > 8) {
 		user.error('Client provided invalid number of arguments')
 		return user.client.sb.fatal(cmd, ErrorCode.BadCVRFormatting)
@@ -37,14 +37,14 @@ export const handle_CVR = async (user: PulseUser, cmd: PulseCommand) => {
 		user.context.messenger.intrCliName = cmd.Args[6]
 	}
 
-	return await handle_CVQ(user, cmd)
+	return await handleCVQ(user, cmd)
 }
 
 /*
  * -> CVQ [trId] [localeId] [osType] [osVersion] [cpuArch] [libName] [clientVer] [clientName] [passport]
  * <- CVQ [trId] [recVer] [recVer2=recVer] [minVer] [downloadUrl] [infoUrl]
  */
-export const handle_CVQ = async (user: PulseUser, cmd: PulseCommand) => {
+export const handleCVQ = async (user: PulseUser, cmd: PulseCommand) => {
 	const ver = cmd.Args[5]
 	const url = 'https://remsgr.net'
 
@@ -58,7 +58,7 @@ export const handle_CVQ = async (user: PulseUser, cmd: PulseCommand) => {
  * MSNP9+:
  *   <> CHG [trId] [status] [msnc_clientCaps] [msnc_objectDesc]
  */
-export const handle_CHG = async (user: PulseUser, cmd: PulseCommand) => {
+export const handleCHG = async (user: PulseUser, cmd: PulseCommand) => {
 	user.context.state.onlineStatus = cmd.Args[0]
 	return user.client.ns.echo(cmd)
 }

@@ -14,3 +14,9 @@ export enum SyncCmds {
 	ListGroups = 'LSG',
 	ListContacts = 'LST',
 }
+
+export enum PresenceCmds {
+	ClientVersionRecord = 'CVR',
+	ClientVersionQuery = 'CVQ',
+	ChangeStatus = 'CHG',
+}

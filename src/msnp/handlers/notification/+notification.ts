@@ -4,8 +4,9 @@ import { PulseInteractable } from '../../framework/interactable'
 import { PulseUser } from '../../framework/user'
 import { handleINF, handleUSR, handleVER } from './logon'
 import { handleSYN } from './synchronization'
-import { DispatchCmds, SyncCmds } from '../../protocol/commands'
+import { DispatchCmds, PresenceCmds, SyncCmds } from '../../protocol/commands'
 import net from 'node:net'
+import { handleCHG, handleCVQ, handleCVR } from './presence'
 
 /**
  * TODO: Look into rewriting with class-based reflection (see AzureFlare for examples)
@@ -20,6 +21,11 @@ const nsCommandHandlers = new Map<string, (user: PulseUser, cmd: PulseCommand) =
 
 	// Synchronization
 	[SyncCmds.BeginSynchronizationLegacy, handleSYN],
+
+	// Presence
+	[PresenceCmds.ClientVersionRecord, handleCVR],
+	[PresenceCmds.ClientVersionQuery, handleCVQ],
+	[PresenceCmds.ChangeStatus, handleCHG],
 ])
 
 export const notificationServer = () => {
