@@ -5,8 +5,8 @@ import { PulseUser } from '../../framework/user'
 import { handleINF, handleUSR, handleVER } from './logon'
 import { handleSYN } from './synchronization'
 import { DispatchCmds, PresenceCmds, SyncCmds } from '../../protocol/commands'
-import net from 'node:net'
 import { handleCHG, handleCVQ, handleCVR } from './presence'
+import net from 'node:net'
 
 /**
  * TODO: Look into rewriting with class-based reflection (see AzureFlare for examples)

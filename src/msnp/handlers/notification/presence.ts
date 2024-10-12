@@ -41,14 +41,17 @@ export const handleCVR = async (user: PulseUser, cmd: PulseCommand) => {
 }
 
 /*
- * -> CVQ [trId] [localeId] [osType] [osVersion] [cpuArch] [libName] [clientVer] [clientName] [passport]
- * <- CVQ [trId] [recVer] [recVer2=recVer] [minVer] [downloadUrl] [infoUrl]
+ * MSNP2 - MSNP7:
+ *   -> CVQ [trId] [localeId] [osType] [osVersion] [cpuArch] [libName] [clientVer] [clientName]
+ *
+ * MSNP8+:
+ *   -> CVQ [trId] [localeId] [osType] [osVersion] [cpuArch] [libName] [clientVer] [clientName] [passport]
  */
 export const handleCVQ = async (user: PulseUser, cmd: PulseCommand) => {
 	const ver = cmd.Args[5]
 	const url = 'https://remsgr.net'
 
-	return user.client.ns.reply(cmd, [ver, ver, ver, url, url])
+	return user.client.ns.reply(cmd, [ver, ver, '1.0.0000', url, url])
 }
 
 /*

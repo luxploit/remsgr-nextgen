@@ -157,7 +157,6 @@ export const handleUSR = async (user: PulseUser, cmd: PulseCommand) => {
 				encodeURIComponent(user.data.user.DisplayName),
 			])
 		}
-		//return user.client.ns.reply(cmd, ['OK', 1, 0])
 	}
 }
 

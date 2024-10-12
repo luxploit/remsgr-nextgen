@@ -76,7 +76,7 @@ import { ContactType, ListBitFlags, ListTypes, ListTypesT, Properties } from '..
  *
  * Contact Lists:
  *   MSNP2:
- *     <- LST [trId] [listType=FL|RL|AL|BL] [serverSyncId]  [listVerId] [userIdx] [totalUsers] [passport?] [friendlyName?] [groupIds[,]?]
+ *     <- LST [trId] [listType=FL|RL|AL|BL] [listVerId] [userIdx] [totalUsers] [passport?] [friendlyName?] [groupIds[,]?]
  *
  *   MSNP10:
  *    <- LST N=[passport] F=[friendlyName] C=[contactGUID] [listBitFlags] [groupGUIDs[,]]
@@ -336,7 +336,7 @@ const handleSYN_ContactGroups = async (user: PulseUser, cmd: PulseCommand) => {
 
 /*
  * MSNP2:
- *   <- LST [trId] [listType=FL|RL|AL|BL] [serverSyncId] [listVerId] [userIdx] [totalUsers] [passport?] [friendlyName?] [groupIds[,]?]
+ *   <- LST [trId] [listType=FL|RL|AL|BL] [listVer] [userIdx] [totalUsers] [passport?] [friendlyName?] [groupIds[,]?]
  *
  * MSNP10:
  *  <- LST N=[passport] F=[friendlyName] C=[contactGUID] [listBitFlags] [groupGUIDs[,]]
@@ -381,7 +381,6 @@ const handleSYN_ContactsLists = async (user: PulseUser, cmd: PulseCommand) => {
 	) => {
 		let args: PulseInteractableArgs = [
 			listType,
-			user.data.user.ClVersion,
 			listVer,
 			userIdx,
 			listLen,
@@ -411,7 +410,6 @@ const handleSYN_ContactsLists = async (user: PulseUser, cmd: PulseCommand) => {
 				user.client.ns.send(SyncCmds.ListContacts, cmd.TrId, [
 					listType,
 					user.data.user.ClVersion,
-					0,
 					0,
 					0,
 				])
