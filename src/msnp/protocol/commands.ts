@@ -20,4 +20,5 @@ export enum PresenceCmds {
 	ClientVersionRecord = 'CVR',
 	ClientVersionQuery = 'CVQ',
 	ChangeStatus = 'CHG',
+	PolicyConfiguration = 'GCF',
 }

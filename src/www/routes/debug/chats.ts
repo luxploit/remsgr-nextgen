@@ -2,5 +2,5 @@ import { FlareController, FlareRequest, FlareResponse, Get } from '@lxpt/azurefl
 
 export class ListChatsController extends FlareController {
 	@Get('/chats')
-	bannerAd(req: FlareRequest, res: FlareResponse) {}
+	listChats(req: FlareRequest, res: FlareResponse) {}
 }

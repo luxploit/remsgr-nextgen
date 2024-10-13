@@ -1,5 +1,4 @@
 import { activeUsers } from './+msnp'
-import crypto from 'node:crypto'
 import { PulseUser } from './framework/user'
 import { PulseCommand } from './framework/decoder'
 import { PulseInteractableArgs } from './framework/interactable'
@@ -7,6 +6,8 @@ import { ListsT } from '../database/models/list'
 import { UsersT } from '../database/models/user'
 import { populatePulseDataByUID } from '../database/queries/populate'
 import { ListTypes, ListTypesT } from './protocol/sync'
+import crypto from 'node:crypto'
+import fs from 'node:fs/promises'
 
 export const getPulseUserByUID = (uid: number) => activeUsers[uid]
 export const deletePulseUserByUID = (uid: number) => delete activeUsers[uid]
@@ -18,7 +19,8 @@ export const generateMD5Password = (password: string, salt: string) => {
 }
 
 export const getSNfromMail = (email: string) => email.split('@')[0]
-export const makeEmailFromSN = (sn: string) => sn + '@remsgr.net'
+export const makeEmailFromSN = (sn: string, legacy: boolean) =>
+	sn + legacy ? '@hotmail.com' : '@remsgr.net'
 
 export const getClVersions = (user: PulseUser, cmd: PulseCommand) => {
 	const clientCl = parseInt(cmd.Args[0])
@@ -118,10 +120,13 @@ export const createFakeContactUser = async (user: PulseUser, cid: number) => {
 	return contact
 }
 
-export const runSequentially = async (tasks: (() => Promise<boolean>)[]) => {
+export const runSequentially = async <T>(tasks: (() => Promise<T>)[]) => {
 	const results = []
 	for (const task of tasks) {
 		results.push(await task())
 	}
 	return results
 }
+
+export const loadTemplate = async (filePath: string) =>
+	(await fs.readFile('./src/msnp/templates/' + filePath)).toString().replace(/r?\n/g, '\r\n')

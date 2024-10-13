@@ -41,7 +41,7 @@ export const notificationServer = () => {
 
 			const result = getCommand(data)
 			if (!result) {
-				logging.error('Invalid command found! Closing')
+				logging.error('Invalid command found! Closing...')
 				socket.destroy()
 				return
 			}

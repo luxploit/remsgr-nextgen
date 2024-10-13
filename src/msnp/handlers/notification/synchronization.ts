@@ -113,7 +113,7 @@ export const handleSYN = async (user: PulseUser, cmd: PulseCommand) => {
 
 	if (cmd.Args.length <= 0 || cmd.Args.length >= 3) {
 		user.error('Client provided invalid number of arguments')
-		return user.client.sb.fatal(cmd, ErrorCode.ServerIsBusy)
+		return user.client.ns.fatal(cmd, ErrorCode.ServerIsBusy)
 	}
 
 	if (user.context.messenger.dialect >= 13) {
@@ -357,7 +357,7 @@ const handleSYN_ContactsLists = async (user: PulseUser, cmd: PulseCommand) => {
 		groups: string[]
 	) => {
 		let args: PulseInteractableArgs = [
-			`N=${makeEmailFromSN(contact.data.account.ScreenName)}`,
+			`N=${makeEmailFromSN(contact.data.account.ScreenName, user.context.messenger.dialect === 2)}`,
 			`F=${encodeURIComponent(contact.data.user.DisplayName)}`,
 			`C=${contact.data.account.GUID}`,
 			listBits,
@@ -389,7 +389,7 @@ const handleSYN_ContactsLists = async (user: PulseUser, cmd: PulseCommand) => {
 			listVer,
 			userIdx,
 			listLen,
-			makeEmailFromSN(contact.data.account.ScreenName),
+			makeEmailFromSN(contact.data.account.ScreenName, user.context.messenger.dialect === 2),
 			encodeURIComponent(contact.data.user.DisplayName),
 		]
 

@@ -19,7 +19,7 @@ export const handleCVR = async (user: PulseUser, cmd: PulseCommand) => {
 
 	if (cmd.Args.length <= 0 || cmd.Args.length > 8) {
 		user.error('Client provided invalid number of arguments')
-		return user.client.sb.fatal(cmd, ErrorCode.BadCVRFormatting)
+		return user.client.ns.fatal(cmd, ErrorCode.BadCVRFormatting)
 	}
 
 	// context.machine
@@ -27,7 +27,7 @@ export const handleCVR = async (user: PulseUser, cmd: PulseCommand) => {
 		user.context.machine.localeId = parseInt(cmd.Args[0], 16)
 		if (isNaN(user.context.machine.localeId)) {
 			user.error('Client provided invalid localeId')
-			return user.client.sb.fatal(cmd, ErrorCode.BadCVRParameters)
+			return user.client.ns.fatal(cmd, ErrorCode.BadCVRParameters)
 		}
 
 		user.context.machine.osType = cmd.Args[1]

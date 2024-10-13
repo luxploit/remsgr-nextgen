@@ -4,7 +4,7 @@ import { AuthMethodsT } from '../protocol/constants'
 
 export class PulseClient {
 	ns!: PulseInteractable
-	sb!: PulseInteractable
+	sb: PulseInteractable[] = []
 }
 
 export class PulseMachineContext {

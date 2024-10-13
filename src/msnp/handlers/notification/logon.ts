@@ -3,10 +3,13 @@ import { populatePulseDataBySN } from '../../../database/queries/populate'
 import { PulseCommand } from '../../framework/decoder'
 import { PulseUser } from '../../framework/user'
 import { AuthMethods, AuthMethodsT, AuthStages, AuthStagesT } from '../../protocol/constants'
-import { generateMD5Password, getSNfromMail, makeEmailFromSN } from '../../util'
+import { generateMD5Password, getSNfromMail, loadTemplate, makeEmailFromSN } from '../../util'
 import { PulseContext } from '../../framework/client'
 import { ErrorCode } from '../../protocol/error_codes'
 import { logging } from '../../../utils/logging'
+import { updateUserLastLoginBySN } from '../../../database/queries/user'
+import { DispatchCmds, PresenceCmds } from '../../protocol/commands'
+import { activeUsers } from '../../+msnp'
 
 /* <> VER [trId] [MSNP(N)] CVR0 */
 export const handleVER = async (user: PulseUser, cmd: PulseCommand) => {
@@ -138,19 +141,39 @@ export const handleUSR = async (user: PulseUser, cmd: PulseCommand) => {
 	}
 
 	if (loggedIn === AuthStages.Disabled) {
+		user.warn(
+			`Client attempted to login via ${method} auth using unsupported dialect MSNP${user.context.messenger.dialect}`
+		)
 		return user.client.ns.fatal(cmd, ErrorCode.DisabledCommand)
 	}
 
 	if (loggedIn === AuthStages.OK) {
-		user.context.messenger.authMethod = method
-		user.data.user.LastLogin = new Date()
+		activeUsers[user.data.account.UID] = user
 
-		const passport = makeEmailFromSN(user.data.account.ScreenName)
+		user.context.messenger.authMethod = method
+
+		// Refresh last login
+		{
+			user.data.user.LastLogin = new Date()
+			updateUserLastLoginBySN(user.data.user.UID, user.data.user.LastLogin)
+		}
+
+		const passport = makeEmailFromSN(
+			user.data.account.ScreenName,
+			user.context.messenger.dialect === 2
+		)
 		user.info('Client has successfully logged-in as:', user.data.account.ScreenName)
+
+		const isKidsPassport = !(1 === 1) // TODO: Implement
 
 		// MSNP10+
 		if (user.context.messenger.dialect >= 10) {
-			return user.client.ns.reply(cmd, ['OK', passport, user.data.account.IsVerified, 0])
+			return user.client.ns.reply(cmd, [
+				'OK',
+				passport,
+				user.data.account.IsVerified,
+				isKidsPassport,
+			])
 		}
 
 		// MSNP8 - MSNP9
@@ -160,7 +183,7 @@ export const handleUSR = async (user: PulseUser, cmd: PulseCommand) => {
 				passport,
 				encodeURIComponent(user.data.user.DisplayName),
 				user.data.account.IsVerified,
-				0,
+				isKidsPassport,
 			])
 		}
 
@@ -184,10 +207,6 @@ export const handleUSR = async (user: PulseUser, cmd: PulseCommand) => {
  */
 const handleUSR_CTP = async (user: PulseUser, cmd: PulseCommand): Promise<AuthStagesT> => {
 	if (user.context.messenger.dialect > 2) {
-		user.warn(
-			'Client attempted to login via CTP auth using unsupported dialect',
-			user.context.messenger.dialect
-		)
 		return AuthStages.Disabled
 	}
 
@@ -230,11 +249,7 @@ const handleUSR_CTP = async (user: PulseUser, cmd: PulseCommand): Promise<AuthSt
  *   - Command is Disabled -
  */
 const handleUSR_MD5 = async (user: PulseUser, cmd: PulseCommand): Promise<AuthStagesT> => {
-	if (user.context.messenger.dialect >= 8 && user.context.messenger.dialect <= 2) {
-		user.warn(
-			'Client attempted to login via MD5 auth using unsupported dialect',
-			user.context.messenger.dialect
-		)
+	if (user.context.messenger.dialect >= 8 || user.context.messenger.dialect <= 2) {
 		return AuthStages.Disabled
 	}
 
@@ -255,7 +270,11 @@ const handleUSR_MD5 = async (user: PulseUser, cmd: PulseCommand): Promise<AuthSt
 
 		user.nsDebug('USR/MD5-I', 'salt as guid', user.data.account.GUID)
 
-		user.client.ns.reply(cmd, ['MD5', 'S', user.data.account.GUID])
+		user.client.ns.reply(cmd, [
+			AuthMethods.SaltedMD5!,
+			AuthStages.Subsequent!,
+			user.data.account.GUID,
+		])
 		return AuthStages.Subsequent
 	}
 
@@ -282,35 +301,98 @@ const handleUSR_MD5 = async (user: PulseUser, cmd: PulseCommand): Promise<AuthSt
  *   - Command is Disabled -
  */
 const handleUSR_TWN = async (user: PulseUser, cmd: PulseCommand): Promise<AuthStagesT> => {
-	if (user.context.messenger.dialect <= 7 && user.context.messenger.dialect > 14) {
-		user.warn(
-			'Client attempted to login via TWN auth using unsupported dialect',
-			user.context.messenger.dialect
-		)
+	if (user.context.messenger.dialect <= 7 || user.context.messenger.dialect > 14) {
 		return AuthStages.Disabled
 	}
 
-	return AuthStages.Error
+	const stage = cmd.Args[1]
+	if (stage !== AuthStages.Initial && stage !== AuthStages.Subsequent) {
+		user.error('Client provided unsupported auth stage for TWN')
+		return AuthStages.Error
+	}
+
+	if (stage === AuthStages.Initial) {
+		const screenname = getSNfromMail(cmd.Args[2])
+		const data = await populatePulseDataBySN(screenname)
+		if (!data) {
+			user.error('Client provided an invalid e-mail address!')
+			return AuthStages.Error
+		}
+		user.data = data
+
+		user.nsDebug('USR/TWN-I', 'token param=guid', user.data.account.GUID)
+		user.client.ns.reply(cmd, [AuthMethods.Tweener!, AuthStages.Subsequent!, user.data.account.GUID])
+
+		if (user.context.messenger.dialect >= 13) {
+			const policyXml = await loadTemplate('policies.xml')
+			user.client.ns.payload(PresenceCmds.PolicyConfiguration, 0, [policyXml.length], policyXml)
+		}
+
+		return AuthStages.Subsequent
+	}
+
+	const authToken = cmd.Args[2]
+	user.nsDebug('USR/TWN-S', 'authtoken', authToken)
+	user.nsDebug('USR/TWN-S', 'dbPass224', user.data.account.PasswordSHA)
+
+	if (!timingSafeStringCompare(authToken, user.data.account.PasswordSHA)) {
+		user.error('Client has sent an invalid hashed response!')
+		return AuthStages.Error
+	}
+
+	return AuthStages.OK
 }
 
 /*
  * MSNP15 - MSNP20:
  *   -> USR [trId] [Method=SSO] [Stage=I] [Mail]
  *   <- USR [trId] [Method=SSO] [Stage=S] [Policy] [ChallengeToken]
+ *   -> USR [trId] [Method=SSO] [Stage=S] [GeneratedToken]
  *
  * MSNP2 - MSNP14 & MSNP21+:
  *   - Command is Disabled -
  */
 const handleUSR_SSO = async (user: PulseUser, cmd: PulseCommand): Promise<AuthStagesT> => {
-	if (user.context.messenger.dialect <= 14 && user.context.messenger.dialect > 21) {
-		user.warn(
-			'Client attempted to login via SSO auth using unsupported dialect',
-			user.context.messenger.dialect
-		)
+	if (user.context.messenger.dialect <= 14 || user.context.messenger.dialect >= 21) {
 		return AuthStages.Disabled
 	}
 
-	return AuthStages.Error
+	const stage = cmd.Args[1]
+	if (stage !== AuthStages.Initial && stage !== AuthStages.Subsequent) {
+		user.error('Client provided unsupported auth stage for SSO')
+		return AuthStages.Error
+	}
+
+	if (stage === AuthStages.Initial) {
+		const screenname = getSNfromMail(cmd.Args[2])
+		const data = await populatePulseDataBySN(screenname)
+		if (!data) {
+			user.error('Client provided an invalid e-mail address!')
+			return AuthStages.Error
+		}
+		user.data = data
+
+		user.nsDebug('USR/SSO-I', 'token param=guid', user.data.account.GUID)
+		user.client.ns.reply(cmd, [AuthMethods.Tweener!, AuthStages.Subsequent!, user.data.account.GUID])
+
+		if (user.context.messenger.dialect >= 13) {
+			const policyXml = await loadTemplate('policies.xml')
+			user.client.ns.payload(PresenceCmds.PolicyConfiguration, 0, [policyXml.length], policyXml)
+		}
+
+		return AuthStages.Subsequent
+	}
+
+	const authToken = cmd.Args[2]
+	user.nsDebug('USR/SSO-S', 'authtoken', authToken)
+	user.nsDebug('USR/SSO-S', 'dbPass224', user.data.account.PasswordSHA)
+
+	if (!timingSafeStringCompare(authToken, user.data.account.PasswordSHA)) {
+		user.error('Client has sent an invalid hashed response!')
+		return AuthStages.Error
+	}
+
+	return AuthStages.OK
 }
 
 /*
@@ -322,10 +404,6 @@ const handleUSR_SSO = async (user: PulseUser, cmd: PulseCommand): Promise<AuthSt
  */
 const handleUSR_SHA = async (user: PulseUser, cmd: PulseCommand): Promise<AuthStagesT> => {
 	if (user.context.messenger.dialect <= 16) {
-		user.warn(
-			'Client attempted to login via SHA auth using unsupported dialect',
-			user.context.messenger.dialect
-		)
 		return AuthStages.Disabled
 	}
 
@@ -333,5 +411,6 @@ const handleUSR_SHA = async (user: PulseUser, cmd: PulseCommand): Promise<AuthSt
 }
 
 export const handleOUT = async (user: PulseUser, cmd: PulseCommand) => {
-	return user.client.ns.echo(cmd)
+	user.client.ns.echo(cmd)
+	return user.client.ns.quit()
 }
