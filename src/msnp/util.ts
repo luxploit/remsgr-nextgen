@@ -9,7 +9,7 @@ import { ListTypes, ListTypesT } from './protocol/sync'
 import crypto from 'node:crypto'
 import fs from 'node:fs/promises'
 
-export const getPulseUserByUID = (uid: number) => activeUsers[uid]
+export const getPulseUserByUID = (uid: number): PulseUser | undefined => activeUsers[uid]
 export const deletePulseUserByUID = (uid: number) => delete activeUsers[uid]
 
 export const generateMD5Password = (password: string, salt: string) => {
@@ -19,8 +19,8 @@ export const generateMD5Password = (password: string, salt: string) => {
 }
 
 export const getSNfromMail = (email: string) => email.split('@')[0]
-export const makeEmailFromSN = (sn: string, legacy: boolean) =>
-	sn + legacy ? '@hotmail.com' : '@remsgr.net'
+export const makeEmailFromSN = (sn: string, legacy: boolean = false) =>
+	sn + (legacy ? '@hotmail.com' : '@remsgr.net')
 
 export const getClVersions = (user: PulseUser, cmd: PulseCommand) => {
 	const clientCl = parseInt(cmd.Args[0])
@@ -46,21 +46,6 @@ export const sendSyncCmd = (
 	}
 
 	return user.client.ns.send(cmd, trId, [user.data.user.ClVersion, ...(args ?? [])])
-}
-
-export const getListVer = (listType: ListTypesT, user: UsersT) => {
-	switch (listType) {
-		case ListTypes.Forward:
-			return user.FlVersion
-		case ListTypes.Reverse:
-			return user.RlVersion
-		case ListTypes.Allow:
-			return user.AlVersion
-		case ListTypes.Block:
-			return user.BlVersion
-	}
-
-	return 0
 }
 
 export const buildLegacyGroupIDsMap = (uuids: string[]) => {
@@ -128,5 +113,21 @@ export const runSequentially = async <T>(tasks: (() => Promise<T>)[]) => {
 	return results
 }
 
-export const loadTemplate = async (filePath: string) =>
-	(await fs.readFile('./src/msnp/templates/' + filePath)).toString().replace(/r?\n/g, '\r\n')
+export const registerHbsPartials = async () => {
+	const files = await fs.readdir('./src/msnp/templates')
+
+	for (const file of files) {
+		const templateFile = await fs.readFile('./src/msnp/templates/' + file.toLowerCase())
+		const template = templateFile.toString()
+
+		Handlebars.registerPartial(file, template)
+	}
+}
+
+export const loadTemplate = async (filePath: string, context?: Object) => {
+	const file = await fs.readFile('./src/msnp/templates/' + filePath.toLowerCase())
+	const template = file.toString()
+
+	const compiled = Handlebars.compile(template)
+	return compiled(context ?? {}).replace(/r?\n/g, '\r\n')
+}

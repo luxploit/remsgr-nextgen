@@ -9,7 +9,6 @@ import {
 	createFakeContactUser,
 	getClVersions,
 	getLegacyGroupIDs,
-	getListVer,
 	getModernSYNTimestamp,
 	makeEmailFromSN,
 	runSequentially,
@@ -107,7 +106,7 @@ import { ContactType, ListBitFlags, ListTypes, ListTypesT, Properties } from '..
  */
 export const handleSYN = async (user: PulseUser, cmd: PulseCommand) => {
 	if (cmd.TrId === -1) {
-		user.error('Client not provided a CVR0 to command')
+		user.error('Client did not provide a valid Transaction ID')
 		return user.client.ns.quit()
 	}
 
@@ -357,7 +356,7 @@ const handleSYN_ContactsLists = async (user: PulseUser, cmd: PulseCommand) => {
 		groups: string[]
 	) => {
 		let args: PulseInteractableArgs = [
-			`N=${makeEmailFromSN(contact.data.account.ScreenName, user.context.messenger.dialect === 2)}`,
+			`N=${makeEmailFromSN(contact.data.account.ScreenName)}`,
 			`F=${encodeURIComponent(contact.data.user.DisplayName)}`,
 			`C=${contact.data.account.GUID}`,
 			listBits,
@@ -380,13 +379,12 @@ const handleSYN_ContactsLists = async (user: PulseUser, cmd: PulseCommand) => {
 		user: PulseUser,
 		contact: PulseUser,
 		userIdx: number,
-		listVer: number,
 		listLen: number,
 		groups: Map<string, number>
 	) => {
 		let args: PulseInteractableArgs = [
 			listType,
-			listVer,
+			user.data.user.ClVersion,
 			userIdx,
 			listLen,
 			makeEmailFromSN(contact.data.account.ScreenName, user.context.messenger.dialect === 2),
@@ -425,21 +423,11 @@ const handleSYN_ContactsLists = async (user: PulseUser, cmd: PulseCommand) => {
 				const contact = await createFakeContactUser(user, list.ContactID)
 				if (!contact) return false
 
-				const listVer = getListVer(listType, user.data.user)
 				const listLen = syncList.length
 				const groups = buildLegacyGroupIDsMap(list.Groups ?? [])
 
 				// MSNP2+ LST
-				syncContactByLegacySyncID(
-					list,
-					listType,
-					user,
-					contact,
-					++userIdx,
-					listVer,
-					listLen,
-					groups
-				)
+				syncContactByLegacySyncID(list, listType, user, contact, ++userIdx, listLen, groups)
 
 				if (listType !== ListTypes.Forward) {
 					continue

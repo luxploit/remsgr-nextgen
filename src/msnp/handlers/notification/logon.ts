@@ -10,11 +10,12 @@ import { logging } from '../../../utils/logging'
 import { updateUserLastLoginBySN } from '../../../database/queries/user'
 import { DispatchCmds, PresenceCmds } from '../../protocol/commands'
 import { activeUsers } from '../../+msnp'
+import { handleGCF_Send } from './misc'
 
 /* <> VER [trId] [MSNP(N)] CVR0 */
 export const handleVER = async (user: PulseUser, cmd: PulseCommand) => {
 	if (cmd.TrId === -1) {
-		user.error('Client not provided a CVR0 to command')
+		user.error('Client did not provide a valid Transaction ID')
 		return user.client.ns.quit()
 	}
 
@@ -64,7 +65,7 @@ export const handleVER = async (user: PulseUser, cmd: PulseCommand) => {
  */
 export const handleINF = async (user: PulseUser, cmd: PulseCommand) => {
 	if (cmd.TrId === -1) {
-		user.error('Client not provided a CVR0 to command')
+		user.error('Client did not provide a valid Transaction ID')
 		return user.client.ns.quit()
 	}
 
@@ -110,7 +111,7 @@ export const handleUSR = async (user: PulseUser, cmd: PulseCommand) => {
 	)
 
 	if (cmd.TrId === -1) {
-		user.error('Client not provided a CVR0 to command')
+		user.error('Client did not provide a valid Transaction ID')
 		return user.client.ns.quit()
 	}
 
@@ -323,10 +324,7 @@ const handleUSR_TWN = async (user: PulseUser, cmd: PulseCommand): Promise<AuthSt
 		user.nsDebug('USR/TWN-I', 'token param=guid', user.data.account.GUID)
 		user.client.ns.reply(cmd, [AuthMethods.Tweener!, AuthStages.Subsequent!, user.data.account.GUID])
 
-		if (user.context.messenger.dialect >= 13) {
-			const policyXml = await loadTemplate('policies.xml')
-			user.client.ns.payload(PresenceCmds.PolicyConfiguration, 0, [policyXml.length], policyXml)
-		}
+		await handleGCF_Send(user, cmd.TrId, 'gcf_policies.xml')
 
 		return AuthStages.Subsequent
 	}
@@ -375,10 +373,7 @@ const handleUSR_SSO = async (user: PulseUser, cmd: PulseCommand): Promise<AuthSt
 		user.nsDebug('USR/SSO-I', 'token param=guid', user.data.account.GUID)
 		user.client.ns.reply(cmd, [AuthMethods.Tweener!, AuthStages.Subsequent!, user.data.account.GUID])
 
-		if (user.context.messenger.dialect >= 13) {
-			const policyXml = await loadTemplate('policies.xml')
-			user.client.ns.payload(PresenceCmds.PolicyConfiguration, 0, [policyXml.length], policyXml)
-		}
+		await handleGCF_Send(user, cmd.TrId, 'gcf_policies.xml')
 
 		return AuthStages.Subsequent
 	}
@@ -411,6 +406,6 @@ const handleUSR_SHA = async (user: PulseUser, cmd: PulseCommand): Promise<AuthSt
 }
 
 export const handleOUT = async (user: PulseUser, cmd: PulseCommand) => {
-	user.client.ns.echo(cmd)
+	user.client.ns.untracked(cmd.Command, cmd.Args)
 	return user.client.ns.quit()
 }

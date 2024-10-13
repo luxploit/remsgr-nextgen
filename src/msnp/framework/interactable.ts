@@ -30,8 +30,8 @@ export class PulseInteractable {
 	untracked = (command: string, args?: PulseInteractableArgs) =>
 		this.socketWrite([command, ...(args ?? [])])
 
-	payload = (command: string, trId: number, args?: PulseInteractableArgs, payload?: string) =>
-		this.socketWrite([command, trId, ...(args ?? []), ...(payload ? ['\r\n', payload] : [])])
+	payload = (command: string, args?: PulseInteractableArgs, payload?: string) =>
+		this.socketWrite([command, ...(args ?? []), ...(payload ? ['\r\n', payload] : [])])
 
 	echo = (cmd: PulseCommand) => this.socketWrite([cmd.Command, cmd.TrId, ...cmd.Args])
 

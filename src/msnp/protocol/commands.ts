@@ -20,5 +20,11 @@ export enum PresenceCmds {
 	ClientVersionRecord = 'CVR',
 	ClientVersionQuery = 'CVQ',
 	ChangeStatus = 'CHG',
+	InitialStatus = 'ILN',
+	GetExtendedStatus = 'UBX',
+	SetExtendedstatus = 'UUX',
+}
+
+export enum MiscCmds {
 	PolicyConfiguration = 'GCF',
 }

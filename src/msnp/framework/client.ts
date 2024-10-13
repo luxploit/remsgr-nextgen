@@ -1,6 +1,7 @@
 import { Socket } from 'node:net'
 import { PulseInteractable } from './interactable'
 import { AuthMethodsT } from '../protocol/constants'
+import { OnlineStatusT } from '../protocol/presence'
 
 export class PulseClient {
 	ns!: PulseInteractable
@@ -12,6 +13,7 @@ export class PulseMachineContext {
 	osType!: string
 	osVersion!: string
 	cpuArch!: string
+	mGUID!: string
 }
 
 export class PulseMessengerContext {
@@ -23,7 +25,11 @@ export class PulseMessengerContext {
 }
 
 export class PulseStateContext {
-	onlineStatus!: string
+	initialStatus: boolean = false
+	onlineStatus!: OnlineStatusT
+	clientCaps!: string // todo
+	pfpObject!: string // todo
+	ubxStatus!: Buffer
 }
 
 export class PulseContext {
