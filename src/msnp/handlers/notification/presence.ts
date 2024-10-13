@@ -154,11 +154,11 @@ export const handleCHG_Async = async (user: PulseUser, cmd: PulseCommand) => {
 		}
 
 		if (user.context.state.onlineStatus === OnlineStatus.Hidden) {
-			await handleFLN(user, cmd)
+			await handleFLN(user, clUser)
 			continue
 		}
 
-		await handleNLN(user, cmd)
+		await handleNLN(user, clUser)
 	}
 }
 
@@ -175,7 +175,49 @@ export const handleCHG_Async = async (user: PulseUser, cmd: PulseCommand) => {
  * MSNP14+:
  *   <- NLN [status] [passport] [networkId] [friendlyName] [msnc_clientCaps] [msnc_objectDesc]
  */
-export const handleNLN = async (user: PulseUser, cmd: PulseCommand) => {}
+export const handleNLN = async (user: PulseUser, contact: PulseUser) => {
+	// MSNP14+
+	if (contact.context.messenger.dialect >= 14) {
+		return contact.client.ns.untracked(PresenceCmds.OnlineStatus, [
+			user.context.state.onlineStatus,
+			makeEmailFromSN(user.data.account.ScreenName),
+			1, // todo networkId impl
+			user.data.user.DisplayName,
+			user.context.state.clientCaps,
+			user.context.state.pfpObject,
+		])
+	}
+
+	// MSNP9 - MSNP13
+	if (contact.context.messenger.dialect >= 9) {
+		return contact.client.ns.untracked(PresenceCmds.OnlineStatus, [
+			user.context.state.onlineStatus,
+			makeEmailFromSN(user.data.account.ScreenName),
+			user.data.user.DisplayName,
+			user.context.state.clientCaps,
+			user.context.state.pfpObject,
+		])
+	}
+
+	// MSNP8
+	if (user.context.messenger.dialect >= 8) {
+		return contact.client.ns.untracked(PresenceCmds.OnlineStatus, [
+			user.context.state.onlineStatus,
+			makeEmailFromSN(user.data.account.ScreenName),
+			user.data.user.DisplayName,
+			user.context.state.clientCaps,
+		])
+	}
+
+	// MSNP2 - MSNP7
+	{
+		return contact.client.ns.untracked(PresenceCmds.OnlineStatus, [
+			user.context.state.onlineStatus,
+			makeEmailFromSN(user.data.account.ScreenName, contact.context.messenger.dialect === 2),
+			user.data.user.DisplayName,
+		])
+	}
+}
 
 /*
  * MSNP2 - MSNP13:
@@ -184,7 +226,22 @@ export const handleNLN = async (user: PulseUser, cmd: PulseCommand) => {}
  * MSNP14+:
  *   <- FLN [passport] [networkId]
  */
-export const handleFLN = async (user: PulseUser, cmd: PulseCommand) => {}
+export const handleFLN = async (user: PulseUser, contact: PulseUser) => {
+	// MSNP14+
+	if (contact.context.messenger.dialect >= 14) {
+		return contact.client.ns.untracked(PresenceCmds.OfflineStatus, [
+			makeEmailFromSN(user.data.account.ScreenName),
+			1, // todo networkId impl
+		])
+	}
+
+	// MSNP2 - MSNP13
+	{
+		return contact.client.ns.untracked(PresenceCmds.OfflineStatus, [
+			makeEmailFromSN(user.data.account.ScreenName, contact.context.messenger.dialect === 2),
+		])
+	}
+}
 
 /*
  * MSNP2 - MSNP7:

@@ -21,6 +21,8 @@ export enum PresenceCmds {
 	ClientVersionQuery = 'CVQ',
 	ChangeStatus = 'CHG',
 	InitialStatus = 'ILN',
+	OnlineStatus = 'NLN',
+	OfflineStatus = 'FLN',
 	GetExtendedStatus = 'UBX',
 	SetExtendedstatus = 'UUX',
 }
