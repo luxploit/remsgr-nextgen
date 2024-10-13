@@ -3,11 +3,10 @@ import { PulseUser } from './framework/user'
 import { PulseCommand } from './framework/decoder'
 import { PulseInteractableArgs } from './framework/interactable'
 import { ListsT } from '../database/models/list'
-import { UsersT } from '../database/models/user'
 import { populatePulseDataByUID } from '../database/queries/populate'
-import { ListTypes, ListTypesT } from './protocol/sync'
 import crypto from 'node:crypto'
 import fs from 'node:fs/promises'
+import Handlebars from 'handlebars'
 
 export const getPulseUserByUID = (uid: number): PulseUser | undefined => activeUsers[uid]
 export const deletePulseUserByUID = (uid: number) => delete activeUsers[uid]
