@@ -9,15 +9,12 @@ import {
 	generateMD5Password,
 	getPulseUserByUID,
 	getSNfromMail,
-	loadTemplate,
 	makeEmailFromSN,
 } from '../../util'
 import { PulseContext } from '../../framework/client'
 import { ErrorCode } from '../../protocol/error_codes'
-import { logging } from '../../../utils/logging'
 import { updateUserLastLoginBySN } from '../../../database/queries/user'
-import { DispatchCmds, PresenceCmds } from '../../protocol/commands'
-import { activeUsers } from '../../+msnp'
+import { DispatchCmds } from '../../protocol/commands'
 import { handleGCF_Send } from './misc'
 import { SignOutReasons } from '../../protocol/dispatch'
 
@@ -40,7 +37,7 @@ export const handleVER = async (user: PulseUser, cmd: PulseCommand) => {
 	const validClVrs: string[] = []
 	for (let clVer of clVersions) {
 		let intVer = parseInt(clVer.substring(4), 10)
-		if (isNaN(intVer) || intVer < 2 || intVer > 24) continue
+		if (isNaN(intVer) || intVer < 2 || intVer > 22) continue
 
 		validClVrs.push(clVer)
 	}
@@ -56,7 +53,7 @@ export const handleVER = async (user: PulseUser, cmd: PulseCommand) => {
 
 	// Sort desecendingly
 	validClVrs.sort((a, b) => parseInt(b.substring(4), 10) - parseInt(a.substring(4), 10))
-	user.info('Client has reported following supported versions:', validClVrs)
+	user.info('Client has reported following supported versions:', validClVrs.join(', '))
 
 	user.context = new PulseContext()
 	user.context.messenger.dialect = parseInt(validClVrs[0].substring(4))
@@ -106,6 +103,9 @@ export const handleINF = async (user: PulseUser, cmd: PulseCommand) => {
  *     -> USR [trId] [Method=SSO] [Stage=I] [Mail]
  *     <- USR [trId] [Method=SSO] [Stage=S] [Policy] [ChallengeToken]
  *
+ * WEB:
+ *     -> USR [trId] [Method=WEB] [unkGuid]
+ *
  * <- USR [trId] [Stage=OK] [Mail] [ScreenName]
  */
 export const handleUSR = async (user: PulseUser, cmd: PulseCommand) => {
@@ -116,6 +116,7 @@ export const handleUSR = async (user: PulseUser, cmd: PulseCommand) => {
 			[AuthMethods.Tweener, handleUSR_TWN],
 			[AuthMethods.SingleSignOn, handleUSR_SSO],
 			[AuthMethods.CircleTicket, handleUSR_SHA],
+			[AuthMethods.MetroWeb, handleUSR_WEB],
 		]
 	)
 
@@ -130,12 +131,12 @@ export const handleUSR = async (user: PulseUser, cmd: PulseCommand) => {
 	}
 
 	const method = cmd.Args[0] as AuthMethodsT
-	const stage = cmd.Args[1]
 
-	if (stage !== AuthStages.Initial && stage !== AuthStages.Subsequent && stage !== AuthStages.Auth) {
-		user.error('Client provided invalid auth stage')
-		return user.client.ns.fatal(cmd, ErrorCode.ServerIsBusy)
-	}
+	const stage = cmd.Args[1] ?? '(N/A)'
+	// if (stage !== AuthStages.Initial && stage !== AuthStages.Subsequent && stage !== AuthStages.Auth) {
+	// 	user.error('Client provided invalid auth stage')
+	// 	return user.client.ns.fatal(cmd, ErrorCode.ServerIsBusy)
+	// }
 
 	const handler = handlers.get(method)
 
@@ -424,6 +425,24 @@ const handleUSR_SHA = async (user: PulseUser, cmd: PulseCommand): Promise<AuthSt
 	return AuthStages.Error
 }
 
+/*
+ * MSNP22:
+ *   -> USR [trId] [Method=WEB] [unkGuid]
+ *
+ * MSNP2 - MSNP21:
+ *   - Command is Disabled -
+ */
+const handleUSR_WEB = async (user: PulseUser, cmd: PulseCommand): Promise<AuthStagesT> => {
+	if (user.context.messenger.dialect <= 22) {
+		return AuthStages.Disabled
+	}
+
+	return AuthStages.Error
+}
+
+/*
+ * <> OUT [reason]
+ */
 export const handleOUT = async (user: PulseUser, cmd: PulseCommand) => {
 	user.client.ns.untracked(cmd.Command, cmd.Args)
 	return user.client.ns.quit()
