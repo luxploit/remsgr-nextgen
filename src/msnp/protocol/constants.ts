@@ -1,19 +1,20 @@
-export type AuthMethodsT = 'CTP' | 'MD5' | 'TWN' | 'SSO' | 'SHA' | null
+export type AuthMethodsT = (typeof AuthMethods)[keyof typeof AuthMethods]
 export const AuthMethods = {
-	PlainText: 'CTP' as AuthMethodsT,
-	SaltedMD5: 'MD5' as AuthMethodsT,
-	Tweener: 'TWN' as AuthMethodsT,
-	SingleSignOn: 'SSO' as AuthMethodsT,
-	CircleTicket: 'SHA' as AuthMethodsT,
+	PlainText: 'CTP',
+	SaltedMD5: 'MD5',
+	Tweener: 'TWN',
+	SingleSignOn: 'SSO',
+	CircleTicket: 'SHA',
+	MetroWeb: 'WEB',
 	Error: null,
-}
+} as const
 
-export type AuthStagesT = 'I' | 'S' | 'A' | 'OK' | 'D' | null
+export type AuthStagesT = (typeof AuthStages)[keyof typeof AuthStages]
 export const AuthStages = {
-	Initial: 'I' as AuthStagesT,
-	Subsequent: 'S' as AuthStagesT,
-	Auth: 'A' as AuthStagesT, // circleTicket sha auth for MSNP17+
-	OK: 'OK' as AuthStagesT,
-	Disabled: 'D' as AuthStagesT,
+	Initial: 'I',
+	Subsequent: 'S',
+	Auth: 'A', // circleTicket sha auth for MSNP17+
+	OK: 'OK',
+	Disabled: 'D',
 	Error: null,
-}
+} as const
