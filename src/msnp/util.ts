@@ -10,6 +10,8 @@ import Handlebars from 'handlebars'
 
 export const getPulseUserByUID = (uid: number): PulseUser | undefined => activeUsers[uid]
 export const deletePulseUserByUID = (uid: number) => delete activeUsers[uid]
+export const addPulseUserByUID = (uid: number, user: PulseUser) =>
+	(activeUsers[uid] = user) as unknown as void
 
 export const generateMD5Password = (password: string, salt: string) => {
 	const md5 = crypto.createHash('md5')

@@ -3,7 +3,15 @@ import { populatePulseDataBySN } from '../../../database/queries/populate'
 import { PulseCommand } from '../../framework/decoder'
 import { PulseUser } from '../../framework/user'
 import { AuthMethods, AuthMethodsT, AuthStages, AuthStagesT } from '../../protocol/constants'
-import { generateMD5Password, getSNfromMail, loadTemplate, makeEmailFromSN } from '../../util'
+import {
+	addPulseUserByUID,
+	deletePulseUserByUID,
+	generateMD5Password,
+	getPulseUserByUID,
+	getSNfromMail,
+	loadTemplate,
+	makeEmailFromSN,
+} from '../../util'
 import { PulseContext } from '../../framework/client'
 import { ErrorCode } from '../../protocol/error_codes'
 import { logging } from '../../../utils/logging'
@@ -11,6 +19,7 @@ import { updateUserLastLoginBySN } from '../../../database/queries/user'
 import { DispatchCmds, PresenceCmds } from '../../protocol/commands'
 import { activeUsers } from '../../+msnp'
 import { handleGCF_Send } from './misc'
+import { SignOutReasons } from '../../protocol/dispatch'
 
 /* <> VER [trId] [MSNP(N)] CVR0 */
 export const handleVER = async (user: PulseUser, cmd: PulseCommand) => {
@@ -149,9 +158,19 @@ export const handleUSR = async (user: PulseUser, cmd: PulseCommand) => {
 	}
 
 	if (loggedIn === AuthStages.OK) {
-		activeUsers[user.data.account.UID] = user
+		// check and signout old inst
+		// TODO: Revisit for MSNP17+ MPOP feature
+		const oldUser = getPulseUserByUID(user.data.account.UID)
+		if (oldUser) {
+			oldUser.client.ns.untracked(DispatchCmds.SignOut, [SignOutReasons.NewSignInLocation])
+			deletePulseUserByUID(user.data.account.UID)
+		}
 
-		user.context.messenger.authMethod = method
+		// Add to list and apply context
+		{
+			addPulseUserByUID(user.data.account.UID, user)
+			user.context.messenger.authMethod = method
+		}
 
 		// Refresh last login
 		{
@@ -159,13 +178,13 @@ export const handleUSR = async (user: PulseUser, cmd: PulseCommand) => {
 			updateUserLastLoginBySN(user.data.user.UID, user.data.user.LastLogin)
 		}
 
+		const isKidsPassport = !(1 === 1) // TODO: Implement
 		const passport = makeEmailFromSN(
 			user.data.account.ScreenName,
 			user.context.messenger.dialect === 2
 		)
-		user.info('Client has successfully logged-in as:', user.data.account.ScreenName)
 
-		const isKidsPassport = !(1 === 1) // TODO: Implement
+		user.info('Client has successfully logged-in as:', user.data.account.ScreenName)
 
 		// MSNP10+
 		if (user.context.messenger.dialect >= 10) {
