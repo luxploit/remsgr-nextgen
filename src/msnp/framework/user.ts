@@ -16,25 +16,16 @@ export class PulseUser extends Logger {
 		super()
 	}
 
-	private getHost = () => {
-		return `[HOST ${this.client.ns.getHostAddress()}]`
-	}
+	private getHost = () => `[HOST ${this.client.ns.getHostAddress()}]`
 
-	info = (msg: string, ...optionals: any[]) => {
-		return super.info(this.getHost(), msg, ...optionals)
-	}
+	info = (msg: string, ...optionals: any[]) => super.info(this.getHost(), msg, ...optionals)
 
-	warn = (msg: string, ...optionals: any[]) => {
-		return super.warn(this.getHost(), msg, ...optionals)
-	}
+	warn = (msg: string, ...optionals: any[]) => super.warn(this.getHost(), msg, ...optionals)
 
-	error = (msg: string, ...optionals: any[]) => {
-		return super.error(this.getHost(), msg, ...optionals)
-	}
+	error = (msg: string, ...optionals: any[]) => super.error(this.getHost(), msg, ...optionals)
 
-	debug = (handler: string, msg: string, ...optionals: any[]) => {
-		return super.debug(handler, this.getHost(), msg, ...optionals)
-	}
+	debug = (handler: string, msg: string, ...optionals: any[]) =>
+		super.debug(handler, this.getHost(), msg, ...optionals)
 
 	nsDebug = (handler: string, msg: string, ...optionals: any[]) => {
 		if (!cliArgs.dev) return

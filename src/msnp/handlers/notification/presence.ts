@@ -178,10 +178,11 @@ export const handleCHG_Async = async (user: PulseUser, cmd: PulseCommand) => {
 export const handleNLN = async (user: PulseUser, contact: PulseUser) => {
 	// MSNP14+
 	if (contact.context.messenger.dialect >= 14) {
+		const networkId = 1 /* MSN */
 		return contact.client.ns.untracked(PresenceCmds.OnlineStatus, [
 			user.context.state.onlineStatus,
 			makeEmailFromSN(user.data.account.ScreenName),
-			1, // todo networkId impl
+			networkId, // todo networkId impl
 			user.data.user.DisplayName,
 			user.context.state.clientCaps,
 			user.context.state.pfpObject,
@@ -229,9 +230,10 @@ export const handleNLN = async (user: PulseUser, contact: PulseUser) => {
 export const handleFLN = async (user: PulseUser, contact: PulseUser) => {
 	// MSNP14+
 	if (contact.context.messenger.dialect >= 14) {
+		const networkId = 1 /* MSN */
 		return contact.client.ns.untracked(PresenceCmds.OfflineStatus, [
 			makeEmailFromSN(user.data.account.ScreenName),
-			1, // todo networkId impl
+			networkId, // todo networkId impl
 		])
 	}
 
@@ -277,10 +279,11 @@ export const handleILN = async (user: PulseUser, cmd: PulseCommand) => {
 
 		// MSNP14+
 		if (user.context.messenger.dialect >= 14) {
+			const networkId = 1 /* MSN */
 			user.client.ns.send(PresenceCmds.InitialStatus, cmd.TrId, [
 				clUser.context.state.onlineStatus,
 				makeEmailFromSN(clUser.data.account.ScreenName),
-				1, // todo networkId impl
+				networkId, // todo networkId impl
 				clUser.data.user.DisplayName,
 				clUser.context.state.clientCaps,
 				clUser.context.state.pfpObject,
@@ -344,9 +347,10 @@ export const handleUBX = async (user: PulseUser, passport: string) => {
 	// MSNP14+
 	if (user.context.messenger.dialect >= 14) {
 		// TODO: Impl NetworkID (1)
+		const networkId = 1 /* MSN */
 		return user.client.ns.payload(
 			PresenceCmds.GetExtendedStatus,
-			[makeEmailFromSN(passport), 1, user.context.state.ubxStatus.length],
+			[makeEmailFromSN(passport), networkId, user.context.state.ubxStatus.length],
 			user.context.state.ubxStatus.toString()
 		)
 	}
