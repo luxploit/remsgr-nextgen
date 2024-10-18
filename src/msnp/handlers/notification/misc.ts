@@ -14,7 +14,15 @@ import { loadTemplate } from '../../util'
  */
 export const handleGCF = async (user: PulseUser, cmd: PulseCommand) => {
 	if (user.context.messenger.dialect < 11 || user.context.messenger.dialect >= 13) {
+		user.warn(
+			`Client tried to call GCF using an unsupported dialect MSNP${user.context.messenger.dialect}`
+		)
 		return user.client.ns.error(cmd, ErrorCode.DisabledCommand)
+	}
+
+	if (cmd.Args.length !== 1) {
+		user.error(`Client provided an invalid amount of arguments to command GCF`)
+		return user.client.ns.error(cmd, ErrorCode.InvalidParameter)
 	}
 
 	const fileName = cmd.Args[0]

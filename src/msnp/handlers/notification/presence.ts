@@ -1,12 +1,12 @@
-import { activeUsers } from '../../+msnp'
-import { getContactByIDs } from '../../../database/queries/lists'
+import { getAccountBySN } from '../../../database/queries/account'
+import { updateUserClVersionByUID, updateUserDisplayNameByUID } from '../../../database/queries/user'
 import { PulseCommand } from '../../framework/decoder'
 import { PulseUser } from '../../framework/user'
 import { PresenceCmds } from '../../protocol/commands'
 import { ErrorCode } from '../../protocol/error_codes'
 import { OnlineStatus, OnlineStatusT } from '../../protocol/presence'
 import { ListBitFlags } from '../../protocol/sync'
-import { getPulseUserByUID, loadTemplate, makeEmailFromSN } from '../../util'
+import { getPulseUserByUID, makeEmailFromSN } from '../../util'
 
 /*
  * MSNP2 - MSNP7:
@@ -19,12 +19,12 @@ import { getPulseUserByUID, loadTemplate, makeEmailFromSN } from '../../util'
  */
 export const handleCVR = async (user: PulseUser, cmd: PulseCommand) => {
 	if (cmd.TrId === -1) {
-		user.error('Client did not provide a valid Transaction ID')
+		user.error('Client did not provide a valid Transaction ID to command CVR')
 		return user.client.ns.quit()
 	}
 
-	if (cmd.Args.length <= 0 || cmd.Args.length > 8) {
-		user.error('Client provided invalid number of arguments')
+	if (cmd.Args.length < 7 || cmd.Args.length > 8) {
+		user.error('Client provided an invalid number of arguments to command CVR')
 		return user.client.ns.fatal(cmd, ErrorCode.BadCVRFormatting)
 	}
 
@@ -57,11 +57,18 @@ export const handleCVR = async (user: PulseUser, cmd: PulseCommand) => {
  *
  * MSNP8+:
  *   -> CVQ [trId] [localeId] [osType] [osVersion] [cpuArch] [libName] [clientVer] [clientName] [passport]
+ *
+ * <- CVQ [trId] [recVer] [recVer2=recVer] [minVer] [downloadUrl] [infoUrl]
  */
 export const handleCVQ = async (user: PulseUser, cmd: PulseCommand) => {
 	if (cmd.TrId === -1) {
 		user.error('Client did not provide a valid Transaction ID')
 		return user.client.ns.quit()
+	}
+
+	if (cmd.Args.length < 7 || cmd.Args.length > 8) {
+		user.error('Client provided an invalid number of arguments to command CVQ')
+		return user.client.ns.fatal(cmd, ErrorCode.BadCVRFormatting)
 	}
 
 	const ver = cmd.Args[5]
@@ -95,8 +102,13 @@ export const handleCHG = async (user: PulseUser, cmd: PulseCommand) => {
 	}
 
 	if (cmd.TrId === -1) {
-		user.error('Client did not provide a valid Transaction ID')
+		user.error('Client did not provide a valid Transaction ID to command CHG')
 		return user.client.ns.quit()
+	}
+
+	if (cmd.Args.length < 1 || cmd.Args.length > 3) {
+		user.error('Client provided an invalid number of arguments to command CHG')
+		return user.client.ns.fatal(cmd, ErrorCode.InvalidParameter)
 	}
 
 	if (!Object.values(OnlineStatus).includes(cmd.Args[0] as OnlineStatus)) {
@@ -183,7 +195,7 @@ export const handleNLN = async (user: PulseUser, contact: PulseUser) => {
 			user.context.state.onlineStatus,
 			makeEmailFromSN(user.data.account.ScreenName),
 			networkId, // todo networkId impl
-			user.data.user.DisplayName,
+			encodeURIComponent(user.data.user.DisplayName),
 			user.context.state.clientCaps,
 			user.context.state.pfpObject,
 		])
@@ -194,7 +206,7 @@ export const handleNLN = async (user: PulseUser, contact: PulseUser) => {
 		return contact.client.ns.untracked(PresenceCmds.OnlineStatus, [
 			user.context.state.onlineStatus,
 			makeEmailFromSN(user.data.account.ScreenName),
-			user.data.user.DisplayName,
+			encodeURIComponent(user.data.user.DisplayName),
 			user.context.state.clientCaps,
 			user.context.state.pfpObject,
 		])
@@ -205,7 +217,7 @@ export const handleNLN = async (user: PulseUser, contact: PulseUser) => {
 		return contact.client.ns.untracked(PresenceCmds.OnlineStatus, [
 			user.context.state.onlineStatus,
 			makeEmailFromSN(user.data.account.ScreenName),
-			user.data.user.DisplayName,
+			encodeURIComponent(user.data.user.DisplayName),
 			user.context.state.clientCaps,
 		])
 	}
@@ -215,7 +227,7 @@ export const handleNLN = async (user: PulseUser, contact: PulseUser) => {
 		return contact.client.ns.untracked(PresenceCmds.OnlineStatus, [
 			user.context.state.onlineStatus,
 			makeEmailFromSN(user.data.account.ScreenName, contact.context.messenger.dialect === 2),
-			user.data.user.DisplayName,
+			encodeURIComponent(user.data.user.DisplayName),
 		])
 	}
 }
@@ -284,7 +296,7 @@ export const handleILN = async (user: PulseUser, cmd: PulseCommand) => {
 				clUser.context.state.onlineStatus,
 				makeEmailFromSN(clUser.data.account.ScreenName),
 				networkId, // todo networkId impl
-				clUser.data.user.DisplayName,
+				encodeURIComponent(clUser.data.user.DisplayName),
 				clUser.context.state.clientCaps,
 				clUser.context.state.pfpObject,
 			])
@@ -296,7 +308,7 @@ export const handleILN = async (user: PulseUser, cmd: PulseCommand) => {
 			user.client.ns.send(PresenceCmds.InitialStatus, cmd.TrId, [
 				clUser.context.state.onlineStatus,
 				makeEmailFromSN(clUser.data.account.ScreenName),
-				clUser.data.user.DisplayName,
+				encodeURIComponent(clUser.data.user.DisplayName),
 				clUser.context.state.clientCaps,
 				clUser.context.state.pfpObject,
 			])
@@ -312,7 +324,7 @@ export const handleILN = async (user: PulseUser, cmd: PulseCommand) => {
 			user.client.ns.send(PresenceCmds.InitialStatus, cmd.TrId, [
 				clUser.context.state.onlineStatus,
 				makeEmailFromSN(clUser.data.account.ScreenName),
-				clUser.data.user.DisplayName,
+				encodeURIComponent(clUser.data.user.DisplayName),
 				clUser.context.state.clientCaps,
 			])
 			continue
@@ -323,7 +335,7 @@ export const handleILN = async (user: PulseUser, cmd: PulseCommand) => {
 			user.client.ns.send(PresenceCmds.InitialStatus, cmd.TrId, [
 				clUser.context.state.onlineStatus,
 				makeEmailFromSN(clUser.data.account.ScreenName, user.context.messenger.dialect === 2),
-				clUser.data.user.DisplayName,
+				encodeURIComponent(clUser.data.user.DisplayName),
 			])
 		}
 
@@ -363,4 +375,98 @@ export const handleUBX = async (user: PulseUser, passport: string) => {
 			user.context.state.ubxStatus.toString()
 		)
 	}
+}
+
+/*
+ * MSNP11:
+ *  -> UUX [trId] [payloadLen] \r\n [payloadData]
+ *
+ * MSNP14:
+ *  -> UUX [trId] [networkId] [payloadLen] \r\n [payloadData]
+ *
+ * MSNP2 - MSNP10:
+ *   - Command is Disabled -
+ *
+ * <- UUX [trId] 0
+ */
+export const handleUUX = async (user: PulseUser, cmd: PulseCommand) => {}
+
+/*
+ * MSNP2 - MSNP10:
+ *   -> REA [trId] [passport] [friendlyName]
+ *   <- REA [trId] [serverSyncId + 1] [passport] [friendlyName]
+ *
+ * MSNP11+
+ *   - Command is Disabled -
+ */
+export const handleREA = async (user: PulseUser, cmd: PulseCommand) => {
+	if (user.context.messenger.dialect >= 11) {
+		user.warn(
+			`Client tried to call REA using an unsupported dialect MSNP${user.context.messenger.dialect}`
+		)
+		return user.client.ns.error(cmd, ErrorCode.DisabledCommand)
+	}
+
+	if (cmd.TrId === -1) {
+		user.error('Client did not provide a valid Transaction ID to command REA')
+		return user.client.ns.quit()
+	}
+
+	if (cmd.Args.length !== 2) {
+		user.error(`Client provided an invalid amount of arguments to command REA`)
+		return user.client.ns.error(cmd, ErrorCode.InvalidParameter)
+	}
+
+	const passport = cmd.Args[0]
+	const dbPassport = makeEmailFromSN(
+		user.data.account.ScreenName,
+		user.context.messenger.dialect === 2
+	)
+	if (passport !== dbPassport) {
+		// user.warn(
+		// 	`Client provided an invalid passport ${passport} to command REA! Expected: ${dbPassport}`
+		// )
+		//return user.client.ns.error(cmd, ErrorCode.Unexpected)
+
+		const ogAcc = await getAccountBySN(passport.split('@')[0])
+		if (!ogAcc) {
+			user.error(`Unable to find passport ${passport} for simulated REA!`)
+			return user.client.ns.error(cmd, ErrorCode.Unexpected)
+		}
+
+		const ogPulse = getPulseUserByUID(ogAcc.UID)
+		if (!ogPulse) {
+			user.error(`Unable to find signed-in user ${passport} for simulated REA!`)
+			return user.client.ns.error(cmd, ErrorCode.Unexpected)
+		}
+
+		return user.client.ns.reply(cmd, [
+			user.data.user.ClVersion,
+			makeEmailFromSN(ogPulse.data.account.ScreenName),
+			encodeURIComponent(ogPulse.data.user.DisplayName),
+		])
+	}
+
+	const newFriendly = cmd.Args[1]
+	if (newFriendly.length > 387) {
+		user.error(`Client's new friendly name has exceeded the character limit of 387!`)
+		return user.client.ns.reply(cmd, [0])
+	}
+
+	// Update Data
+	{
+		user.data.user.DisplayName = decodeURIComponent(newFriendly)
+		await updateUserDisplayNameByUID(user.data.account.UID, decodeURIComponent(newFriendly))
+
+		user.data.user.ClVersion = user.data.user.ClVersion + 1
+		await updateUserClVersionByUID(user.data.account.UID, user.data.user.ClVersion)
+	}
+
+	await handleCHG_Async(user, cmd)
+
+	return user.client.ns.reply(cmd, [
+		user.data.user.ClVersion,
+		makeEmailFromSN(user.data.account.ScreenName),
+		newFriendly,
+	])
 }

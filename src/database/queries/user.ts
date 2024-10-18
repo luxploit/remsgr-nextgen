@@ -8,5 +8,8 @@ export const getUserByUID = async (uid: number) =>
 export const updateUserClVersionByUID = async (uid: number, clVer: number) =>
 	await getDB().db.update(Users).set({ ClVersion: clVer }).where(eq(Users.UID, uid))
 
-export const updateUserLastLoginBySN = async (uid: number, loginDate: Date) =>
+export const updateUserLastLoginByUID = async (uid: number, loginDate: Date) =>
 	await getDB().db.update(Users).set({ LastLogin: loginDate }).where(eq(Users.UID, uid))
+
+export const updateUserDisplayNameByUID = async (uid: number, friendlyName: string) =>
+	await getDB().db.update(Users).set({ DisplayName: friendlyName }).where(eq(Users.UID, uid))

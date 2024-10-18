@@ -106,19 +106,18 @@ import { ContactType, ListBitFlags, ListTypes, ListTypesT, Properties } from '..
  */
 export const handleSYN = async (user: PulseUser, cmd: PulseCommand) => {
 	if (cmd.TrId === -1) {
-		user.error('Client did not provide a valid Transaction ID')
+		user.error('Client did not provide a valid Transaction ID to command SYN')
 		return user.client.ns.quit()
 	}
 
 	if (cmd.Args.length <= 0 || cmd.Args.length >= 3) {
-		user.error('Client provided invalid number of arguments')
+		user.error('Client provided an invalid number of arguments to command SYN')
 		return user.client.ns.fatal(cmd, ErrorCode.ServerIsBusy)
 	}
 
 	if (user.context.messenger.dialect >= 13) {
-		user.error(
-			'Client tried to call SYN with unsupported protocol version:',
-			user.context.messenger.dialect
+		user.warn(
+			`Client tried to call GCF using an unsupported dialect MSNP${user.context.messenger.dialect}`
 		)
 		return user.client.ns.fatal(cmd, ErrorCode.DisabledCommand)
 	}
@@ -285,7 +284,10 @@ const handleSYN_Properties = async (
 	sendSyncCmd(user, prop, cmd.TrId, [Properties.DirectPaging, 1 === 1 ? '0' : '2'])
 
 	if (user.context.messenger.dialect >= 10) {
-		user.client.ns.untracked(prop, [Properties.FriendlyName, user.data.user.DisplayName])
+		user.client.ns.untracked(prop, [
+			Properties.FriendlyName,
+			encodeURIComponent(user.data.user.DisplayName),
+		])
 	}
 
 	// TODO: impl HSB correctly

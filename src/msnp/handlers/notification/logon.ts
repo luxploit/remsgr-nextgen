@@ -13,7 +13,7 @@ import {
 } from '../../util'
 import { PulseContext } from '../../framework/client'
 import { ErrorCode } from '../../protocol/error_codes'
-import { updateUserLastLoginBySN } from '../../../database/queries/user'
+import { updateUserLastLoginByUID } from '../../../database/queries/user'
 import { DispatchCmds } from '../../protocol/commands'
 import { handleGCF_Send } from './misc'
 import { SignOutReasons } from '../../protocol/dispatch'
@@ -21,14 +21,19 @@ import { SignOutReasons } from '../../protocol/dispatch'
 /* <> VER [trId] [MSNP(N)] CVR0 */
 export const handleVER = async (user: PulseUser, cmd: PulseCommand) => {
 	if (cmd.TrId === -1) {
-		user.error('Client did not provide a valid Transaction ID')
+		user.error('Client did not provide a valid Transaction ID to command VER')
+		return user.client.ns.quit()
+	}
+
+	if (cmd.Args.length < 1) {
+		user.error(`Client provided an invalid amount of arguments to command VER`)
 		return user.client.ns.quit()
 	}
 
 	// toUpperCase is just excessive insurance, never assume!
 	const cvr0Index = cmd.Args.findIndex((arg) => arg.toUpperCase() === 'CVR0')
 	if (cvr0Index === -1) {
-		user.error('Client not provided a CVR0 to command')
+		user.error('Client did not provide a CVR0 to command VER')
 		user.client.ns.reply(cmd, [0])
 		return user.client.ns.quit()
 	}
@@ -44,7 +49,7 @@ export const handleVER = async (user: PulseUser, cmd: PulseCommand) => {
 
 	if (!validClVrs.length) {
 		user.error(
-			'Client did not provide a supported protocol version! Request was:',
+			'Client did not provide a supported protocol version! Requested were:',
 			clVersions.join(', ')
 		)
 		user.client.ns.reply(cmd, [0])
@@ -71,13 +76,20 @@ export const handleVER = async (user: PulseUser, cmd: PulseCommand) => {
  */
 export const handleINF = async (user: PulseUser, cmd: PulseCommand) => {
 	if (cmd.TrId === -1) {
-		user.error('Client did not provide a valid Transaction ID')
+		user.error('Client did not provide a valid Transaction ID to command INF')
+		return user.client.ns.quit()
+	}
+
+	if (cmd.Args.length > 0) {
+		user.error(`Client provided an invalid amount of arguments to command INF`)
 		return user.client.ns.quit()
 	}
 
 	if (user.context.messenger.dialect >= 8) {
-		user.warn('Client tried to use legacy authentication selector')
-		return user.client.ns.fatal(cmd, ErrorCode.DisabledCommand)
+		user.warn(
+			`Client tried to call INF using an unsupported dialect MSNP${user.context.messenger.dialect}`
+		)
+		return user.client.ns.error(cmd, ErrorCode.DisabledCommand)
 	}
 
 	const authProv = user.context.messenger.dialect === 2 ? 'CTP' : 'MD5'
@@ -121,12 +133,12 @@ export const handleUSR = async (user: PulseUser, cmd: PulseCommand) => {
 	)
 
 	if (cmd.TrId === -1) {
-		user.error('Client did not provide a valid Transaction ID')
+		user.error('Client did not provide a valid Transaction ID to command USR')
 		return user.client.ns.quit()
 	}
 
-	if (!cmd.Args.length || cmd.Args.length < 2) {
-		user.error('Client not provide enough/any arguments')
+	if (cmd.Args.length < 2) {
+		user.error('Client provided an invalid amount of arguments to command USR')
 		return user.client.ns.fatal(cmd, ErrorCode.ServerIsBusy)
 	}
 
@@ -141,7 +153,9 @@ export const handleUSR = async (user: PulseUser, cmd: PulseCommand) => {
 	const handler = handlers.get(method)
 
 	if (!handler) {
-		user.error('Client provided an invalid authentication method!')
+		user.error(
+			`Client provided an invalid authentication method ${cmd.Args[0]}! Expected: ${AuthMethods}`
+		)
 		return user.client.ns.fatal(cmd, ErrorCode.ServerIsBusy)
 	}
 
@@ -176,7 +190,7 @@ export const handleUSR = async (user: PulseUser, cmd: PulseCommand) => {
 		// Refresh last login
 		{
 			user.data.user.LastLogin = new Date()
-			updateUserLastLoginBySN(user.data.user.UID, user.data.user.LastLogin)
+			updateUserLastLoginByUID(user.data.user.UID, user.data.user.LastLogin)
 		}
 
 		const isKidsPassport = !(1 === 1) // TODO: Implement
@@ -231,6 +245,11 @@ const handleUSR_CTP = async (user: PulseUser, cmd: PulseCommand): Promise<AuthSt
 		return AuthStages.Disabled
 	}
 
+	if (cmd.Args.length !== 4) {
+		user.error(`Client provided an invalid amount of arguments to method CTP`)
+		return AuthStages.Error
+	}
+
 	const stage = cmd.Args[1]
 	if (stage !== AuthStages.Initial) {
 		user.error('Client provided unsupported auth stage for CTP')
@@ -272,6 +291,11 @@ const handleUSR_CTP = async (user: PulseUser, cmd: PulseCommand): Promise<AuthSt
 const handleUSR_MD5 = async (user: PulseUser, cmd: PulseCommand): Promise<AuthStagesT> => {
 	if (user.context.messenger.dialect >= 8 || user.context.messenger.dialect <= 2) {
 		return AuthStages.Disabled
+	}
+
+	if (cmd.Args.length != 3) {
+		user.error(`Client provided an invalid amount of arguments to method MD5`)
+		return AuthStages.Error
 	}
 
 	const stage = cmd.Args[1]
@@ -326,6 +350,11 @@ const handleUSR_TWN = async (user: PulseUser, cmd: PulseCommand): Promise<AuthSt
 		return AuthStages.Disabled
 	}
 
+	if (cmd.Args.length !== 3) {
+		user.error(`Client provided an invalid amount of arguments to method TWN`)
+		return AuthStages.Error
+	}
+
 	const stage = cmd.Args[1]
 	if (stage !== AuthStages.Initial && stage !== AuthStages.Subsequent) {
 		user.error('Client provided unsupported auth stage for TWN')
@@ -375,6 +404,11 @@ const handleUSR_SSO = async (user: PulseUser, cmd: PulseCommand): Promise<AuthSt
 		return AuthStages.Disabled
 	}
 
+	if (cmd.Args.length < 3 || cmd.Args.length > 4) {
+		user.error(`Client provided an invalid amount of arguments to method CTP`)
+		return AuthStages.Error
+	}
+
 	const stage = cmd.Args[1]
 	if (stage !== AuthStages.Initial && stage !== AuthStages.Subsequent) {
 		user.error('Client provided unsupported auth stage for SSO')
@@ -422,6 +456,11 @@ const handleUSR_SHA = async (user: PulseUser, cmd: PulseCommand): Promise<AuthSt
 		return AuthStages.Disabled
 	}
 
+	if (cmd.Args.length !== 3) {
+		user.error(`Client provided an invalid amount of arguments to method CTP`)
+		return AuthStages.Error
+	}
+
 	return AuthStages.Error
 }
 
@@ -435,6 +474,11 @@ const handleUSR_SHA = async (user: PulseUser, cmd: PulseCommand): Promise<AuthSt
 const handleUSR_WEB = async (user: PulseUser, cmd: PulseCommand): Promise<AuthStagesT> => {
 	if (user.context.messenger.dialect <= 22) {
 		return AuthStages.Disabled
+	}
+
+	if (cmd.Args.length !== 2) {
+		user.error(`Client provided an invalid amount of arguments to method CTP`)
+		return AuthStages.Error
 	}
 
 	return AuthStages.Error

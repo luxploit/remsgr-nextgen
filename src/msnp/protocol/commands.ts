@@ -24,9 +24,12 @@ export enum PresenceCmds {
 	OnlineStatus = 'NLN',
 	OfflineStatus = 'FLN',
 	GetExtendedStatus = 'UBX',
-	SetExtendedstatus = 'UUX',
+	SetExtendedStatus = 'UUX',
+	RenameFriendly = 'REA',
 }
 
 export enum MiscCmds {
 	PolicyConfiguration = 'GCF',
 }
+
+export enum UserCmds {}

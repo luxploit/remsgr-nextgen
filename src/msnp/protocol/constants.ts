@@ -1,13 +1,12 @@
-export type AuthMethodsT = (typeof AuthMethods)[keyof typeof AuthMethods]
-export const AuthMethods = {
-	PlainText: 'CTP',
-	SaltedMD5: 'MD5',
-	Tweener: 'TWN',
-	SingleSignOn: 'SSO',
-	CircleTicket: 'SHA',
-	MetroWeb: 'WEB',
-	Error: null,
-} as const
+export type AuthMethodsT = `${AuthMethods}`
+export enum AuthMethods {
+	PlainText = 'CTP',
+	SaltedMD5 = 'MD5',
+	Tweener = 'TWN',
+	SingleSignOn = 'SSO',
+	CircleTicket = 'SHA',
+	MetroWeb = 'WEB',
+}
 
 export type AuthStagesT = (typeof AuthStages)[keyof typeof AuthStages]
 export const AuthStages = {
