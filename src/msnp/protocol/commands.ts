@@ -30,6 +30,7 @@ export enum PresenceCmds {
 
 export enum MiscCmds {
 	PolicyConfiguration = 'GCF',
+	ServerNotification = 'NOT',
 }
 
 export enum UserCmds {}

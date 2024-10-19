@@ -6,7 +6,3 @@ semi: false
 singleQuote: true
 printWidth: 105
 vueIndentScriptAndStyle: true
-overrides:
-    - files: '*.hbs'
-      options:
-          parser: 'angular'

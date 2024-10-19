@@ -10,7 +10,6 @@ import { ConfigRouter } from './routes/config/+router'
 import { StorageServiceRouter } from './routes/storageservice/+router'
 import { GamesRouter } from './routes/games/+router'
 import { MsnRouter } from './routes/msn/+router'
-import { AdminRouter } from './routes/admin/+router'
 import { DebugRouter } from './routes/debug/+router'
 import { AuthRouter } from './routes/auth/+router'
 
@@ -41,7 +40,7 @@ export const webServer = async () => {
 
 	app.useController(new TestHbs())
 	app.useRouters([
-		{ path: '/admin', router: AdminRouter },
+		//{ path: '/admin', router: AdminRouter },
 		{ path: '/auth', router: AuthRouter },
 		{ path: '/config', router: ConfigRouter },
 		{ path: '/debug', router: DebugRouter },
