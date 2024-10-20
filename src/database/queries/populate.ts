@@ -2,7 +2,7 @@ import { PulseData } from '../../msnp/framework/user'
 import { logging } from '../../utils/logging'
 import { getAccountBySN, getAccountByUID } from './account'
 import { getDetailsByUID } from './details'
-import { getListsByUID } from './lists'
+import { getListByUID } from './lists'
 import { getUserByUID } from './user'
 
 export const populatePulseDataBySN = async (sn: string) => {
@@ -29,7 +29,7 @@ export const populatePulseDataBySN = async (sn: string) => {
 	}
 	data.details = details
 
-	const list = await getListsByUID(account.UID)
+	const list = await getListByUID(account.UID)
 	if (!list) {
 		logging.error('Failed to get Lists by UID', account.UID)
 		return null
@@ -63,7 +63,7 @@ export const populatePulseDataByUID = async (uid: number) => {
 	}
 	data.details = details
 
-	const list = await getListsByUID(account.UID)
+	const list = await getListByUID(account.UID)
 	if (!list) {
 		logging.error('Failed to get Lists by UID', account.UID)
 		return null

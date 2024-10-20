@@ -13,4 +13,4 @@ export const msnpServer = async () => {
 	//switchboardServer().listen(1864, () => logging.info('MSNP SB successfully initialized'))
 }
 
-// TODO - Fix/Impl the following things: Privacy Flags; Kids Passport; Passport Verification
+// TODO - Fix/Impl the following things: Kids Passport; Passport Verification

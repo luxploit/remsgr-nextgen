@@ -6,16 +6,32 @@ import { SyncCmds } from '../../protocol/commands'
 import { ErrorCode } from '../../protocol/error_codes'
 import {
 	buildLegacyGroupIDsMap,
-	createFakeContactUser,
+	createFakeContactUserBySN,
+	createFakeContactUserByUID,
 	getClVersions,
 	getLegacyGroupIDs,
+	getListBitByListType,
 	getModernSYNTimestamp,
+	getSNfromMail,
 	makeEmailFromSN,
 	runSequentially,
 	sendSyncCmd,
 } from '../../util'
 import { PulseInteractableArgs } from '../../framework/interactable'
-import { ContactType, ListBitFlags, ListTypes, ListTypesT, Properties } from '../../protocol/sync'
+import {
+	ContactType,
+	ListBitFlags,
+	ListTypes,
+	ListTypesT,
+	PrivacyModes,
+	Properties,
+} from '../../protocol/sync'
+import {
+	getListEntryByIDs,
+	insertListEntry,
+	updateListEntryBitsByIDs,
+} from '../../../database/queries/lists'
+import { updateUserClVersionByUID, updateUserPrivacyOptionsByUID } from '../../../database/queries/user'
 
 /*
  * - SyncId(0 or Mismatch) = Resync Everything -
@@ -204,10 +220,10 @@ const handleSYN_BeginSynchronization = async (user: PulseUser, cmd: PulseCommand
  *   <- BLP [setting=AL|BL]
  */
 const handleSYN_PrivacySettings = async (user: PulseUser, cmd: PulseCommand) => {
-	// TODO: Respect privacy settings!
+	const priv = user.data.user.PrivacyOptions
 
-	sendSyncCmd(user, SyncCmds.FriendRequestPrivacy, cmd.TrId, ['A'])
-	sendSyncCmd(user, SyncCmds.InstantMessagesPrivacy, cmd.TrId, ['AL'])
+	sendSyncCmd(user, SyncCmds.FriendRequestPrivacy, cmd.TrId, [priv.friendRequest])
+	sendSyncCmd(user, SyncCmds.InstantMessagesPrivacy, cmd.TrId, [priv.instantMessages])
 }
 
 /*
@@ -268,7 +284,7 @@ const handleSYN_Properties = async (
 
 	// TODO: impl MOB, MBE and WWE correctly
 	const details = user.data.details
-	const prop = contactProperties ? SyncCmds.ContactProperties : SyncCmds.UserProperties
+	const prop = contactProperties ? SyncCmds.ContactPropertiesLegacy : SyncCmds.UserPropertiesLegacy
 
 	sendSyncCmd(user, prop, cmd.TrId, [Properties.PhoneHome, details.PhoneHome ?? ''])
 	sendSyncCmd(user, prop, cmd.TrId, [Properties.PhoneWork, details.PhoneWork ?? ''])
@@ -309,8 +325,8 @@ const handleSYN_ContactGroups = async (user: PulseUser, cmd: PulseCommand) => {
 	}
 
 	let groupIdx = 0
-	if (user.context.messenger.dialect <= 10) {
-		user.client.ns.send(SyncCmds.ListGroups, cmd.TrId, [
+	if (user.context.messenger.dialect <= 9) {
+		user.client.ns.send(SyncCmds.ListGroupsLegacy, cmd.TrId, [
 			user.data.user.ClVersion,
 			groupIdx++,
 			user.data.user.ContactGroups?.length ?? 1,
@@ -323,17 +339,16 @@ const handleSYN_ContactGroups = async (user: PulseUser, cmd: PulseCommand) => {
 		return user.info('Ignoring groups sync... (none found)')
 	}
 
-	const dbGroups = user.data.user.ContactGroups as GenericGroup[]
-	for (const dbGroup of dbGroups) {
+	for (const dbGroup of user.data.user.ContactGroups) {
 		if (user.context.messenger.dialect >= 10) {
-			user.client.ns.untracked(SyncCmds.ListGroups, [dbGroup.name, dbGroup.guid])
+			user.client.ns.untracked(SyncCmds.ListGroupsLegacy, [dbGroup.name, dbGroup.guid])
 			continue
 		}
 
-		user.client.ns.send(SyncCmds.ListGroups, cmd.TrId, [
+		user.client.ns.send(SyncCmds.ListGroupsLegacy, cmd.TrId, [
 			user.data.user.ClVersion,
 			groupIdx++,
-			dbGroups.length,
+			user.data.user.ContactGroups.length,
 			dbGroup.name,
 			0,
 		])
@@ -372,7 +387,7 @@ const handleSYN_ContactsLists = async (user: PulseUser, cmd: PulseCommand) => {
 			args = [...args, groups.join(',')]
 		}
 
-		return user.client.ns.untracked(SyncCmds.ListContacts, args)
+		return user.client.ns.untracked(SyncCmds.ListContactsLegacy, args)
 	}
 
 	const syncContactByLegacySyncID = (
@@ -397,7 +412,7 @@ const handleSYN_ContactsLists = async (user: PulseUser, cmd: PulseCommand) => {
 			args = [...args, getLegacyGroupIDs(list, groups).join(',')]
 		}
 
-		return user.client.ns.send(SyncCmds.ListContacts, cmd.TrId, args)
+		return user.client.ns.send(SyncCmds.ListContactsLegacy, cmd.TrId, args)
 	}
 
 	const syncList = async (lists: ListsT[]) => {
@@ -412,7 +427,7 @@ const handleSYN_ContactsLists = async (user: PulseUser, cmd: PulseCommand) => {
 
 			if (!syncList.length) {
 				user.info(`Ignoring ${listType} list sync... (empty)`)
-				user.client.ns.send(SyncCmds.ListContacts, cmd.TrId, [
+				user.client.ns.send(SyncCmds.ListContactsLegacy, cmd.TrId, [
 					listType,
 					user.data.user.ClVersion,
 					0,
@@ -422,7 +437,7 @@ const handleSYN_ContactsLists = async (user: PulseUser, cmd: PulseCommand) => {
 			}
 
 			for (const list of syncList) {
-				const contact = await createFakeContactUser(user, list.ContactID)
+				const contact = await createFakeContactUserByUID(user, list.ContactID)
 				if (!contact) return false
 
 				const listLen = syncList.length
@@ -472,7 +487,7 @@ const handleSYN_ContactsLists = async (user: PulseUser, cmd: PulseCommand) => {
 
 		// Modern "untracked" Sync Mode
 		for (const list of lists) {
-			const contact = await createFakeContactUser(user, list.ContactID)
+			const contact = await createFakeContactUserByUID(user, list.ContactID)
 			if (!contact) return false
 
 			// MSNP10+ LST
@@ -497,4 +512,114 @@ const handleSYN_ContactsLists = async (user: PulseUser, cmd: PulseCommand) => {
 	if (!(await syncList(user.data.list))) {
 		return user.client.ns.fatal(cmd, ErrorCode.DatabaseError)
 	}
+}
+
+/*
+ * MSNP2 - MSNP9:
+ *   -> BLP [trId] [setting=AL|BL]
+ *   <- BLP [trId] [serverSyncId + 1]
+ *
+ * MSNP10+:
+ *   - Fuck around and find out -
+ */
+export const handleBLP = async (user: PulseUser, cmd: PulseCommand) => {
+	// if (user.context.messenger.dialect >= 10) {
+	// 	user.warn(
+	// 		`Client tried to call ADD using an unsupported dialect MSNP${user.context.messenger.dialect}`
+	// 	)
+	// 	return user.client.ns.error(cmd, ErrorCode.DisabledCommand)
+	// }
+
+	if (cmd.TrId === -1) {
+		user.error('Client did not provide a valid Transaction ID to command BLP')
+		return user.client.ns.quit()
+	}
+
+	if (cmd.Args.length !== 1) {
+		user.error(`Client provided an invalid amount of arguments to command BLP`)
+		return user.client.ns.error(cmd, ErrorCode.InvalidParameter)
+	}
+
+	const setting = cmd.Args[0]
+	if (setting !== PrivacyModes.BLP_AllowEveryone && setting !== PrivacyModes.BLP_OnlyAllowList) {
+		user.error(`Client provided a setting to command BLP! Provided was: ${setting}`)
+		return user.client.ns.error(cmd, ErrorCode.InvalidParameter)
+	}
+
+	const dbSetting = user.data.user.PrivacyOptions.instantMessages
+	if (setting === dbSetting) {
+		user.warn(
+			`Client provided a setting that was already set as the current mode to BLP! Provided was: ${setting}`
+		)
+		return user.client.ns.error(cmd, ErrorCode.InvalidParameter)
+	}
+
+	// update details
+	{
+		user.data.user.PrivacyOptions.instantMessages = setting
+		await updateUserPrivacyOptionsByUID(user.data.account.UID, user.data.user.PrivacyOptions)
+
+		user.data.user.ClVersion += 1
+		await updateUserClVersionByUID(user.data.account.UID, user.data.user.ClVersion)
+	}
+
+	return user.client.ns.reply(cmd, [user.data.user.ClVersion])
+}
+
+/*
+ * MSNP2 - MSNP9:
+ *   -> GTC [trId] [setting=A|N]
+ *   <- GTC [trId] [serverSyncId + 1]
+ *
+ * MSNP10 - MSNP12:
+ *   - Fuck around and find out -
+ *
+ * MSNP13+:
+ *   - Command is Disabled -
+ */
+export const handleGTC = async (user: PulseUser, cmd: PulseCommand) => {
+	if (user.context.messenger.dialect >= 13) {
+		user.warn(
+			`Client tried to call GTC using an unsupported dialect MSNP${user.context.messenger.dialect}`
+		)
+		return user.client.ns.error(cmd, ErrorCode.DisabledCommand)
+	}
+
+	if (cmd.TrId === -1) {
+		user.error('Client did not provide a valid Transaction ID to command GTC')
+		return user.client.ns.quit()
+	}
+
+	if (cmd.Args.length !== 1) {
+		user.error(`Client provided an invalid amount of arguments to command GTC`)
+		return user.client.ns.error(cmd, ErrorCode.InvalidParameter)
+	}
+
+	const setting = cmd.Args[0]
+	if (
+		setting !== PrivacyModes.GTC_NotifyReverseList &&
+		setting !== PrivacyModes.GTC_IgnoreReverseList
+	) {
+		user.error(`Client provided a setting to command GTC! Provided was: ${setting}`)
+		return user.client.ns.error(cmd, ErrorCode.InvalidParameter)
+	}
+
+	const dbSetting = user.data.user.PrivacyOptions.friendRequest
+	if (setting === dbSetting) {
+		user.warn(
+			`Client provided a setting that was already set as the current mode to GTC! Provided was: ${setting}`
+		)
+		return user.client.ns.error(cmd, ErrorCode.InvalidParameter)
+	}
+
+	// update details
+	{
+		user.data.user.PrivacyOptions.friendRequest = setting
+		await updateUserPrivacyOptionsByUID(user.data.account.UID, user.data.user.PrivacyOptions)
+
+		user.data.user.ClVersion += 1
+		await updateUserClVersionByUID(user.data.account.UID, user.data.user.ClVersion)
+	}
+
+	return user.client.ns.reply(cmd, [user.data.user.ClVersion])
 }

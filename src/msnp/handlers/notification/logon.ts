@@ -101,16 +101,20 @@ export const handleINF = async (user: PulseUser, cmd: PulseCommand) => {
 /*
  * CTP:
  *     -> USR [trId] [Method=CTP] [Stage=I] [Mail] [Password]
+ *
  * MD5:
  *     -> USR [trId] [Method=MD5] [Stage=I] [Mail]
  *     <- USR [trId] [Method=MD5] [Stage=S] [ChallengeToken]
  *     -> USR [trId] [Method=MD5] [Stage=S] [HashedResponse]
+ *
  * SHA:
  *     -> USR [trId] [Method=SHA] [Stage=A] [CircleTicket]
+ *
  * TWN:
  *     -> USR [trId] [Method=TWN] [Stage=I] [Mail]
  *     <- USR [trId] [Method=TWN] [Stage=S] [TokenParams]
  *     -> USR [trId] [Method=TWN] [Stage=S] [GeneratedToken]
+ *
  * SSO:
  *     -> USR [trId] [Method=SSO] [Stage=I] [Mail]
  *     <- USR [trId] [Method=SSO] [Stage=S] [Policy] [ChallengeToken]
@@ -140,6 +144,11 @@ export const handleUSR = async (user: PulseUser, cmd: PulseCommand) => {
 	if (cmd.Args.length < 2) {
 		user.error('Client provided an invalid amount of arguments to command USR')
 		return user.client.ns.fatal(cmd, ErrorCode.ServerIsBusy)
+	}
+
+	if (user.context.state.signedIn) {
+		user.warn('Client is already signed-in, aborting sign-in attempt!')
+		return user.client.ns.error(cmd, ErrorCode.AlreadyLoggedIn)
 	}
 
 	const method = cmd.Args[0] as AuthMethodsT
@@ -181,16 +190,17 @@ export const handleUSR = async (user: PulseUser, cmd: PulseCommand) => {
 			deletePulseUserByUID(user.data.account.UID)
 		}
 
-		// Add to list and apply context
-		{
-			addPulseUserByUID(user.data.account.UID, user)
-			user.context.messenger.authMethod = method
-		}
-
 		// Refresh last login
 		{
 			user.data.user.LastLogin = new Date()
 			updateUserLastLoginByUID(user.data.user.UID, user.data.user.LastLogin)
+		}
+
+		// Add to list and apply context
+		{
+			addPulseUserByUID(user.data.account.UID, user)
+			user.context.messenger.authMethod = method
+			user.context.state.signedIn = true
 		}
 
 		const isKidsPassport = !(1 === 1) // TODO: Implement

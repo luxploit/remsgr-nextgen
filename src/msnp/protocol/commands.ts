@@ -10,10 +10,10 @@ export enum SyncCmds {
 	BeginSynchronizationLegacy = 'SYN',
 	FriendRequestPrivacy = 'GTC',
 	InstantMessagesPrivacy = 'BLP',
-	UserProperties = 'PRP',
-	ContactProperties = 'BRP',
-	ListGroups = 'LSG',
-	ListContacts = 'LST',
+	UserPropertiesLegacy = 'PRP',
+	ContactPropertiesLegacy = 'BRP',
+	ListGroupsLegacy = 'LSG',
+	ListContactsLegacy = 'LST',
 }
 
 export enum PresenceCmds {
@@ -25,12 +25,16 @@ export enum PresenceCmds {
 	OfflineStatus = 'FLN',
 	GetExtendedStatus = 'UBX',
 	SetExtendedStatus = 'UUX',
-	RenameFriendly = 'REA',
+	RenameFriendlyLegacy = 'REA',
 }
 
 export enum MiscCmds {
 	PolicyConfiguration = 'GCF',
 	ServerNotification = 'NOT',
+	NetworkLinks = 'URL',
 }
 
-export enum UserCmds {}
+export enum UserCmds {
+	AddToListLegacy = 'ADD',
+	AddContactLegacy = 'ADC',
+}

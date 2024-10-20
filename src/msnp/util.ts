@@ -3,10 +3,11 @@ import { PulseUser } from './framework/user'
 import { PulseCommand } from './framework/decoder'
 import { PulseInteractableArgs } from './framework/interactable'
 import { ListsT } from '../database/models/list'
-import { populatePulseDataByUID } from '../database/queries/populate'
+import { populatePulseDataBySN, populatePulseDataByUID } from '../database/queries/populate'
 import crypto from 'node:crypto'
 import fs from 'node:fs/promises'
 import Handlebars from 'handlebars'
+import { ListBitFlags, ListTypesT } from './protocol/sync'
 
 export const getPulseUserByUID = (uid: number): PulseUser | undefined => activeUsers[uid]
 export const deletePulseUserByUID = (uid: number) => delete activeUsers[uid]
@@ -54,7 +55,7 @@ export const buildLegacyGroupIDsMap = (uuids: string[]) => {
 
 	let groupIdx = 0
 	for (const uuid of uuids) {
-		mapping.set(uuid, groupIdx++)
+		mapping.set(uuid, ++groupIdx)
 	}
 
 	return mapping
@@ -90,8 +91,24 @@ export const getLegacyGroupIDs = (lists: ListsT, groups: Map<string, number>) =>
 // 	return list.length === 1
 // }
 
-export const createFakeContactUser = async (user: PulseUser, cid: number) => {
+export const createFakeContactUserByUID = async (user: PulseUser, cid: number) => {
 	const data = await populatePulseDataByUID(cid)
+	if (!data) return null
+
+	// Populate new contact
+	const contact = new PulseUser()
+	{
+		contact.data = data
+		contact.data.user.ClVersion = user.data.user.ClVersion // @hack
+		contact.context = user.context
+		contact.client = user.client
+	}
+
+	return contact
+}
+
+export const createFakeContactUserBySN = async (user: PulseUser, sn: string) => {
+	const data = await populatePulseDataBySN(sn)
 	if (!data) return null
 
 	// Populate new contact
@@ -131,4 +148,17 @@ export const loadTemplate = async (filePath: string, context?: Object) => {
 
 	const compiled = Handlebars.compile(template)
 	return compiled(context ?? {}).replace(/r?\n/g, '\r\n')
+}
+
+export const getListBitByListType = (listType: ListTypesT) => {
+	switch (listType) {
+		case 'FL':
+			return ListBitFlags.Forward
+		case 'AL':
+			return ListBitFlags.Allow
+		case 'BL':
+			return ListBitFlags.Block
+		case 'RL':
+			return ListBitFlags.Reverse
+	}
 }

@@ -5,8 +5,8 @@ import { PulseUser } from '../../framework/user'
 import { PresenceCmds } from '../../protocol/commands'
 import { ErrorCode } from '../../protocol/error_codes'
 import { OnlineStatus, OnlineStatusT } from '../../protocol/presence'
-import { ListBitFlags } from '../../protocol/sync'
-import { getPulseUserByUID, makeEmailFromSN } from '../../util'
+import { ListBitFlags, PrivacyModes } from '../../protocol/sync'
+import { getPulseUserByUID, getSNfromMail, makeEmailFromSN } from '../../util'
 
 /*
  * MSNP2 - MSNP7:
@@ -135,7 +135,7 @@ export const handleCHG = async (user: PulseUser, cmd: PulseCommand) => {
 	}
 
 	user.context.state.onlineStatus = status
-	await handleCHG_Async(user, cmd)
+	await handleCHG_Async(user)
 
 	return user.client.ns.echo(cmd)
 }
@@ -143,11 +143,18 @@ export const handleCHG = async (user: PulseUser, cmd: PulseCommand) => {
 /*
  * - Calls NLN/FLN for Async Presence -
  */
-export const handleCHG_Async = async (user: PulseUser, cmd: PulseCommand) => {
-	// TODO: Revisit when Privacy Settings are implemented properly
-
+export const handleCHG_Async = async (user: PulseUser) => {
 	for (const contact of user.data.list) {
-		if (!(contact.ListBits & ListBitFlags.Allow)) {
+		const listBit =
+			user.data.user.PrivacyOptions.instantMessages === PrivacyModes.BLP_OnlyAllowList
+				? ListBitFlags.Allow
+				: ListBitFlags.Reverse
+
+		if (contact.ListBits & ListBitFlags.Block) {
+			continue
+		}
+
+		if (!(contact.ListBits & listBit)) {
 			continue
 		}
 
@@ -161,9 +168,9 @@ export const handleCHG_Async = async (user: PulseUser, cmd: PulseCommand) => {
 			continue
 		}
 
-		if (!(clListEntry.ListBits & ListBitFlags.Forward)) {
-			continue
-		}
+		// if (!(clListEntry.ListBits & ListBitFlags.Forward)) {
+		// 	continue
+		// }
 
 		if (user.context.state.onlineStatus === OnlineStatus.Hidden) {
 			await handleFLN(user, clUser)
@@ -428,7 +435,7 @@ export const handleREA = async (user: PulseUser, cmd: PulseCommand) => {
 		// )
 		//return user.client.ns.error(cmd, ErrorCode.Unexpected)
 
-		const ogAcc = await getAccountBySN(passport.split('@')[0])
+		const ogAcc = await getAccountBySN(getSNfromMail(passport))
 		if (!ogAcc) {
 			user.error(`Unable to find passport ${passport} for simulated REA!`)
 			return user.client.ns.error(cmd, ErrorCode.Unexpected)
@@ -442,7 +449,7 @@ export const handleREA = async (user: PulseUser, cmd: PulseCommand) => {
 
 		return user.client.ns.reply(cmd, [
 			user.data.user.ClVersion,
-			makeEmailFromSN(ogPulse.data.account.ScreenName),
+			passport,
 			encodeURIComponent(ogPulse.data.user.DisplayName),
 		])
 	}
@@ -462,11 +469,11 @@ export const handleREA = async (user: PulseUser, cmd: PulseCommand) => {
 		await updateUserClVersionByUID(user.data.account.UID, user.data.user.ClVersion)
 	}
 
-	await handleCHG_Async(user, cmd)
+	await handleCHG_Async(user)
 
 	return user.client.ns.reply(cmd, [
 		user.data.user.ClVersion,
-		makeEmailFromSN(user.data.account.ScreenName),
+		makeEmailFromSN(user.data.account.ScreenName, user.context.messenger.dialect === 2),
 		newFriendly,
 	])
 }

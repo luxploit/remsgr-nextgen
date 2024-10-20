@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm'
 import { getDB } from '../+database'
-import { Users } from '../models/user'
+import { PrivacyOptions, Users } from '../models/user'
 
 export const getUserByUID = async (uid: number) =>
 	(await getDB().db.select().from(Users).where(eq(Users.UID, uid))).at(0)
@@ -13,3 +13,6 @@ export const updateUserLastLoginByUID = async (uid: number, loginDate: Date) =>
 
 export const updateUserDisplayNameByUID = async (uid: number, friendlyName: string) =>
 	await getDB().db.update(Users).set({ DisplayName: friendlyName }).where(eq(Users.UID, uid))
+
+export const updateUserPrivacyOptionsByUID = async (uid: number, options: PrivacyOptions) =>
+	await getDB().db.update(Users).set({ PrivacyOptions: options }).where(eq(Users.UID, uid))

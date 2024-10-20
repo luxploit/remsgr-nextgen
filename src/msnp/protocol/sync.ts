@@ -8,7 +8,6 @@ export enum Properties {
 	FriendlyName = 'MFN',
 	HasBlog = 'HSB',
 }
-
 export type PropertiesT = `${Properties}`
 
 export enum ListTypes {
@@ -17,7 +16,6 @@ export enum ListTypes {
 	Block = 'BL',
 	Reverse = 'RL',
 }
-
 export type ListTypesT = `${ListTypes}`
 
 export enum ListBitFlags {
@@ -35,4 +33,11 @@ export enum ContactType {
 	MobileNetwork = 1 << 3, // MNI used by Vodafone interop
 	Jaguire = 1 << 4, // used by Japanese mobile interop
 	Yahoo = 1 << 5, // Yahoo Interop
+}
+
+export enum PrivacyModes {
+	BLP_AllowEveryone = 'AL',
+	BLP_OnlyAllowList = 'BL',
+	GTC_NotifyReverseList = 'A',
+	GTC_IgnoreReverseList = 'N',
 }

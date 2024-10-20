@@ -4,10 +4,11 @@ import { getCommand, PulseCommand } from '../../framework/decoder'
 import { PulseInteractable } from '../../framework/interactable'
 import { PulseUser } from '../../framework/user'
 import { handleINF, handleOUT, handleUSR, handleVER } from './logon'
-import { handleSYN } from './synchronization'
-import { DispatchCmds, MiscCmds, PresenceCmds, SyncCmds } from '../../protocol/commands'
+import { handleBLP, handleGTC, handleSYN } from './synchronization'
+import { DispatchCmds, MiscCmds, PresenceCmds, SyncCmds, UserCmds } from '../../protocol/commands'
 import { handleCHG, handleCVQ, handleCVR, handleUUX, handleREA } from './presence'
 import { handleGCF } from './misc'
+import { handleADD } from './user'
 
 /**
  * TODO: Look into rewriting with class-based reflection (see AzureFlare for examples)
@@ -23,16 +24,21 @@ const nsCommandHandlers = new Map<string, (user: PulseUser, cmd: PulseCommand) =
 
 	// Synchronization
 	[SyncCmds.BeginSynchronizationLegacy, handleSYN],
+	[SyncCmds.FriendRequestPrivacy, handleGTC],
+	[SyncCmds.InstantMessagesPrivacy, handleBLP],
 
 	// Presence
 	[PresenceCmds.ClientVersionRecord, handleCVR],
 	[PresenceCmds.ClientVersionQuery, handleCVQ],
 	[PresenceCmds.ChangeStatus, handleCHG],
 	[PresenceCmds.SetExtendedStatus, handleUUX],
-	[PresenceCmds.RenameFriendly, handleREA],
+	[PresenceCmds.RenameFriendlyLegacy, handleREA],
 
 	// Miscellaneous
 	[MiscCmds.PolicyConfiguration, handleGCF],
+
+	// User
+	[UserCmds.AddToListLegacy, handleADD],
 ])
 
 export const notificationServer = () => {

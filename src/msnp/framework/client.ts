@@ -30,6 +30,7 @@ export class PulseStateContext {
 	clientCaps!: string // todo
 	pfpObject!: string // todo
 	ubxStatus!: Buffer
+	signedIn: boolean = false
 }
 
 export class PulseContext {
