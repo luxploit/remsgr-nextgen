@@ -7,7 +7,7 @@ import { handleINF, handleOUT, handleUSR, handleVER } from './logon'
 import { handleBLP, handleGTC, handleSYN } from './synchronization'
 import { DispatchCmds, MiscCmds, PresenceCmds, SyncCmds, UserCmds } from '../../protocol/commands'
 import { handleCHG, handleCVQ, handleCVR, handleUUX, handleREA } from './presence'
-import { handleGCF } from './misc'
+import { handleGCF, handleURL } from './misc'
 import { handleADD } from './user'
 
 /**
@@ -36,6 +36,7 @@ const nsCommandHandlers = new Map<string, (user: PulseUser, cmd: PulseCommand) =
 
 	// Miscellaneous
 	[MiscCmds.PolicyConfiguration, handleGCF],
+	[MiscCmds.ServiceLinks, handleURL],
 
 	// User
 	[UserCmds.AddToListLegacy, handleADD],

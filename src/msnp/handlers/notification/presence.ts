@@ -9,7 +9,10 @@ import { ListBitFlags, PrivacyModes } from '../../protocol/sync'
 import { getPulseUserByUID, getSNfromMail, makeEmailFromSN } from '../../util'
 
 /*
- * MSNP2 - MSNP7:
+ * MSNP2:
+ *   -> CVR [trId] [localeId] [osType] [osVersion] [cpuArch] [libName] [clientVer]
+ *
+ * MSNP3 - MSNP7:
  *   -> CVR [trId] [localeId] [osType] [osVersion] [cpuArch] [libName] [clientVer] [clientName]
  *
  * MSNP8+:
@@ -23,7 +26,7 @@ export const handleCVR = async (user: PulseUser, cmd: PulseCommand) => {
 		return user.client.ns.quit()
 	}
 
-	if (cmd.Args.length < 7 || cmd.Args.length > 8) {
+	if (cmd.Args.length < 6 || cmd.Args.length > 8) {
 		user.error('Client provided an invalid number of arguments to command CVR')
 		return user.client.ns.fatal(cmd, ErrorCode.BadCVRFormatting)
 	}
@@ -45,14 +48,17 @@ export const handleCVR = async (user: PulseUser, cmd: PulseCommand) => {
 	{
 		user.context.messenger.intrLibName = cmd.Args[4]
 		user.context.messenger.version = cmd.Args[5]
-		user.context.messenger.intrCliName = cmd.Args[6]
+		user.context.messenger.intrCliName = cmd.Args[user.context.messenger.dialect >= 3 ? 6 : 4]
 	}
 
 	return await handleCVQ(user, cmd)
 }
 
 /*
- * MSNP2 - MSNP7:
+ * MSNP2:
+ *   -> CVQ [trId] [localeId] [osType] [osVersion] [cpuArch] [libName] [clientVer]
+ *
+ * MSNP3 - MSNP7:
  *   -> CVQ [trId] [localeId] [osType] [osVersion] [cpuArch] [libName] [clientVer] [clientName]
  *
  * MSNP8+:
@@ -66,7 +72,7 @@ export const handleCVQ = async (user: PulseUser, cmd: PulseCommand) => {
 		return user.client.ns.quit()
 	}
 
-	if (cmd.Args.length < 7 || cmd.Args.length > 8) {
+	if (cmd.Args.length < 6 || cmd.Args.length > 8) {
 		user.error('Client provided an invalid number of arguments to command CVQ')
 		return user.client.ns.fatal(cmd, ErrorCode.BadCVRFormatting)
 	}

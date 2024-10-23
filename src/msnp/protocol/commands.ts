@@ -31,7 +31,7 @@ export enum PresenceCmds {
 export enum MiscCmds {
 	PolicyConfiguration = 'GCF',
 	ServerNotification = 'NOT',
-	NetworkLinks = 'URL',
+	ServiceLinks = 'URL',
 }
 
 export enum UserCmds {

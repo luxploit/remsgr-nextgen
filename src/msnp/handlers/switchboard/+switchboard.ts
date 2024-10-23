@@ -6,12 +6,14 @@ import net from 'node:net'
 
 const sbCommandHandlers = new Map<string, (user: PulseUser, cmd: PulseCommand) => void>([])
 
+// TODO: I need to figure out a good solution for pushing SB clients, might just record them per user and per sbId
+
 export const switchboardServer = () => {
 	return net.createServer((socket) => {
 		logging.info(`New connection: ${socket.remoteAddress}:${socket.remotePort}`)
 
-		const user = new PulseUser()
-		user.client.sb.push(new PulseInteractable(socket))
+		// const user = new PulseUser()
+		// user.client.sb.push(new PulseInteractable(socket))
 
 		socket.on('data', (data) => {
 			logging.debug('netDebug', 'Incoming traffic:', data.toString().trim())
@@ -22,16 +24,16 @@ export const switchboardServer = () => {
 				return
 			}
 
-			for (let command of result) {
-				const handler = sbCommandHandlers.get(command.Command)
-				if (!handler) {
-					logging.warn('No SB handler available for command', command.Command)
-					return
-				}
+			// for (let command of result) {
+			// 	const handler = sbCommandHandlers.get(command.Command)
+			// 	if (!handler) {
+			// 		logging.warn('No SB handler available for command', command.Command)
+			// 		return
+			// 	}
 
-				user.sbDebug('Command handler', 'Processing SB command', command.Command)
-				handler(user, command)
-			}
+			// 	user.sbDebug('Command handler', 'Processing SB command', command.Command)
+			// 	handler(user, command)
+			// }
 		})
 
 		socket.on('close', () => {})
