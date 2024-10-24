@@ -3,4 +3,4 @@ INSERT INTO "accounts" ("uid", "guid", "screen_name", "email", "password_md5", "
 
 INSERT INTO "details" ("uid", "phone_home", "phone_work", "phone_mobile", "last_modified") VALUES (2, NULL, NULL, NULL, '2024-10-08 08:01:08');
 
-INSERT INTO "users" ("uid", "display_name", "contact_groups", "privacy_flags", "cl_version", "fl_version", "bl_version", "al_version", "rl_version", "last_login", "signup_date", "last_modified") VALUES (2, 'RATAOUILLE KURWA', NULL, 0, 0, 0, 0, 0, 0, NULL, '2024-10-09 23:14:10.45074', '2024-10-09 23:14:08');
+INSERT INTO "users" ("uid", "display_name", "contact_groups", "cl_version", "last_login", "signup_date", "last_modified", "availablity_privacy", "list_changes") VALUES (2, 'RATATOUILLE KURWA', NULL, 4, '2024-10-20 22:44:49.73', '2024-10-21 00:43:20', '2024-10-20 22:44:49.731', 'true', 'true');
