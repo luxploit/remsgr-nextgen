@@ -35,9 +35,12 @@ export enum ContactType {
 	Yahoo = 1 << 5, // Yahoo Interop
 }
 
+export enum NotificationModes {
+	NotifyReverseList = 'A',
+	IgnoreReverseList = 'N',
+}
+
 export enum PrivacyModes {
-	BLP_AllowEveryone = 'AL',
-	BLP_OnlyAllowList = 'BL',
-	GTC_NotifyReverseList = 'A',
-	GTC_IgnoreReverseList = 'N',
+	AllowEveryone = 'AL',
+	OnlyAllowList = 'BL',
 }

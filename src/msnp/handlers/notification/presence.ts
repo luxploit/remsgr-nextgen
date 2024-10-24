@@ -151,10 +151,7 @@ export const handleCHG = async (user: PulseUser, cmd: PulseCommand) => {
  */
 export const handleCHG_Async = async (user: PulseUser) => {
 	for (const contact of user.data.list) {
-		const listBit =
-			user.data.user.PrivacyOptions.instantMessages === PrivacyModes.BLP_OnlyAllowList
-				? ListBitFlags.Allow
-				: ListBitFlags.Reverse
+		const listBit = user.data.user.AvailablityPrivacy ? ListBitFlags.Allow : ListBitFlags.Reverse
 
 		if (contact.ListBits & ListBitFlags.Block) {
 			continue

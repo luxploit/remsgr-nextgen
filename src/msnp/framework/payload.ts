@@ -1,6 +1,6 @@
 export enum PayloadTypes {
 	PlainText = 'text/plain',
-	SystemMessage = 'application/x-msmsgssystemmessage',
+	SystemMessage = 'text/x-msmsgssystemmessage',
 	ProfileMessage = 'text/x-msmsgsprofile',
 	NewMailNotification = 'text/x-msmsgsemailnotification',
 	InitialMailNotification = 'text/x-msmsgsinitialemailnotification',
@@ -8,6 +8,7 @@ export enum PayloadTypes {
 	InitialMData = 'text/x-msmsgsinitialmdatanotification',
 	MessageControls = 'text/x-msmsgscontrol',
 	ClientCapabilities = 'text/x-clientcaps',
+	AimWarning = 'text/x-aimwarning',
 }
 
 export class PulsePayloadBuilder {
@@ -31,12 +32,8 @@ export class PulsePayloadBuilder {
 		return this
 	}
 
-	build = () => {
-		return `MIME-Version: 1.0\r\nContent-Type: ${this.contentType}\r\n${this.headers}\r\n${this.parts}`
-	}
+	build = () =>
+		`MIME-Version: 1.0\r\nContent-Type: ${this.contentType}\r\n${this.headers}\r\n${this.parts}`
 }
 
-export const payload = (type: PayloadTypes, charset?: string) => {
-	const part = (type as string) + charset ? '; charset=UTF8' : ''
-	return new PulsePayloadBuilder(part)
-}
+export const payload = (type: PayloadTypes) => new PulsePayloadBuilder(type as string)

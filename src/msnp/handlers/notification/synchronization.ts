@@ -23,6 +23,7 @@ import {
 	ListBitFlags,
 	ListTypes,
 	ListTypesT,
+	NotificationModes,
 	PrivacyModes,
 	Properties,
 } from '../../protocol/sync'
@@ -31,7 +32,11 @@ import {
 	insertListEntry,
 	updateListEntryBitsByIDs,
 } from '../../../database/queries/lists'
-import { updateUserClVersionByUID, updateUserPrivacyOptionsByUID } from '../../../database/queries/user'
+import {
+	updateUserClVersionByUID,
+	updateUserAvailablityPrivacyByUID,
+	updateUserListChangesNotificationByUID,
+} from '../../../database/queries/user'
 
 /*
  * - SyncId(0 or Mismatch) = Resync Everything -
@@ -212,18 +217,18 @@ const handleSYN_BeginSynchronization = async (user: PulseUser, cmd: PulseCommand
 
 /*
  * MSNP2:
- *   <- GTC [trId] [serverSyncId] [setting=A|N]
  *   <- BLP [trId] [serverSyncId] [setting=AL|BL]
  *
  * MSNP10:
- *   <- GTC [setting=A|N]
  *   <- BLP [setting=AL|BL]
  */
 const handleSYN_PrivacySettings = async (user: PulseUser, cmd: PulseCommand) => {
-	const priv = user.data.user.PrivacyOptions
+	const priv = user.data.user.AvailablityPrivacy
 
-	sendSyncCmd(user, SyncCmds.FriendRequestPrivacy, cmd.TrId, [priv.friendRequest])
-	sendSyncCmd(user, SyncCmds.InstantMessagesPrivacy, cmd.TrId, [priv.instantMessages])
+	// sendSyncCmd(user, SyncCmds.ListChangeNotifications, cmd.TrId, [priv.listChanges])
+	sendSyncCmd(user, SyncCmds.AvailablityPrivacy, cmd.TrId, [
+		priv ? PrivacyModes.AllowEveryone : PrivacyModes.OnlyAllowList,
+	])
 }
 
 /*
@@ -541,13 +546,16 @@ export const handleBLP = async (user: PulseUser, cmd: PulseCommand) => {
 	}
 
 	const setting = cmd.Args[0]
-	if (setting !== PrivacyModes.BLP_AllowEveryone && setting !== PrivacyModes.BLP_OnlyAllowList) {
+	if (setting !== PrivacyModes.AllowEveryone && setting !== PrivacyModes.OnlyAllowList) {
 		user.error(`Client provided a setting to command BLP! Provided was: ${setting}`)
 		return user.client.ns.error(cmd, ErrorCode.InvalidParameter)
 	}
 
-	const dbSetting = user.data.user.PrivacyOptions.instantMessages
-	if (setting === dbSetting) {
+	const dbSetting = user.data.user.AvailablityPrivacy
+	if (
+		(setting === PrivacyModes.AllowEveryone && dbSetting) ||
+		(setting === PrivacyModes.OnlyAllowList && !dbSetting)
+	) {
 		user.warn(
 			`Client provided a setting that was already set as the current mode to BLP! Provided was: ${setting}`
 		)
@@ -556,8 +564,8 @@ export const handleBLP = async (user: PulseUser, cmd: PulseCommand) => {
 
 	// update details
 	{
-		user.data.user.PrivacyOptions.instantMessages = setting
-		await updateUserPrivacyOptionsByUID(user.data.account.UID, user.data.user.PrivacyOptions)
+		user.data.user.AvailablityPrivacy = !dbSetting
+		await updateUserAvailablityPrivacyByUID(user.data.account.UID, !dbSetting)
 
 		user.data.user.ClVersion += 1
 		await updateUserClVersionByUID(user.data.account.UID, user.data.user.ClVersion)
@@ -597,15 +605,18 @@ export const handleGTC = async (user: PulseUser, cmd: PulseCommand) => {
 
 	const setting = cmd.Args[0]
 	if (
-		setting !== PrivacyModes.GTC_NotifyReverseList &&
-		setting !== PrivacyModes.GTC_IgnoreReverseList
+		setting !== NotificationModes.NotifyReverseList &&
+		setting !== NotificationModes.IgnoreReverseList
 	) {
 		user.error(`Client provided a setting to command GTC! Provided was: ${setting}`)
 		return user.client.ns.error(cmd, ErrorCode.InvalidParameter)
 	}
 
-	const dbSetting = user.data.user.PrivacyOptions.friendRequest
-	if (setting === dbSetting) {
+	const dbSetting = user.data.user.ListChanges
+	if (
+		(setting === NotificationModes.NotifyReverseList && dbSetting) ||
+		(setting === NotificationModes.IgnoreReverseList && !dbSetting)
+	) {
 		user.warn(
 			`Client provided a setting that was already set as the current mode to GTC! Provided was: ${setting}`
 		)
@@ -614,8 +625,8 @@ export const handleGTC = async (user: PulseUser, cmd: PulseCommand) => {
 
 	// update details
 	{
-		user.data.user.PrivacyOptions.friendRequest = setting
-		await updateUserPrivacyOptionsByUID(user.data.account.UID, user.data.user.PrivacyOptions)
+		user.data.user.ListChanges = !dbSetting
+		await updateUserListChangesNotificationByUID(user.data.account.UID, !dbSetting)
 
 		user.data.user.ClVersion += 1
 		await updateUserClVersionByUID(user.data.account.UID, user.data.user.ClVersion)

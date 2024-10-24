@@ -213,3 +213,10 @@ export const handleADD = async (user: PulseUser, cmd: PulseCommand) => {
 
 	return user.client.ns.reply(cmd, args)
 }
+
+/*
+ *
+ *
+ *
+ */
+export const handleREM = async (user: PulseUser, cmd: PulseCommand) => {}

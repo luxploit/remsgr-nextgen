@@ -8,8 +8,8 @@ export enum DispatchCmds {
 
 export enum SyncCmds {
 	BeginSynchronizationLegacy = 'SYN',
-	FriendRequestPrivacy = 'GTC',
-	InstantMessagesPrivacy = 'BLP',
+	ListChangeNotifications = 'GTC',
+	AvailablityPrivacy = 'BLP',
 	UserPropertiesLegacy = 'PRP',
 	ContactPropertiesLegacy = 'BRP',
 	ListGroupsLegacy = 'LSG',

@@ -24,8 +24,8 @@ const nsCommandHandlers = new Map<string, (user: PulseUser, cmd: PulseCommand) =
 
 	// Synchronization
 	[SyncCmds.BeginSynchronizationLegacy, handleSYN],
-	[SyncCmds.FriendRequestPrivacy, handleGTC],
-	[SyncCmds.InstantMessagesPrivacy, handleBLP],
+	[SyncCmds.ListChangeNotifications, handleGTC],
+	[SyncCmds.AvailablityPrivacy, handleBLP],
 
 	// Presence
 	[PresenceCmds.ClientVersionRecord, handleCVR],
